@@ -93,7 +93,9 @@ settings profiles (wave mode/flow/frequency) in the browser and clone a
 profile across every pump in a tank with one click, entirely client-side
 against HA's REST API (a Long-Lived Access Token, from your HA profile
 page, is all it needs). See the comments at the top of each dashboards/
-file for the entity_id pattern and how to adapt them to your own pumps.
+file for the entity_id pattern and how to adapt them to your own pumps -
+or see [dashboards/README.md](dashboards/README.md) for a full step-by-step
+install guide.
 
 ## Project layout
 
