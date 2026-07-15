@@ -18,8 +18,11 @@
 #         number.jebao_<did>_flow
 #         number.jebao_<did>_frequency
 #         number.jebao_<did>_feedtime      (feed duration, minutes)
-#     <did> is the pump's device id (lowercased) - find it under
-#     Settings → Devices → the pump → Device info. The example did below
+#     <did> is the pump's device id (lowercased) - find it in any of its
+#     entity_ids (Developer Tools → States, filter "jebao_" is fastest, or
+#     Settings → Devices & Services → Devices → the pump → click any
+#     entity). It's also shown directly in the config-flow discovery list
+#     when you first add the pump. The example did below
 #     (qp50gpt5i8h4mfkio0enik) is a real pump from this project's own
 #     testing - replace it with yours.
 #     Not every Jebao product exposes every entity above (e.g. dosing pumps

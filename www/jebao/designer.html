@@ -182,8 +182,11 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
           <input id="newLabel" placeholder="label, e.g. Left flow">
           <button id="btnAddPump">Add</button>
         </div>
-        <p class="note">Find a pump's <code>did</code> under Settings → Devices → the pump →
-          Device info, or in the config-flow discovery list when you first added it.</p>
+        <p class="note">Find a pump's <code>did</code> in any of its entity_ids - Developer
+          Tools → States (filter <code>jebao_</code>) is fastest, or Settings → Devices &amp;
+          Services → Devices → the pump → click any entity. It's the part between
+          <code>jebao_</code> and the attribute name, e.g. <code>switch.jebao_<b>&lt;did&gt;</b>_switchon</code>.
+          It's also shown directly in the config-flow discovery list when you first add the pump.</p>
         <div style="border-top:1px solid var(--line);margin:16px 0 4px"></div>
         <div class="two">
           <input id="tankName" placeholder="Tank name, e.g. Display">
