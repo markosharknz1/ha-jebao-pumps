@@ -1,0 +1,103 @@
+# Jebao Pumps — Lovelace dashboard
+# ---------------------------------------------------------------------------
+# HOW TO USE
+#   Settings → Dashboards → Add dashboard → (open it) → top-right ⋮ →
+#   Edit dashboard → ⋮ → Raw configuration editor → paste this in.
+#
+#   Also copy www/jebao/designer.html into your HA config's www/ folder
+#   (so it's served at /local/jebao/designer.html) if you want the embedded
+#   Control panel view below, or the standalone tank-grouping/profile-clone/
+#   feed-timer tool it provides.
+#
+# ADAPT IT
+#   * Group your pumps into tanks by editing the sections/views below.
+#   * Entity IDs follow the pattern:
+#         switch.jebao_<did>_switchon      (power)
+#         switch.jebao_<did>_feedswitch    (feed mode)
+#         select.jebao_<did>_mode          (wave pattern)
+#         number.jebao_<did>_flow
+#         number.jebao_<did>_frequency
+#         number.jebao_<did>_feedtime      (feed duration, minutes)
+#     <did> is the pump's device id (lowercased) - find it under
+#     Settings → Devices → the pump → Device info. The example did below
+#     (qp50gpt5i8h4mfkio0enik) is a real pump from this project's own
+#     testing - replace it with yours.
+#     Not every Jebao product exposes every entity above (e.g. dosing pumps
+#     don't have FeedSwitch/FeedTime) - HA will just skip cards for entities
+#     that don't exist for a given device.
+# ---------------------------------------------------------------------------
+title: Jebao Pumps
+views:
+  # ---- OVERVIEW: tanks as sections, a compact card per pump ----
+  - title: Overview
+    path: overview
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Display tank
+            heading_style: title
+            icon: mdi:fishbowl
+          - type: entities
+            title: Pump qp50gpt5i8h4mfkio0enik
+            state_color: true
+            entities:
+              - entity: switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
+                name: Power
+              - entity: select.jebao_qp50gpt5i8h4mfkio0enik_mode
+                name: Wave mode
+              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_flow
+                name: Flow
+              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_frequency
+                name: Frequency
+              - type: section
+                label: Feed mode
+              - entity: switch.jebao_qp50gpt5i8h4mfkio0enik_feedswitch
+                name: Feed mode
+              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_feedtime
+                name: Feed duration (min)
+          # Quick actions for the whole tank (see jebao-tank-scripts.yaml):
+          - type: entities
+            title: Display tank actions
+            entities:
+              - entity: script.display_tank_all_on
+                name: All pumps on
+                icon: mdi:power
+              - entity: script.display_tank_all_off
+                name: All pumps off
+                icon: mdi:power-off
+              - entity: script.display_tank_feed_now
+                name: Feed now (with timer)
+                icon: mdi:food-drumstick
+
+      # ---- Add more tanks by copying a grid section like this ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: Frag tank (example — edit dids)
+            heading_style: title
+            icon: mdi:fishbowl-outline
+          - type: entities
+            title: Pump 00000001
+            state_color: true
+            entities:
+              - entity: switch.jebao_00000001_switchon
+                name: Power
+              - entity: select.jebao_00000001_mode
+                name: Wave mode
+              - entity: number.jebao_00000001_flow
+                name: Flow
+              - entity: number.jebao_00000001_frequency
+                name: Frequency
+
+  # ---- CONTROL PANEL (embedded designer: tank groups, settings
+  # profiles, clone-to-tank, feed timer) ----
+  - title: Control panel
+    path: control
+    icon: mdi:tune
+    cards:
+      - type: iframe
+        url: /local/jebao/designer.html
+        aspect_ratio: 120%

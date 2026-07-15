@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jebao Pump Control</title>
+<style>
+:root{
+  --bg:#08131f; --panel:#0e2033; --panel2:#122a41; --line:#1e3c56;
+  --ink:#d6e6f2; --muted:#6d8aa0; --accent:#33cfe0; --warn:#ffb021; --feed:#7cd67c;
+  --danger:#ff6b6b; --radius:14px;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#eaf1f7; --panel:#ffffff; --panel2:#f0f5fa; --line:#cfddea;
+    --ink:#0e2233; --muted:#5b7286; --accent:#0a94a8; --warn:#c77a00; --feed:#1f8f3a; }
+}
+:root[data-theme="dark"]{ --bg:#08131f; --panel:#0e2033; --panel2:#122a41; --line:#1e3c56;
+  --ink:#d6e6f2; --muted:#6d8aa0; --accent:#33cfe0; --warn:#ffb021; --feed:#7cd67c; }
+:root[data-theme="light"]{ --bg:#eaf1f7; --panel:#ffffff; --panel2:#f0f5fa; --line:#cfddea;
+  --ink:#0e2233; --muted:#5b7286; --accent:#0a94a8; --warn:#c77a00; --feed:#1f8f3a; }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{text-wrap:balance;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 64px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px 20px;margin-bottom:20px}
+header h1{font-size:1.5rem;letter-spacing:-.02em;font-weight:650}
+header .sub{color:var(--muted);font-size:.85rem;max-width:56ch}
+.eyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;
+  font-size:.68rem;color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 16px 18px}
+.panel h2{font-size:.95rem;font-weight:600;margin-bottom:12px;display:flex;
+  align-items:center;gap:8px}
+.panel h2 .tag{margin-left:auto;font-family:var(--mono);font-size:.66rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.12em}
+
+/* pump cards */
+.pumplist{display:flex;flex-direction:column;gap:10px}
+.pumpcard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.pumpcard.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.pumpcard .hd{display:flex;align-items:center;gap:8px;cursor:pointer}
+.pumpcard .hd .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.pumpcard .hd .dot.on{background:var(--accent);box-shadow:0 0 6px var(--accent)}
+.pumpcard .hd .label{font-weight:600;font-size:.86rem}
+.pumpcard .hd .did{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:auto}
+.pumpcard .hd .rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;
+  padding:0 2px;line-height:1}
+.pumpcard .hd .rm:hover{color:var(--danger)}
+.pumpcard .status{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.empty{color:var(--muted);font-size:.82rem;padding:18px 4px;text-align:center}
+
+/* controls */
+.row{display:flex;align-items:center;gap:10px;margin:9px 0}
+.row label{font-size:.8rem;color:var(--muted);min-width:90px}
+.row .val{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.82rem;
+  margin-left:auto;min-width:52px;text-align:right}
+input[type=range]{flex:1;accent-color:var(--accent);height:22px}
+input[type=text],input[type=number],select,input[type=password]{
+  background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  border-radius:8px;padding:7px 9px;font-family:var(--mono);font-size:.82rem;width:100%}
+.field{display:flex;flex-direction:column;gap:5px;margin:9px 0}
+.field span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+button{font-family:var(--sans);cursor:pointer;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel2);color:var(--ink);padding:8px 12px;font-size:.82rem;font-weight:550}
+button.primary{background:var(--accent);color:#04222a;border-color:transparent}
+button.on{background:var(--accent);color:#04222a;border-color:transparent}
+button.off{background:var(--panel2)}
+button.danger{color:var(--danger)}
+button.feed{background:var(--feed);color:#04220a;border-color:transparent}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{padding:6px 11px;font-size:.78rem}
+.tabs button.active{background:var(--accent);color:#04222a;border-color:transparent}
+.tabpane{display:none}.tabpane.active{display:block}
+pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:12px;overflow-x:auto;font-family:var(--mono);font-size:.75rem;margin:0;
+  color:var(--ink)}
+.export-block{margin:12px 0}
+.export-block .hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.export-block .hd h3{font-size:.82rem;font-weight:600}
+.export-block .hd button{margin-left:auto;padding:5px 10px;font-size:.74rem}
+.note{font-size:.76rem;color:var(--muted);margin-top:6px}
+.pill{font-family:var(--mono);font-size:.7rem;padding:2px 7px;border-radius:999px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
+.countdown{font-family:var(--mono);font-size:1.6rem;font-weight:650;text-align:center;
+  padding:10px 0;color:var(--feed)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--accent);color:#04222a;padding:9px 16px;border-radius:10px;font-size:.82rem;
+  font-weight:600;opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Jebao · Local pump control</div>
+      <h1>Pump Control</h1>
+    </div>
+    <p class="sub">Group pumps into tanks, save a settings profile once and clone it across a
+      tank, and run feed mode with an auto-off timer — pushed straight to Home Assistant.</p>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: the active tank -->
+    <div>
+      <div class="panel">
+        <h2>Tank <span class="tag" id="tankTag">no tank selected</span></h2>
+        <div class="row" style="margin-top:0">
+          <select id="tankSel" style="flex:1"><option value="">— no tank —</option></select>
+          <button id="btnEditTank">Edit</button>
+        </div>
+        <div class="pumplist" id="pumpList"></div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>Feed mode <span class="tag">timed pause</span></h2>
+        <p class="note" style="margin-top:-4px">Turns Feed mode on for every pump in the tank,
+          for the duration below, then off again. Uses the pump's own <code>FeedSwitch</code> /
+          <code>FeedTime</code> datapoints (confirmed for the wavemaker this project was built
+          against; other Jebao pump lines expose the same names but haven't been individually
+          live-tested — see <a href="../../CHANGELOG.md" style="color:var(--accent)">CHANGELOG.md</a>).</p>
+        <div class="row"><label>Duration</label>
+          <input type="range" id="feedMinutes" min="1" max="60" step="1" value="5">
+          <span class="val" id="feedMinutesV">5 min</span></div>
+        <div id="feedCountdown" class="countdown" hidden>05:00</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="btnFeedNow" class="feed" style="flex:1">Feed tank now</button>
+          <button id="btnFeedStop" class="danger" disabled>Stop</button>
+        </div>
+        <p class="note">This timer only runs while this page stays open. For a feed timer that
+          survives closing the browser, install
+          <a href="https://github.com/markosharknz1/jebao-local-ha/blob/master/dashboards/jebao-tank-scripts.yaml"
+             style="color:var(--accent)">dashboards/jebao-tank-scripts.yaml</a>'s
+          <code>&lt;tank&gt;_feed_now</code> script instead and call it from HA.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: control panels -->
+    <div class="panel">
+      <div class="tabs" role="tablist">
+        <button class="active" data-tab="setup">Setup</button>
+        <button data-tab="tanks">Tanks</button>
+        <button data-tab="profile">Profile</button>
+        <button data-tab="export">Export</button>
+      </div>
+
+      <div class="tabpane active" id="tab-setup">
+        <p class="note" style="margin-top:0">Leave the URL blank when this page is opened from
+          inside HA (<code>/local/…</code>); otherwise enter your HA URL. The token is a
+          Long-Lived Access Token (HA profile page, bottom of the page).</p>
+        <div class="field"><span>HA base URL (optional)</span>
+          <input type="text" id="haUrl" placeholder="e.g. http://homeassistant.local:8123"></div>
+        <div class="field"><span>Long-lived access token</span>
+          <input type="password" id="haToken" placeholder="paste token"></div>
+        <button id="btnTestConn">Test connection</button>
+        <div id="connOut" class="note" style="margin-top:8px"></div>
+        <div style="border-top:1px solid var(--line);margin:16px 0 4px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="btnTankOn" style="flex:1">Turn tank ON</button>
+          <button id="btnTankOff" style="flex:1">Turn tank OFF</button>
+        </div>
+        <div id="powerOut" class="note" style="margin-top:8px"></div>
+      </div>
+
+      <div class="tabpane" id="tab-tanks">
+        <div class="field"><span>Add a pump to this tank</span></div>
+        <div class="three">
+          <input id="newDid" placeholder="did, e.g. QP50gPt5I8h4mFKIo0ENIK">
+          <input id="newLabel" placeholder="label, e.g. Left flow">
+          <button id="btnAddPump">Add</button>
+        </div>
+        <p class="note">Find a pump's <code>did</code> under Settings → Devices → the pump →
+          Device info, or in the config-flow discovery list when you first added it.</p>
+        <div style="border-top:1px solid var(--line);margin:16px 0 4px"></div>
+        <div class="two">
+          <input id="tankName" placeholder="Tank name, e.g. Display">
+          <button id="btnSaveTank">Save as tank</button>
+        </div>
+        <button id="btnDelTank" style="margin-top:8px">Delete selected tank</button>
+        <p class="note">A tank is just a named list of pump <code>did</code>s, saved in this
+          browser. Pick it from the dropdown on the left to make it the active tank for Profile,
+          Feed, and the ON/OFF buttons.</p>
+      </div>
+
+      <div class="tabpane" id="tab-profile">
+        <p class="note" style="margin-top:0">A profile is a saved snapshot of wave mode, flow
+          and frequency. Save one, then clone it onto every pump in the active tank with one
+          click.</p>
+        <div class="field"><span>Wave mode</span>
+          <select id="pMode"></select></div>
+        <div class="row"><label>Flow</label>
+          <input type="range" id="pFlow" min="0" max="100" step="1" value="60">
+          <span class="val" id="pFlowV">60%</span></div>
+        <div class="row"><label>Frequency</label>
+          <input type="range" id="pFreq" min="0" max="100" step="1" value="50">
+          <span class="val" id="pFreqV">50%</span></div>
+        <div style="border-top:1px solid var(--line);margin:14px 0 4px"></div>
+        <div class="field"><span>Saved profiles</span>
+          <select id="profileSel"><option value="">— unsaved —</option></select></div>
+        <div class="two">
+          <input id="profileName" placeholder="Profile name, e.g. Storm">
+          <button id="btnSaveProfile">Save profile</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <button id="btnDelProfile">Delete profile</button>
+          <button id="btnLoadPump">Load from a pump</button>
+        </div>
+        <button id="btnCloneTank" class="primary" style="width:100%;margin-top:10px">
+          Clone this profile to the whole tank</button>
+        <div id="profileOut" class="note" style="margin-top:8px"></div>
+      </div>
+
+      <div class="tabpane" id="tab-export">
+        <p class="note" style="margin-top:0">Copy into an automation, script, or Developer
+          Tools → Actions.</p>
+        <div class="export-block">
+          <div class="hd"><h3>Apply profile to tank</h3><button data-copy="exProfile">Copy</button></div>
+          <pre id="exProfile"></pre>
+        </div>
+        <div class="export-block">
+          <div class="hd"><h3>Feed tank now</h3><button data-copy="exFeed">Copy</button></div>
+          <pre id="exFeed"></pre>
+        </div>
+        <div class="export-block">
+          <div class="hd"><h3>Tank ON / OFF</h3><button data-copy="exPower">Copy</button></div>
+          <pre id="exPower"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+"use strict";
+// ---- wave mode options (raw values are what the device's Mode select
+// entity actually expects - the schema's enum strings are Chinese, so we
+// show a bilingual label but send the raw value) ----
+const MODES = [
+  {value:"经典造浪", label:"Classic wave (经典造浪)"},
+  {value:"正弦造浪", label:"Sine wave (正弦造浪)"},
+  {value:"随机造浪", label:"Random wave (随机造浪)"},
+  {value:"恒流造浪", label:"Constant flow (恒流造浪)"},
+];
+
+// ---- entity_id helpers (matches custom_components/jebao_local/entity.py's
+// suggested_object_id: jebao_<did>_<attr name lowercased>) ----
+const eidSwitchPower = did => `switch.jebao_${did.toLowerCase()}_switchon`;
+const eidSwitchFeed  = did => `switch.jebao_${did.toLowerCase()}_feedswitch`;
+const eidSelectMode  = did => `select.jebao_${did.toLowerCase()}_mode`;
+const eidNumberFlow  = did => `number.jebao_${did.toLowerCase()}_flow`;
+const eidNumberFreq  = did => `number.jebao_${did.toLowerCase()}_frequency`;
+const eidNumberFeedT = did => `number.jebao_${did.toLowerCase()}_feedtime`;
+
+// ---- state ----
+let state = { tank: null, feedTimer: null, feedDeadline: 0 };
+
+// ---- tanks (localStorage) ----
+function getTanks(){ try{ return JSON.parse(localStorage.getItem("jebao_tanks")||"[]"); }catch(e){ return []; } }
+function setTanks(t){ try{ localStorage.setItem("jebao_tanks",JSON.stringify(t)); }catch(e){} }
+function activeTank(){ return getTanks().find(t=>t.name===state.tank) || null; }
+function refreshTankSel(){
+  const sel=document.getElementById("tankSel"), cur=sel.value;
+  sel.innerHTML='<option value="">— no tank —</option>';
+  getTanks().forEach(t=>{ const o=document.createElement("option");
+    o.value=t.name; o.textContent=t.name+" ("+t.pumps.length+")"; sel.appendChild(o); });
+  sel.value=cur || "";
+}
+function selectTank(name){
+  state.tank = name || null;
+  document.getElementById("tankTag").textContent = name ? name : "no tank selected";
+  document.getElementById("tankSel").value = name || "";
+  renderPumpList();
+  updateExports();
+}
+function renderPumpList(){
+  const list=document.getElementById("pumpList"); list.innerHTML="";
+  const tank=activeTank();
+  if(!tank || tank.pumps.length===0){
+    list.innerHTML='<div class="empty">No pumps in this tank yet — add some under the Tanks tab.</div>';
+    return;
+  }
+  tank.pumps.forEach((p,i)=>{
+    const card=document.createElement("div"); card.className="pumpcard";
+    card.innerHTML=`<div class="hd">
+        <span class="dot" data-role="dot"></span>
+        <span class="label">${escapeHtml(p.label||p.did)}</span>
+        <span class="did">${escapeHtml(p.did)}</span>
+        <button class="rm" title="Remove from tank" data-i="${i}">×</button>
+      </div>
+      <div class="status" data-role="status">Not loaded — use "Test connection" or "Load from a pump"</div>`;
+    card.querySelector(".rm").addEventListener("click",e=>{
+      e.stopPropagation();
+      const t=activeTank(); t.pumps.splice(+e.target.dataset.i,1);
+      setTanks(getTanks().map(x=>x.name===t.name?t:x)); renderPumpList(); refreshTankSel(); updateExports();
+    });
+    list.appendChild(card);
+  });
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function bindTanks(){
+  refreshTankSel();
+  document.getElementById("tankSel").addEventListener("change",e=>selectTank(e.target.value));
+  document.getElementById("btnEditTank").addEventListener("click",()=>switchTab("tanks"));
+  document.getElementById("btnAddPump").addEventListener("click",()=>{
+    const did=document.getElementById("newDid").value.trim();
+    const label=document.getElementById("newLabel").value.trim();
+    if(!did) return toast("Enter a did first");
+    let tank=activeTank();
+    if(!tank){ tank={name:state.tank||"Tank 1", pumps:[]}; }
+    tank.pumps.push({did,label});
+    const tanks=getTanks().filter(t=>t.name!==tank.name); tanks.push(tank); setTanks(tanks);
+    state.tank=tank.name;
+    document.getElementById("newDid").value=""; document.getElementById("newLabel").value="";
+    refreshTankSel(); selectTank(tank.name); toast("Added pump");
+  });
+  document.getElementById("btnSaveTank").addEventListener("click",()=>{
+    const name=document.getElementById("tankName").value.trim();
+    if(!name) return toast("Name the tank first");
+    const cur=activeTank();
+    const pumps = cur ? cur.pumps : [];
+    const tanks=getTanks().filter(t=>t.name!==name); tanks.push({name,pumps}); setTanks(tanks);
+    document.getElementById("tankName").value="";
+    refreshTankSel(); selectTank(name); toast(`Saved tank "${name}"`);
+  });
+  document.getElementById("btnDelTank").addEventListener("click",()=>{
+    if(!state.tank) return toast("Pick a tank first");
+    setTanks(getTanks().filter(t=>t.name!==state.tank));
+    toast(`Deleted "${state.tank}"`); selectTank(null); refreshTankSel();
+  });
+}
+
+// ---- profiles (localStorage) ----
+function getProfiles(){ try{ return JSON.parse(localStorage.getItem("jebao_profiles")||"[]"); }catch(e){ return []; } }
+function setProfiles(p){ try{ localStorage.setItem("jebao_profiles",JSON.stringify(p)); }catch(e){} }
+function refreshProfileSel(){
+  const sel=document.getElementById("profileSel"), cur=sel.value;
+  sel.innerHTML='<option value="">— unsaved —</option>';
+  getProfiles().forEach(p=>{ const o=document.createElement("option"); o.value=p.name; o.textContent=p.name; sel.appendChild(o); });
+  sel.value=cur;
+}
+function currentProfile(){
+  return {
+    mode: document.getElementById("pMode").value,
+    flow: +document.getElementById("pFlow").value,
+    frequency: +document.getElementById("pFreq").value,
+  };
+}
+function applyProfileToForm(p){
+  document.getElementById("pMode").value=p.mode;
+  document.getElementById("pFlow").value=p.flow; document.getElementById("pFlowV").textContent=p.flow+"%";
+  document.getElementById("pFreq").value=p.frequency; document.getElementById("pFreqV").textContent=p.frequency+"%";
+}
+function bindProfile(){
+  MODES.forEach(m=>{ const o=document.createElement("option"); o.value=m.value; o.textContent=m.label;
+    document.getElementById("pMode").appendChild(o); });
+  refreshProfileSel();
+  document.getElementById("pFlow").addEventListener("input",e=>{
+    document.getElementById("pFlowV").textContent=e.target.value+"%"; updateExports(); });
+  document.getElementById("pFreq").addEventListener("input",e=>{
+    document.getElementById("pFreqV").textContent=e.target.value+"%"; updateExports(); });
+  document.getElementById("pMode").addEventListener("change",updateExports);
+  document.getElementById("profileSel").addEventListener("change",e=>{
+    const p=getProfiles().find(x=>x.name===e.target.value);
+    if(p){ applyProfileToForm(p); updateExports(); }
+  });
+  document.getElementById("btnSaveProfile").addEventListener("click",()=>{
+    const name=document.getElementById("profileName").value.trim();
+    if(!name) return showProfileOut("Name the profile first.",true);
+    const profiles=getProfiles().filter(p=>p.name!==name);
+    profiles.push({name, ...currentProfile()}); setProfiles(profiles);
+    document.getElementById("profileName").value="";
+    refreshProfileSel(); document.getElementById("profileSel").value=name;
+    showProfileOut(`Saved profile "${name}".`);
+  });
+  document.getElementById("btnDelProfile").addEventListener("click",()=>{
+    const name=document.getElementById("profileSel").value;
+    if(!name) return showProfileOut("Pick a profile first.",true);
+    setProfiles(getProfiles().filter(p=>p.name!==name));
+    refreshProfileSel(); showProfileOut(`Deleted "${name}".`);
+  });
+  document.getElementById("btnLoadPump").addEventListener("click",loadFromPump);
+  document.getElementById("btnCloneTank").addEventListener("click",cloneProfileToTank);
+}
+function showProfileOut(msg,bad){ const o=document.getElementById("profileOut");
+  o.textContent=msg; o.style.color=bad?"var(--warn)":"var(--muted)"; }
+
+// ---- tabs ----
+function switchTab(name){
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tabpane").forEach(x=>x.classList.remove("active"));
+  document.querySelector(`.tabs button[data-tab="${name}"]`).classList.add("active");
+  document.getElementById("tab-"+name).classList.add("active");
+}
+function bindTabs(){
+  document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+}
+
+// ---- feed timer (client-side; see the note in the panel about the
+// script-based alternative for when this page isn't open) ----
+function bindFeed(){
+  document.getElementById("feedMinutes").addEventListener("input",e=>{
+    document.getElementById("feedMinutesV").textContent=e.target.value+" min"; updateExports(); });
+  document.getElementById("btnFeedNow").addEventListener("click",feedNow);
+  document.getElementById("btnFeedStop").addEventListener("click",()=>stopFeed(true));
+}
+async function feedNow(){
+  const tank=activeTank();
+  if(!tank || !tank.pumps.length) return toast("Select a tank with pumps first");
+  if(!haToken()) return toast("Paste an access token in Setup first");
+  const minutes=+document.getElementById("feedMinutes").value;
+  const dids=tank.pumps.map(p=>p.did);
+  try{
+    await haCall("number/set_value", dids.map(eidNumberFeedT), {value:minutes});
+    await haCall("switch/turn_on", dids.map(eidSwitchFeed));
+  }catch(e){ return toast("Feed start failed: "+(e.message||e)); }
+  startCountdown(minutes*60, async ()=>{
+    try{ await haCall("switch/turn_off", dids.map(eidSwitchFeed)); }catch(e){ toast("Auto-off failed: "+(e.message||e)); }
+  });
+  toast(`Feeding for ${minutes} min`);
+}
+function stopFeed(manual){
+  const tank=activeTank();
+  clearInterval(state.feedTimer); state.feedTimer=null;
+  document.getElementById("feedCountdown").hidden=true;
+  document.getElementById("btnFeedStop").disabled=true;
+  if(manual && tank && tank.pumps.length && haToken()){
+    haCall("switch/turn_off", tank.pumps.map(p=>eidSwitchFeed(p.did))).catch(e=>toast("Stop failed: "+(e.message||e)));
+  }
+}
+function startCountdown(seconds, onDone){
+  clearInterval(state.feedTimer);
+  state.feedDeadline = Date.now() + seconds*1000;
+  const el=document.getElementById("feedCountdown"); el.hidden=false;
+  document.getElementById("btnFeedStop").disabled=false;
+  const tick=()=>{
+    const left=Math.max(0, Math.round((state.feedDeadline-Date.now())/1000));
+    const mm=String(Math.floor(left/60)).padStart(2,"0"), ss=String(left%60).padStart(2,"0");
+    el.textContent=`${mm}:${ss}`;
+    if(left<=0){ clearInterval(state.feedTimer); state.feedTimer=null; el.hidden=true;
+      document.getElementById("btnFeedStop").disabled=true; onDone(); }
+  };
+  tick(); state.feedTimer=setInterval(tick,1000);
+}
+
+// ---- Home Assistant apply/load ----
+function haBase(){ return (document.getElementById("haUrl").value||"").replace(/\/+$/,""); }
+function haToken(){ return document.getElementById("haToken").value.trim(); }
+function haHeaders(){ return {"Authorization":"Bearer "+haToken(), "Content-Type":"application/json"}; }
+function saveHaSettings(){ try{ localStorage.setItem("jebao_ha",
+  JSON.stringify({url:document.getElementById("haUrl").value, token:document.getElementById("haToken").value})); }catch(e){} }
+function loadHaSettings(){ try{ const s=JSON.parse(localStorage.getItem("jebao_ha")||"{}");
+  if(s.url) document.getElementById("haUrl").value=s.url;
+  if(s.token) document.getElementById("haToken").value=s.token; }catch(e){} }
+
+async function haCall(servicePath, entityIds, data={}){
+  const r=await fetch(haBase()+"/api/services/"+servicePath,
+    {method:"POST",headers:haHeaders(),body:JSON.stringify({entity_id:entityIds, ...data})});
+  if(!r.ok) throw new Error("HA "+r.status+": "+(await r.text()).slice(0,140));
+}
+async function haGetState(entityId){
+  const r=await fetch(haBase()+"/api/states/"+entityId,{headers:haHeaders()});
+  if(!r.ok) throw new Error("HA "+r.status);
+  return r.json();
+}
+async function testConnection(){
+  const o=document.getElementById("connOut"); o.textContent="Testing…"; o.style.color="var(--muted)";
+  try{
+    const r=await fetch(haBase()+"/api/",{headers:haHeaders()});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    o.textContent="Connected."; o.style.color="var(--muted)";
+  }catch(e){ o.textContent="Failed: "+(e.message||e); o.style.color="var(--warn)"; }
+}
+async function tankPower(on){
+  const tank=activeTank(); const o=document.getElementById("powerOut");
+  if(!tank || !tank.pumps.length) return o.textContent="Select a tank with pumps first.";
+  if(!haToken()) return o.textContent="Paste an access token first.";
+  o.textContent = (on?"Turning ON ":"Turning OFF ")+tank.pumps.length+" pump(s)…";
+  try{
+    await haCall("switch/turn_"+(on?"on":"off"), tank.pumps.map(p=>eidSwitchPower(p.did)));
+    o.textContent = "Tank "+(on?"ON":"OFF")+".";
+    refreshPumpStatuses();
+  }catch(e){ o.textContent = String(e.message||e); o.style.color="var(--warn)"; }
+}
+async function cloneProfileToTank(){
+  const tank=activeTank();
+  if(!tank || !tank.pumps.length) return showProfileOut("Select a tank with pumps first.",true);
+  if(!haToken()) return showProfileOut("Paste an access token in Setup first.",true);
+  const p=currentProfile();
+  showProfileOut(`Applying to ${tank.pumps.length} pump(s)…`);
+  try{
+    const dids=tank.pumps.map(x=>x.did);
+    await haCall("select/select_option", dids.map(eidSelectMode), {option:p.mode});
+    await haCall("number/set_value", dids.map(eidNumberFlow), {value:p.flow});
+    await haCall("number/set_value", dids.map(eidNumberFreq), {value:p.frequency});
+    showProfileOut(`Applied to ${tank.pumps.length} pump(s).`);
+    refreshPumpStatuses();
+  }catch(e){ showProfileOut(String(e.message||e),true); }
+}
+async function loadFromPump(){
+  const tank=activeTank();
+  if(!tank || !tank.pumps.length) return showProfileOut("Add a pump to the tank first.",true);
+  if(!haToken()) return showProfileOut("Paste an access token in Setup first.",true);
+  const did=tank.pumps[0].did;
+  showProfileOut(`Loading from ${did}…`);
+  try{
+    const [mode, flow, freq] = await Promise.all([
+      haGetState(eidSelectMode(did)), haGetState(eidNumberFlow(did)), haGetState(eidNumberFreq(did)),
+    ]);
+    applyProfileToForm({mode: mode.state, flow: Math.round(+flow.state), frequency: Math.round(+freq.state)});
+    updateExports();
+    showProfileOut(`Loaded current settings from ${did}.`);
+  }catch(e){ showProfileOut("Load failed: "+(e.message||e),true); }
+}
+async function refreshPumpStatuses(){
+  const tank=activeTank(); if(!tank || !haToken()) return;
+  const cards=[...document.querySelectorAll("#pumpList .pumpcard")];
+  await Promise.all(tank.pumps.map(async (p,i)=>{
+    const card=cards[i]; if(!card) return;
+    try{
+      const s=await haGetState(eidSwitchPower(p.did));
+      card.querySelector('[data-role="dot"]').classList.toggle("on", s.state==="on");
+      card.querySelector('[data-role="status"]').textContent = "Power: "+s.state;
+    }catch(e){ card.querySelector('[data-role="status"]').textContent = "Unreachable"; }
+  }));
+}
+function bindApply(){
+  loadHaSettings();
+  ["haUrl","haToken"].forEach(id=>document.getElementById(id).addEventListener("change",saveHaSettings));
+  document.getElementById("btnTestConn").addEventListener("click",testConnection);
+  document.getElementById("btnTankOn").addEventListener("click",()=>tankPower(true));
+  document.getElementById("btnTankOff").addEventListener("click",()=>tankPower(false));
+}
+
+// ---- exports ----
+function tankDids(){ const t=activeTank(); return t ? t.pumps.map(p=>p.did) : ["<did-1>","<did-2>"]; }
+function updateExports(){
+  const dids=tankDids();
+  const p=currentProfile();
+  document.getElementById("exProfile").textContent =
+`action: select.select_option
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidSelectMode(d)}`).join("\n")}
+data:
+  option: "${p.mode}"
+---
+action: number.set_value
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidNumberFlow(d)}`).join("\n")}
+data:
+  value: ${p.flow}
+---
+action: number.set_value
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidNumberFreq(d)}`).join("\n")}
+data:
+  value: ${p.frequency}`;
+
+  const minutes=+document.getElementById("feedMinutes").value;
+  document.getElementById("exFeed").textContent =
+`action: number.set_value
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidNumberFeedT(d)}`).join("\n")}
+data:
+  value: ${minutes}
+---
+action: switch.turn_on
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidSwitchFeed(d)}`).join("\n")}
+---
+delay:
+  minutes: ${minutes}
+---
+action: switch.turn_off
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidSwitchFeed(d)}`).join("\n")}`;
+
+  document.getElementById("exPower").textContent =
+`action: switch.turn_on   # or switch.turn_off
+target:
+  entity_id:
+${dids.map(d=>`    - ${eidSwitchPower(d)}`).join("\n")}`;
+}
+
+function bindCopy(){
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+    const t=document.getElementById(b.dataset.copy).textContent;
+    navigator.clipboard.writeText(t).then(()=>toast("Copied")).catch(()=>toast("Copy failed"));
+  }));
+}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg||"Done";
+  t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1600);}
+
+// ---- init ----
+bindTabs(); bindTanks(); bindProfile(); bindFeed(); bindApply(); bindCopy();
+selectTank(getTanks()[0]?.name || null);
+updateExports();
+setInterval(()=>{ if(haToken()) refreshPumpStatuses(); }, 15000);
+</script>
+</body>
+</html>

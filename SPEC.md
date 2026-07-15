@@ -207,6 +207,27 @@ Attempted a deeper test with `pytest-homeassistant-custom-component` (a real HA 
 
 ---
 
+## Phase 8 — Tank dashboards
+
+**Goal:** Group pumps by tank in a Lovelace dashboard, with settings that can be saved and cloned across a tank, an on/off switch, and feed mode with a timer.
+
+**Status: BUILT (2026-07-15).**
+
+Before building the dashboard, fixed a real bug it would otherwise have inherited: `JebaoLocalEntity` (`custom_components/jebao_local/entity.py`) built HA's `DeviceInfo.name` straight from the vendor's datapoint schema `name` field, which for this project's wavemaker is Chinese (`本地造浪泵_WIFI_BLE`). HA's `entity_id` is normally derived by slugifying `"{device name} {entity name}"`, and HA's slugify has no Chinese transliteration - it just drops characters it can't map, so entity_ids would have come out unpredictable and prone to colliding across same-model pumps. Fixed by setting `_attr_suggested_object_id = f"jebao_{coordinator.did}_{unique_id_suffix}"` in the base entity - `did` is a stable, ASCII, per-device identifier already available from discovery, so entity_ids are now deterministic: `switch.jebao_<did>_switchon`, `number.jebao_<did>_flow`, etc. Also added an `entity` translation block to `strings.json`/`translations/en.json` giving the common pump attributes (power, feed mode, wave mode, flow, frequency, feed duration, ...) friendly English display names, gathered by scanning all 29 bundled product schemas' `display_name`/`desc` fields for the attribute names that actually recur across products.
+
+Confirmed the pump's schema exposes exactly what "feed mode with a timer" needs: `FeedSwitch` (bool, 喂食开关 "feed switch") and `FeedTime` (uint8, 喂食时长 "feed duration", range 1-60) - turning `FeedSwitch` on pauses the pump for `FeedTime` minutes so food settles, matching the wavemaker's real-world feed-pause behavior. Not live-tested against hardware (only `SwitchON` and byte-type writes are confirmed live so far - see Phase 4/4B), so this is formula-confirmed, not hardware-confirmed.
+
+Built three deliverables:
+- `www/jebao/designer.html` - a standalone control-panel web app (same visual language and localStorage patterns as the sibling `aipai-light-ha` project's schedule designer, adapted for pumps instead of light channels): named tank groups (lists of pump `did`s, saved in the browser), settings profiles (wave mode/flow/frequency, save/load/delete, "clone to tank" applies the profile to every pump in the active tank via individual `select.select_option`/`number.set_value` calls), tank-wide on/off, and a feed-now button with a duration slider and a live countdown that calls `switch.turn_on` then `switch.turn_off` on `FeedSwitch` after the countdown - explicitly documented as only running while the page stays open, with a pointer to the script-based alternative for reliability.
+- `dashboards/jebao-dashboard.yaml` - a Lovelace dashboard with tanks as sections (entities cards per pump: power, wave mode, flow, frequency, feed switch/duration) plus an embedded iframe view of the designer.
+- `dashboards/jebao-tank-scripts.yaml` - HA `script:` definitions for tank-wide all-on/all-off and a feed-now script that survives the browser closing, using a templated `delay:` that reads the pump's own `FeedTime` number entity.
+
+**Verification:** Since the integration itself still hasn't been tested against a live HA instance (Phase 7's known gap), `designer.html`'s HA-connected actions couldn't be exercised end-to-end either. What *was* verified, by serving the file statically and driving it with a real browser: tab switching, adding a pump to a tank, saving/reselecting tanks (persisted correctly across a page reload via localStorage), saving/loading a settings profile, and the feed countdown timer (starts, ticks down, fires its on-completion callback, re-enables/disables the right buttons). This caught one real bug before it shipped: the Export tab kept showing placeholder `<did-1>`/`<did-2>` text instead of the active tank's real pump `did`s, because `updateExports()` wasn't being re-run when the active tank changed (only on a few input events) - fixed by calling it from `selectTank()` and the remove-pump handler. Confirmed the generated entity_ids (e.g. `switch.jebao_qp50gpt5i8h4mfkio0enik_switchon`) match `entity.py`'s new `_attr_suggested_object_id` output exactly. Also re-ran `tests/test_control.py` and `tests/test_ha_integration_compat.py` after the `entity.py` change - all still pass, confirming the fix didn't break the existing HA-import-cleanliness or write-encoding coverage.
+
+Both new YAML files were validated with `yaml.safe_load` (syntactically valid), but - like the rest of the HA integration - haven't been loaded into a real Home Assistant instance, so card rendering and the templated `delay:` in `jebao_tank_feed_now` are unverified beyond that.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

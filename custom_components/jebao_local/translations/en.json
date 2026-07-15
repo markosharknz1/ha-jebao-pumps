@@ -36,5 +36,27 @@
         }
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "switchon": { "name": "Power" },
+      "feedswitch": { "name": "Feed mode" },
+      "timeron": { "name": "Timer enabled" },
+      "pulsetide": { "name": "Pulse tide" },
+      "autopulsetide": { "name": "Pulse tide (scheduled)" }
+    },
+    "select": {
+      "mode": { "name": "Wave mode" },
+      "automode": { "name": "Mode (scheduled)" },
+      "linkage": { "name": "Linkage" }
+    },
+    "number": {
+      "flow": { "name": "Flow" },
+      "frequency": { "name": "Frequency" },
+      "feedtime": { "name": "Feed duration" },
+      "autoflow": { "name": "Flow (scheduled)" },
+      "autofreq": { "name": "Frequency (scheduled)" },
+      "autofeedtime": { "name": "Feed duration (scheduled)" }
+    }
   }
 }

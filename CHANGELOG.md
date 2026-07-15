@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## Unreleased
+
+- **Tank dashboards**: `dashboards/jebao-dashboard.yaml` (Lovelace, pumps
+  grouped into tank sections) and `dashboards/jebao-tank-scripts.yaml`
+  (tank-wide on/off, feed mode with an auto-off timer). `www/jebao/
+  designer.html` is a control-panel web app for saving named tank groups
+  and settings profiles (wave mode/flow/frequency) and cloning a profile
+  across a tank with one click.
+- **Entity IDs are now stable and ASCII** (`switch.jebao_<did>_switchon`,
+  etc.) instead of being derived from the vendor's often non-ASCII product
+  name, which HA's slugify could mangle unpredictably. Also added English
+  display names for the common pump attributes via HA's entity
+  translations.
+
 ## 0.1.0
 
 Initial release.

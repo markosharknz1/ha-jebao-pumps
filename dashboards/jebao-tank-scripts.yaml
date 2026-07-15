@@ -1,0 +1,100 @@
+# Per-tank scripts for Jebao pumps
+# ---------------------------------------------------------------------------
+# Put these under `script:` in configuration.yaml (or a packages file), then
+# reload scripts. They chain a whole tank's pumps together: one tap turns
+# them all on/off, or runs feed mode with an auto-off timer that keeps
+# working even if the Control panel page isn't open (unlike the designer's
+# own client-side countdown — see www/jebao/designer.html's note).
+#
+# Entity IDs follow switch.jebao_<did>_<attr> - see jebao-dashboard.yaml's
+# header comment for the full pattern and how to find a pump's did. The
+# example below uses a real pump from this project's own testing
+# (qp50gpt5i8h4mfkio0enik) - replace it with yours.
+# ---------------------------------------------------------------------------
+
+display_tank_all_on:
+  alias: Display tank — all on
+  icon: mdi:power
+  sequence:
+    - action: switch.turn_on
+      target:
+        entity_id:
+          - switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
+
+display_tank_all_off:
+  alias: Display tank — all off
+  icon: mdi:power-off
+  sequence:
+    - action: switch.turn_off
+      target:
+        entity_id:
+          - switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
+
+display_tank_feed_now:
+  alias: Display tank — feed now
+  icon: mdi:food-drumstick
+  sequence:
+    # Uses whatever duration is currently set on each pump's Feed duration
+    # number entity (falls back to 5 minutes if it can't be read). Set it
+    # first with number.set_value if you want a different duration than
+    # what's already there.
+    - action: switch.turn_on
+      target:
+        entity_id:
+          - switch.jebao_qp50gpt5i8h4mfkio0enik_feedswitch
+    - delay:
+        minutes: "{{ states('number.jebao_qp50gpt5i8h4mfkio0enik_feedtime') | int(5) }}"
+    - action: switch.turn_off
+      target:
+        entity_id:
+          - switch.jebao_qp50gpt5i8h4mfkio0enik_feedswitch
+
+display_tank_apply_storm_profile:
+  alias: Display tank — apply Storm profile
+  icon: mdi:weather-windy
+  sequence:
+    # Build profiles like this in the Control panel's Profile tab (Save
+    # profile), then copy the mode/flow/frequency values from its Export
+    # tab here for a one-tap automation trigger.
+    - action: select.select_option
+      target:
+        entity_id:
+          - select.jebao_qp50gpt5i8h4mfkio0enik_mode
+      data:
+        option: "随机造浪"  # Random wave
+    - action: number.set_value
+      target:
+        entity_id:
+          - number.jebao_qp50gpt5i8h4mfkio0enik_flow
+      data:
+        value: 90
+    - action: number.set_value
+      target:
+        entity_id:
+          - number.jebao_qp50gpt5i8h4mfkio0enik_frequency
+      data:
+        value: 80
+
+# ---- Copy the pattern for other tanks ----
+# frag_tank_all_on:
+#   alias: Frag tank — all on
+#   sequence:
+#     - action: switch.turn_on
+#       target:
+#         entity_id:
+#           - switch.jebao_<frag-did-1>_switchon
+#           - switch.jebao_<frag-did-2>_switchon
+#
+# frag_tank_feed_now:
+#   alias: Frag tank — feed now
+#   sequence:
+#     - action: switch.turn_on
+#       target:
+#         entity_id:
+#           - switch.jebao_<frag-did-1>_feedswitch
+#     - delay:
+#         minutes: "{{ states('number.jebao_<frag-did-1>_feedtime') | int(5) }}"
+#     - action: switch.turn_off
+#       target:
+#         entity_id:
+#           - switch.jebao_<frag-did-1>_feedswitch

@@ -17,6 +17,13 @@ class JebaoLocalEntity(CoordinatorEntity[JebaoLocalCoordinator]):
     def __init__(self, coordinator: JebaoLocalCoordinator, unique_id_suffix: str) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.did}_{unique_id_suffix}"
+        # Product names come from the vendor's (often non-ASCII, e.g. Chinese)
+        # datapoint schema - HA's slugify() drops characters it can't
+        # transliterate, which makes entity_ids built from the device name
+        # unpredictable and prone to colliding across same-model pumps.
+        # did is a stable, ASCII, per-device identifier, so anchor entity_ids
+        # to it directly instead: switch.jebao_<did>_switchon, etc.
+        self._attr_suggested_object_id = f"jebao_{coordinator.did}_{unique_id_suffix}".lower()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.did)},
             name=coordinator.schema.name,

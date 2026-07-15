@@ -24,6 +24,7 @@ down with it.
 | Home Assistant integration | ✅ Built (`custom_components/jebao_local/`), not yet tested against a running HA instance |
 | Coexists with other HA integrations | ✅ Verified against a second real integration ([`aipai-light-ha`](https://github.com/markosharknz1/aipai-light-ha)) - no domain/dependency conflicts, see [`tests/test_ha_integration_compat.py`](tests/test_ha_integration_compat.py) |
 | Multi-product support | ✅ 29 WiFi-capable product schemas bundled (wavemakers, dosing pumps, lights, filters, pumps) - see [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) |
+| Tank dashboards | ✅ Lovelace dashboard + tank scripts ([`dashboards/`](dashboards/)) and a control-panel web app ([`www/jebao/designer.html`](www/jebao/designer.html)) for grouping pumps by tank, saving/cloning settings profiles, and feed mode with an auto-off timer |
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
 | Schedule programming (the 48 daily timer slots) | ❌ Decodable, not yet exposed as an HA entity |
 
@@ -80,11 +81,27 @@ the integration itself (config flow UX, entity behavior end-to-end) hasn't
 been exercised inside a running HA. Treat it as a strong starting point,
 not a finished product - see [SPEC.md](SPEC.md) Phase 7 for context.
 
+### Tank dashboards
+
+`dashboards/jebao-dashboard.yaml` groups your pumps into tanks (edit the
+example `did`s for your own) and embeds a control panel; `dashboards/
+jebao-tank-scripts.yaml` adds one-tap tank-wide on/off and a feed-mode
+script with a server-side auto-off timer. Copy `www/jebao/designer.html`
+into your HA config's `www/` folder to serve the control panel itself at
+`/local/jebao/designer.html` - it lets you save named tank groups and
+settings profiles (wave mode/flow/frequency) in the browser and clone a
+profile across every pump in a tank with one click, entirely client-side
+against HA's REST API (a Long-Lived Access Token, from your HA profile
+page, is all it needs). See the comments at the top of each dashboards/
+file for the entity_id pattern and how to adapt them to your own pumps.
+
 ## Project layout
 
 ```
 jebao_gizwits/              Core Python library (protocol, discovery, session, schema, control)
 custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwits + bundles 29 product schemas)
+dashboards/                 Lovelace dashboard + tank scripts for grouping pumps by tank
+www/jebao/designer.html     Control-panel web app: tank groups, cloneable settings profiles, feed timer
 fixtures/                   Real captured bytes used as ground truth (discovery replies, status reads, write frames)
   captured_writes/          Real write frames captured from the vendor app's own debug log - the ground truth for the write protocol
   product_schemas/          All 42 product schemas extracted from the vendor app (WiFi + Bluetooth)
