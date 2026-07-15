@@ -22,6 +22,7 @@ down with it.
 | Write numeric attributes (flow %, frequency %, etc.) | ✅ Working, verified live |
 | Write boolean/enum attributes (power on/off, mode, feed switch) | ✅ Encoding verified against real captured frames; power on/off confirmed live |
 | Home Assistant integration | ✅ Built (`custom_components/jebao_local/`), not yet tested against a running HA instance |
+| Coexists with other HA integrations | ✅ Verified against a second real integration ([`aipai-light-ha`](https://github.com/markosharknz1/aipai-light-ha)) - no domain/dependency conflicts, see [`tests/test_ha_integration_compat.py`](tests/test_ha_integration_compat.py) |
 | Multi-product support | ✅ 29 WiFi-capable product schemas bundled (wavemakers, dosing pumps, lights, filters, pumps) - see [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) |
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
 | Schedule programming (the 48 daily timer slots) | ❌ Decodable, not yet exposed as an HA entity |
