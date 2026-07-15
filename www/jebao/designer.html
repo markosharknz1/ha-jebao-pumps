@@ -253,14 +253,19 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
 
 <script>
 "use strict";
-// ---- wave mode options (raw values are what the device's Mode select
-// entity actually expects - the schema's enum strings are Chinese, so we
-// show a bilingual label but send the raw value) ----
+// ---- wave mode options ----
+// `value` is NOT cosmetic - it's the literal option string the device's
+// Mode select entity expects (select.py passes the schema's raw enum_values
+// straight through, unmodified, as _attr_options - see custom_components/
+// jebao_local/select.py and jebao_gizwits/schema.py). The schema's enum
+// strings are Chinese; the label below is just what the human sees, kept
+// in sync 1:1 with the value order so switching label language never
+// touches what actually gets sent to the pump.
 const MODES = [
-  {value:"经典造浪", label:"Classic wave (经典造浪)"},
-  {value:"正弦造浪", label:"Sine wave (正弦造浪)"},
-  {value:"随机造浪", label:"Random wave (随机造浪)"},
-  {value:"恒流造浪", label:"Constant flow (恒流造浪)"},
+  {value:"经典造浪", label:"Classic wave"},
+  {value:"正弦造浪", label:"Sine wave"},
+  {value:"随机造浪", label:"Random wave"},
+  {value:"恒流造浪", label:"Constant flow"},
 ];
 
 // ---- entity_id helpers (matches custom_components/jebao_local/entity.py's
@@ -558,13 +563,14 @@ function tankDids(){ const t=activeTank(); return t ? t.pumps.map(p=>p.did) : ["
 function updateExports(){
   const dids=tankDids();
   const p=currentProfile();
+  const modeLabel=(MODES.find(m=>m.value===p.mode)||{}).label||"";
   document.getElementById("exProfile").textContent =
 `action: select.select_option
 target:
   entity_id:
 ${dids.map(d=>`    - ${eidSelectMode(d)}`).join("\n")}
 data:
-  option: "${p.mode}"
+  option: "${p.mode}"  # ${modeLabel}
 ---
 action: number.set_value
 target:
