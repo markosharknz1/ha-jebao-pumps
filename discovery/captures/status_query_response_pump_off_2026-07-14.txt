@@ -1,0 +1,56 @@
+Capture date: 2026-07-14
+Device: Jebao wavemaker pump, IP 192.168.1.77, MAC 24-ec-4a-ee-a4-d4
+Device state at capture time: powered/paired, output off (SwitchON=false)
+Transport: TCP, device_ip:12416
+Product key: 54114ccdac1e41c0bb17e222887c07ba
+Gizwits device_id: QP50gPt5I8h4mFKIo0ENIK
+Captured by: discovery/test_gizwits_lan.py, live run against real hardware
+
+--- UDP discovery response (broadcast to 255.255.255.255:12414, payload 0000000303000003) ---
+RX from 192.168.1.77:12414 (127 bytes):
+000000037a00000400165150353067507435493868346d464b496f30454e494b0006$ecJeea4d4000834443330513239002035343131346363646163316534316330626231376532323238383763303762610000000000000002757361706... (see live console output for exact bytes; re-run test_udp_discovery.py to reproduce)
+
+--- Step 1: TX 0x0006 (get binding key) ---
+TX: 0000000303000006
+RX (20 bytes): 000000030f000007000a4a594158585447534e48
+binding_key extracted: 000a4a594158585447534e48
+
+--- Step 2: TX 0x0008 + binding_key ---
+TX: 000000030f000008000a4a594158585447534e48
+RX (9 bytes): 0000000304000009 00   (ack, command 0x0009)
+
+--- Step 3: TX 0x0093 + 0000000202 (status query) ---
+TX: 00000003080000930000000202
+
+RX, total 457 bytes across 2 reads, containing 3 framed messages:
+  msg1: offset=0   len=4   flag=00 command=0062 payload=00
+  msg2: offset=9   len=4   flag=00 command=0009 payload=00
+  msg3: offset=18  len=433 flag=01 command=0094 payload (430 bytes, this is the device status):
+    0000000200165150353067507435493868346d464b496f30454e494b0302411e1f0a645f000000000001645f00eeee...(repeated 0xee padding to end)...000000000000000000
+
+Full raw hex of msg3 payload (430 bytes) is reproducible by re-running discovery/test_gizwits_lan.py against the live pump.
+
+--- Parsed against reference model 54114ccdac1e41c0bb17e222887c07ba.json ---
+  SwitchON: False
+  PulseTide: False
+  FeedSwitch: False
+  TimerON: False
+  Mode: 经典造浪 (Classic Wave / Square Wave)
+  Linkage: 独立 (Independent)
+  Flow: 0
+  Frequency: 2
+  FeedTime: 0
+  Fault_Overcurrent: False
+  Fault_Overvoltage: True    <- SUSPECT: byte_offset 400 lands in 0xee padding region, not real fault data
+  Fault_OverTemp: True       <- SUSPECT: same
+  Fault_Undervoltage: True   <- SUSPECT: same
+  Fault_Lockedrotor: False
+  Fault_no_liveload: True    <- SUSPECT: same
+  Fault_UART: True           <- SUSPECT: same
+
+Note: 0xee = 0b11101110 exactly matches the pattern of "true" bits read at
+byte_offset 400 (bits 1,2,3,5,6,7 set, bits 0,4 clear) — strong evidence the
+fault flags are being read from padding filler bytes, not real fault status.
+The model's byte_offset for the fault block is likely wrong for this exact
+firmware/message length, or faults live in a different message entirely.
+Not blocking for Phase 1 gate; flag for Phase 2 datapoint verification.

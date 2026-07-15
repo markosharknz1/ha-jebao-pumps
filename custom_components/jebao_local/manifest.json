@@ -1,0 +1,13 @@
+{
+  "domain": "jebao_local",
+  "name": "Jebao Local",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/markosharknz1/jebao-local-control",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/markosharknz1/jebao-local-control/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

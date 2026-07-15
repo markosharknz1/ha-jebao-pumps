@@ -1,0 +1,422 @@
+[
+  {
+    "product_key": "9cb3ec792e054c748eafe675469894e6",
+    "name_cn": "ATI_lights",
+    "name_en": "ATI Lights (third-party brand)",
+    "protocolType": "standard",
+    "num_attrs": 43,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "efc08baa6b0a4de38d4bc9bce04ad350",
+    "name_cn": "水族灯",
+    "name_en": "Aquarium Light",
+    "protocolType": "standard",
+    "num_attrs": 18,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "1588f1dd744a47a5a550b426d5e9cce2",
+    "name_cn": "水族灯WiFi_BLE",
+    "name_en": "Aquarium Light (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "6a5c47b3ea364ecb841b47f5997a1775",
+    "name_cn": "水族泵WIFI_BLE",
+    "name_en": "Aquarium Pump (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "02039876751049deb404d1d89221ec4b",
+    "name_cn": "水族泵_有AP校时",
+    "name_en": "Aquarium Pump (with AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "a4167c09ed81480c83bec3b334b7ec75",
+    "name_cn": "水草灯",
+    "name_en": "Aquatic Plant Light",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "cb5ef5c7f1994511bd0d5655c9789429",
+    "name_cn": "水草灯WiFi_BLE",
+    "name_en": "Aquatic Plant Light (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "386c9120642c4377911b3141e7c92e39",
+    "name_cn": "蓝牙水族灯",
+    "name_en": "Bluetooth Aquarium Light",
+    "protocolType": "var_len",
+    "num_attrs": 45,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "ef4649b70d9a4c0aac513df7c4803a2d",
+    "name_cn": "蓝牙水族泵",
+    "name_en": "Bluetooth Aquarium Pump",
+    "protocolType": "var_len",
+    "num_attrs": 66,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "684082625e0d4c16a16adf48f7c032b4",
+    "name_cn": "蓝牙水草灯",
+    "name_en": "Bluetooth Aquatic Plant Light",
+    "protocolType": "var_len",
+    "num_attrs": 45,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "64236a674d8342fcba0ffc5eb3965083",
+    "name_cn": "蓝牙缸外过滤器",
+    "name_en": "Bluetooth External Filter",
+    "protocolType": "var_len",
+    "num_attrs": 66,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "1d1720fa7d8346e78eebc7c99be7ae42",
+    "name_cn": "蓝牙喂食器",
+    "name_en": "Bluetooth Feeder",
+    "protocolType": "var_len",
+    "num_attrs": 22,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "d8be6d07e415444f834a91e9041e60db",
+    "name_cn": "蓝牙鱼缸喂食器",
+    "name_en": "Bluetooth Fish Tank Feeder",
+    "protocolType": "var_len",
+    "num_attrs": 22,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "48fc85f8cf83420489e0ae033b03216b",
+    "name_cn": "蓝牙淡水灯",
+    "name_en": "Bluetooth Freshwater Light",
+    "protocolType": "var_len",
+    "num_attrs": 45,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "a97b4d69bc7b41648a10cec4e285d919",
+    "name_cn": "蓝牙多头滴定泵",
+    "name_en": "Bluetooth Multi-Head Dosing Pump",
+    "protocolType": "var_len",
+    "num_attrs": 42,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "e7b4649fdf8d413ba0a60d57fdde7101",
+    "name_cn": "蓝牙户外水泵",
+    "name_en": "Bluetooth Outdoor Water Pump",
+    "protocolType": "var_len",
+    "num_attrs": 66,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "035d465e0531422195bab05bd478cd03",
+    "name_cn": "蓝牙简易水族灯",
+    "name_en": "Bluetooth Simple Aquarium Light",
+    "protocolType": "var_len",
+    "num_attrs": 66,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "b9b1a9dfd90c49b08b88be84e7df9e6b",
+    "name_cn": "蓝牙水泵调速器",
+    "name_en": "Bluetooth Water Pump Speed Controller",
+    "protocolType": "var_len",
+    "num_attrs": 66,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "0bc0064708414a2593b2390ca9dbfff1",
+    "name_cn": "蓝牙造浪泵",
+    "name_en": "Bluetooth Wavemaker",
+    "protocolType": "var_len",
+    "num_attrs": 71,
+    "connectivity": "Bluetooth (BLE) only (by name)",
+    "lan_discoverable": false,
+    "note": ""
+  },
+  {
+    "product_key": "5b3c136fd4b74f3fb2a366a254c76c9a",
+    "name_cn": "滴定泵_无AP校时",
+    "name_en": "Dosing Pump (no AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 23,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "25c5b146791f465bbefdbfd312b9e8ea",
+    "name_cn": "滴定泵_有AP校时",
+    "name_en": "Dosing Pump (with AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 25,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "352beee71a4641cf823c314a46835a2c",
+    "name_cn": "缸外过滤器",
+    "name_en": "External (Hang-on/Canister) Filter",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "90b603b450c14b55b41e90724020203c",
+    "name_cn": "缸外过滤器WiFi_BLE",
+    "name_en": "External Filter (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "0cdca0490a1747f1b90aff0e1ae5293a",
+    "name_cn": "喂食器",
+    "name_en": "Feeder",
+    "protocolType": "standard",
+    "num_attrs": 22,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "8ec86278bf1f42d0a7a91c96c4aaaeed",
+    "name_cn": "淡水灯",
+    "name_en": "Freshwater Light",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "da46a2b19a2c44b2bdac61a871a25382",
+    "name_cn": "淡水灯WiFi_BLE",
+    "name_en": "Freshwater Light (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "cf4aaef856b84f6ea9cea29030eff19b",
+    "name_cn": "本地定时LED灯_无AP校时",
+    "name_en": "Local Timer LED Light (no AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 43,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "83139ec4bc7a406495a8a52aa6d3e75d",
+    "name_cn": "本地定时LED灯_有AP校时",
+    "name_en": "Local Timer LED Light (with AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 45,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "54114ccdac1e41c0bb17e222887c07ba",
+    "name_cn": "本地造浪泵_WIFI_BLE",
+    "name_en": "Local Wavemaker (WiFi+BLE) [THIS PROJECT'S PUMP]",
+    "protocolType": "standard",
+    "num_attrs": 71,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "f0d844ab0d4947ac9527a286160bc705",
+    "name_cn": "本地造浪泵_无AP校时",
+    "name_en": "Local Wavemaker (no AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 69,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "1d8c63eaccac4205b92c84d77d5a08fb",
+    "name_cn": "本地造浪泵_有AP校时",
+    "name_en": "Local Wavemaker (with AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 71,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "3b181431429e46029f850348869cc66f",
+    "name_cn": "多头WIFI滴定泵",
+    "name_en": "Multi-Head WiFi Dosing Pump",
+    "protocolType": "var_len",
+    "num_attrs": 42,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": "NAME says WiFi-capable but protocolType=var_len (usually a BLE signal) - exception to the general pattern, verify before assuming LAN support"
+  },
+  {
+    "product_key": "02a69eb3b44b4a60a2187cbdce76a04e",
+    "name_cn": "户外水泵",
+    "name_en": "Outdoor Water Pump",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "3e75dd53e5f44c3784d2fc655008fdf5",
+    "name_cn": "户外水泵WiFi_BLE",
+    "name_en": "Outdoor Water Pump (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "778ea24746c14a8886eee24ec7922412",
+    "name_cn": "单头滴定泵_无AP校时",
+    "name_en": "Single-Head Dosing Pump (no AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 12,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "031f8753d7ad47a4bf46d89b17f40282",
+    "name_cn": "单头滴定泵_有AP校时",
+    "name_en": "Single-Head Dosing Pump (with AP time-sync)",
+    "protocolType": "standard",
+    "num_attrs": 14,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "79325028f5754ffc811fcb2d4506c654",
+    "name_cn": "单头无线定时开关",
+    "name_en": "Single-Head Wireless Timer Switch",
+    "protocolType": "standard",
+    "num_attrs": 23,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "bd0febe99e724e3b8640ed955cd81972",
+    "name_cn": "水泵",
+    "name_en": "Water Pump",
+    "protocolType": "standard",
+    "num_attrs": 14,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "954b3e52aa5141539dfcaa2fff6c9e7f",
+    "name_cn": "水泵调速器",
+    "name_en": "Water Pump Speed Controller",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "35abf13fa5444553b4a7cd0d184f3430",
+    "name_cn": "水泵调速器WiFi_BLE",
+    "name_en": "Water Pump Speed Controller (WiFi+BLE)",
+    "protocolType": "standard",
+    "num_attrs": 66,
+    "connectivity": "WiFi + Bluetooth (dual mode, by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "f65982cb65da43baa0c722c84dd2740b",
+    "name_cn": "造浪泵",
+    "name_en": "Wavemaker (base/legacy)",
+    "protocolType": "standard",
+    "num_attrs": 19,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  },
+  {
+    "product_key": "db6a58856402414283ec174642629eea",
+    "name_cn": "无线定时开关",
+    "name_en": "Wireless Timer Switch",
+    "protocolType": "standard",
+    "num_attrs": 71,
+    "connectivity": "WiFi only (by name)",
+    "lan_discoverable": true,
+    "note": ""
+  }
+]

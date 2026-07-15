@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "discover": "Scan the local network for pumps",
+          "manual": "Enter an IP address manually"
+        }
+      },
+      "discover": {
+        "title": "Discovered devices",
+        "data": {
+          "device": "Select a device"
+        }
+      },
+      "manual": {
+        "title": "Manual setup",
+        "data": {
+          "host": "IP address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach a Jebao device at that address (checked with a directed LAN discovery packet)."
+    },
+    "abort": {
+      "already_configured": "This device is already configured.",
+      "unsupported_product": "This device's product_key ({product_key}) isn't in this integration's bundled schema list yet - see docs/SUPPORTED_MODELS.md."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Poll interval (seconds)"
+        }
+      }
+    }
+  }
+}

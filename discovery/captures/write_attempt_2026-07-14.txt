@@ -1,0 +1,48 @@
+Capture date: 2026-07-14
+Device: same wavemaker pump as status_query_response_pump_off_2026-07-14.txt
+Test: discovery/test_gizwits_write.py, experimental control write using the
+323-byte control-frame format from python-jebao (built for MDP-20000, a
+different Jebao product line), applied to this wavemaker as a hypothesis.
+
+Status BEFORE write: SwitchON=False (confirmed via known-good read path)
+
+TX (323 bytes total, first 30 shown):
+00000003bd02000093000000010100000000000000010100000000000000...
+  - header 00000003, length field 0xbd02 (LEB128) = 317
+  - byte8 = 0x93 (MSG_CONTROL_OR_EXTENDED_REQUEST, matches read-path's 0x93)
+  - bytes9-13 = sequence (0x00000001)
+  - byte13 = 0x01
+  - byte21 = 0x01 (opcode1, python-jebao's TURN_ON_OFF)
+  - byte22 = 0x01 (opcode2, python-jebao's "ON")
+
+RX, two separate messages:
+  msg A (411 bytes): header 00000003, LEB128 length [0x95,0x03]=405, flag=00,
+    command=0x0091 (MSG_DATA_RESPONSE_SIMPLE), payload starts
+    0402401e1f0a645f000000000001645f00ee... (looks like the "simple" 90/91
+    short-status pair, unsolicited)
+  msg B (36 bytes): header 00000003, length=0x1f=31, flag=0x01, command=0x0094
+    (MSG_CONTROL_RESPONSE_OR_EXTENDED_DATA), payload =
+    00 00 00 01 00 16 "QP50gPt5I8h4mFKIo0ENIK" (device_id echoed back) — looks
+    like a generic command-accepted ACK, NOT the full 430-byte status blob
+    seen on read queries.
+
+Status AFTER write: SwitchON=False (unchanged)
+
+Conclusion: the pump's firmware accepted and processed the 323-byte
+control-frame format without error/disconnection (responded with what looks
+like a legitimate protocol ACK, distinct from a read response) — so this
+frame *shape* is understood by this device. But opcode1=0x01/opcode2=0x01
+(MDP-20000's TURN_ON_OFF/ON) did not toggle SwitchON on this wavemaker unit.
+Expected: MDP (dosing) and MOW (wavemaker) product lines almost certainly use
+different opcode-to-attribute mappings for byte21/22/23/24, since their
+datapoint models are entirely different (dosing channels/ml vs
+flow%/frequency/mode/linkage).
+
+Determining the correct write opcodes for THIS wavemaker requires either:
+(a) a real packet capture of the Jebao Aqua app performing this exact action
+    (Phase 1B) — most reliable, ground truth
+(b) bounded brute-force of opcode1 values while polling status for a change
+    — feasible since read-verification already works, but is a bigger/riskier
+    action against real hardware than a single toggle test and needs explicit
+    go-ahead before attempting
+Not attempted in this session — deferred pending user decision.

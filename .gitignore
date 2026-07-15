@@ -1,0 +1,36 @@
+# Secrets - never commit
+.env
+captured_token.txt
+*.token
+
+# Raw packet captures can contain the rotating USER_TOKEN in HTTP headers
+# (confirmed: discovery/captures/pcapdroid_session3_..._decrypt_attempt.pcap
+# has one from an early TLS-decrypt attempt). The .csv connection-list and
+# .txt captures alongside it were checked and are clean (no token), so only
+# the capture formats that can carry raw headers are excluded here.
+*.pcap
+*.pcapng
+
+# Large reference/tooling material - reproducible via docs, not meant to be
+# committed (multi-GB: Ghidra, Android SDK, JDK, frida-server, cloned repos,
+# decompiled APK output). See README.md / SPEC.md for how to regenerate.
+tools/
+reference/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Emulator/adb artifacts left over from Frida investigation
+*.log
+tools/screen.png
+
