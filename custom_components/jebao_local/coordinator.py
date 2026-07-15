@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DID, CONF_PRODUCT_KEY, DISCOVERY_TIMEOUT, DOMAIN
+from .const import CONF_DID, CONF_MAC, CONF_PRODUCT_KEY, DISCOVERY_TIMEOUT, DOMAIN
 from .jebao_gizwits.discovery import discover
 from .jebao_gizwits.schema import DatapointSchema, load_by_product_key
 from .jebao_gizwits.session import GizwitsSession, ProtocolError
@@ -38,6 +38,10 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         self.host: str = entry.data["host"]
         self.did: str = entry.data[CONF_DID]
         self.product_key: str = entry.data[CONF_PRODUCT_KEY]
+        # Absent on entries created before this field was added - MAC is
+        # only used for the device page's "Connections" display (see
+        # entity.py), so it's fine for it to just not show up there.
+        self.mac: str | None = entry.data.get(CONF_MAC)
         self.schema: DatapointSchema = load_by_product_key(self.product_key)
         self._session: GizwitsSession | None = None
 

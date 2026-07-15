@@ -186,7 +186,11 @@ pre{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
           Tools → States (filter <code>jebao_</code>) is fastest, or Settings → Devices &amp;
           Services → Devices → the pump → click any entity. It's the part between
           <code>jebao_</code> and the attribute name, e.g. <code>switch.jebao_<b>&lt;did&gt;</b>_switchon</code>.
-          It's also shown directly in the config-flow discovery list when you first add the pump.</p>
+          It's also shown directly in the config-flow discovery list when you first add the pump.
+          If you have several identical pumps and can't tell which is which, the pump's MAC
+          address is shown on its HA device page (Settings → Devices &amp; Services → Devices →
+          the pump, under "Connections") - cross-reference that against your router's client
+          list to find the physical unit, then give it a memorable label below.</p>
         <div style="border-top:1px solid var(--line);margin:16px 0 4px"></div>
         <div class="two">
           <input id="tankName" placeholder="Tank name, e.g. Display">

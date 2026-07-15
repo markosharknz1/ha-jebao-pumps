@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_DID, CONF_PRODUCT_KEY, DEFAULT_SCAN_INTERVAL, DISCOVERY_TIMEOUT, DOMAIN
+from .const import CONF_DID, CONF_MAC, CONF_PRODUCT_KEY, DEFAULT_SCAN_INTERVAL, DISCOVERY_TIMEOUT, DOMAIN
 from .jebao_gizwits.discovery import DiscoveredDevice, discover, discover_one
 from .jebao_gizwits.schema import known_product_keys, load_by_product_key
 
@@ -91,6 +91,7 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: device.ip,
                 CONF_DID: device.did,
                 CONF_PRODUCT_KEY: device.product_key,
+                CONF_MAC: device.mac_hex,
             },
             options={"scan_interval": DEFAULT_SCAN_INTERVAL},
         )

@@ -15,6 +15,12 @@ All notable changes to this project are documented here.
   name, which HA's slugify could mangle unpredictably. Also added English
   display names for the common pump attributes via HA's entity
   translations.
+- **MAC address now shows on the device page** (Settings → Devices &
+  Services → Devices → the pump → Connections), for cross-referencing
+  against a router's client list when you have several identical pumps.
+  `did` stays the identifier HA uses internally (unique_id, entity_ids) -
+  the MAC is purely a UI convenience, previously captured during discovery
+  but discarded.
 
 ## 0.1.0
 
