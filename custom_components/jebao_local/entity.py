@@ -37,9 +37,9 @@ class JebaoLocalEntity(CoordinatorEntity[JebaoLocalCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.did)},
             connections=connections,
-            name=coordinator.schema.name,
+            name=coordinator.schema.name_en,
             manufacturer="Jebao",
-            model=coordinator.schema.name,
+            model=coordinator.schema.name_en,
             configuration_url=f"http://{coordinator.host}:{TCP_PORT}",
         )
 

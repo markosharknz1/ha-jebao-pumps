@@ -50,6 +50,7 @@ class Attr:
 @dataclass(frozen=True)
 class DatapointSchema:
     name: str
+    name_en: str
     product_key: str
     packet_version: str
     protocol_type: str
@@ -152,6 +153,13 @@ def load(path: str | Path) -> DatapointSchema:
 
     return DatapointSchema(
         name=data["name"],
+        # The vendor's own schema only carries a Chinese product name - name_en
+        # is this project's own addition (see docs/product_catalog.json),
+        # bundled directly in the schema JSON so HA's device name/config entry
+        # title default to something readable without extra lookup plumbing.
+        # Falls back to the Chinese name for any schema file that predates
+        # this field (e.g. a hand-authored one).
+        name_en=data.get("name_en", data["name"]),
         product_key=data["product_key"],
         packet_version=data["packetVersion"],
         protocol_type=data["protocolType"],

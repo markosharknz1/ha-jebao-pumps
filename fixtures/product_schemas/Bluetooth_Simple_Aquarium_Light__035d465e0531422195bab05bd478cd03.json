@@ -1,5 +1,6 @@
 {
     "name": "蓝牙简易水族灯",
+    "name_en": "Bluetooth Simple Aquarium Light",
     "packetVersion": "0x00000004",
     "protocolType": "var_len",
     "product_key": "035d465e0531422195bab05bd478cd03",

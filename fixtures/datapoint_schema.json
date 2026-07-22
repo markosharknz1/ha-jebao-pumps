@@ -1,5 +1,6 @@
 {
   "name": "本地造浪泵_WIFI_BLE",
+  "name_en": "Local Wavemaker (WiFi+BLE)",
   "packetVersion": "0x00000004",
   "protocolType": "standard",
   "product_key": "54114ccdac1e41c0bb17e222887c07ba",

@@ -86,7 +86,7 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = load_by_product_key(device.product_key)
         return self.async_create_entry(
-            title=schema.name,
+            title=schema.name_en,
             data={
                 CONF_HOST: device.ip,
                 CONF_DID: device.did,
