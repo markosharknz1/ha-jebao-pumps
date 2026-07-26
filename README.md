@@ -24,7 +24,8 @@ down with it.
 | Home Assistant integration | ✅ Built (`custom_components/jebao_local/`), not yet tested against a running HA instance |
 | Coexists with other HA integrations | ✅ Verified against a second real integration ([`aipai-light-ha`](https://github.com/markosharknz1/aipai-light-ha)) - no domain/dependency conflicts, see [`tests/test_ha_integration_compat.py`](tests/test_ha_integration_compat.py) |
 | Multi-product support | ✅ 29 WiFi-capable product schemas bundled (wavemakers, dosing pumps, lights, filters, pumps) - see [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) |
-| Tank dashboards | ✅ Lovelace dashboard + tank scripts ([`dashboards/`](dashboards/)) and a control-panel web app ([`www/jebao/designer.html`](www/jebao/designer.html)) for grouping pumps by tank, saving/cloning settings profiles, and feed mode with an auto-off timer |
+| Native Lovelace card | ✅ `custom:jebao-pump-card` - add from the card picker with zero YAML; auto-discovers your pumps and only shows the controls each one actually has |
+| Tank dashboards | ✅ Example Lovelace dashboard + tank scripts ([`dashboards/`](dashboards/)) and a Control panel for managing several pumps at once (tank groups, cloneable settings profiles, feed mode with a timer) - both bundled inside the integration, no separate file copying |
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
 | Schedule programming (the 48 daily timer slots) | ❌ Decodable, not yet exposed as an HA entity |
 
@@ -81,29 +82,34 @@ the integration itself (config flow UX, entity behavior end-to-end) hasn't
 been exercised inside a running HA. Treat it as a strong starting point,
 not a finished product - see [SPEC.md](SPEC.md) Phase 7 for context.
 
-### Tank dashboards
+### Dashboards and the native card
 
-`dashboards/jebao-dashboard.yaml` groups your pumps into tanks (edit the
-example `did`s for your own) and embeds a control panel; `dashboards/
-jebao-tank-scripts.yaml` adds one-tap tank-wide on/off and a feed-mode
-script with a server-side auto-off timer. Copy `www/jebao/designer.html`
-into your HA config's `www/` folder to serve the control panel itself at
-`/local/jebao/designer.html` - it lets you save named tank groups and
-settings profiles (wave mode/flow/frequency) in the browser and clone a
-profile across every pump in a tank with one click, entirely client-side
-against HA's REST API (a Long-Lived Access Token, from your HA profile
-page, is all it needs). See the comments at the top of each dashboards/
-file for the entity_id pattern and how to adapt them to your own pumps -
-or see [dashboards/README.md](dashboards/README.md) for a full step-by-step
-install guide.
+Add a **Jebao Pump** card from Lovelace's own card picker (Edit dashboard →
+Add Card → search "Jebao Pump") and it's done - no YAML, no entity picking.
+It discovers every pump the integration knows about and only renders the
+controls each one actually supports (power, wave mode, flow, frequency,
+feed mode with a timer). Scope one to a specific pump with an optional
+`dids: [...]` list if you want one card per tank.
+
+`dashboards/jebao-dashboard.yaml` is a ready-made example dashboard using
+that card, with pumps grouped into tank sections and an embedded Control
+panel view; `dashboards/jebao-tank-scripts.yaml` adds one-tap tank-wide
+on/off and a feed-mode script with a server-side auto-off timer. The
+Control panel (a separate tool for managing *several* pumps at once - named
+tank groups, settings profiles you save once and clone across a tank) is
+also bundled in and served automatically at `/jebao_local/designer.html` -
+no file copying, on HACS or a manual install alike. See
+[dashboards/README.md](dashboards/README.md) for the full guide.
 
 ## Project layout
 
 ```
 jebao_gizwits/              Core Python library (protocol, discovery, session, schema, control)
 custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwits + bundles 29 product schemas)
-dashboards/                 Lovelace dashboard + tank scripts for grouping pumps by tank
-www/jebao/designer.html     Control-panel web app: tank groups, cloneable settings profiles, feed timer
+  lovelace/jebao-pump-card.js    Native Lovelace card - auto-registered, zero YAML required
+  panel/designer.html            Control panel: tank groups, cloneable settings profiles, feed timer
+  panel.py                       Serves both of the above and registers the card/sidebar panel
+dashboards/                 Example Lovelace dashboard + tank scripts for grouping pumps by tank
 fixtures/                   Real captured bytes used as ground truth (discovery replies, status reads, write frames)
   captured_writes/          Real write frames captured from the vendor app's own debug log - the ground truth for the write protocol
   product_schemas/          All 42 product schemas extracted from the vendor app (WiFi + Bluetooth)

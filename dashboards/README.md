@@ -1,48 +1,54 @@
 # Tank dashboards — install guide
 
-Three files, three separate installs. All of it is optional on top of the
-core `jebao_local` integration - skip anything you don't want.
+Everything below is optional on top of the core `jebao_local` integration -
+skip anything you don't want. Nothing here needs a separate file copy
+anymore: the native card and the Control panel are both bundled inside
+`custom_components/jebao_local/` and register themselves automatically the
+moment the integration loads, whether you installed it via HACS or by
+copying the folder by hand. (Earlier versions of this project shipped the
+Control panel in a separate `www/` folder that HACS could never actually
+deliver - fixed now, see `CHANGELOG.md`.)
 
-| File | What it is |
+| What | What it is |
 |---|---|
-| [`jebao-dashboard.yaml`](jebao-dashboard.yaml) | Lovelace dashboard - pumps grouped into tank sections, plus an embedded Control panel view |
+| `custom:jebao-pump-card` | A native Lovelace card, added from the card picker with **zero YAML** - it discovers your pumps itself and only shows the controls each one actually has |
+| [`jebao-dashboard.yaml`](jebao-dashboard.yaml) | An example dashboard using that card, with pumps grouped into tank sections, plus an embedded Control panel view |
 | [`jebao-tank-scripts.yaml`](jebao-tank-scripts.yaml) | HA `script:` entries - tank-wide on/off, and feed mode with a timer that survives closing the browser |
-| [`../www/jebao/designer.html`](../www/jebao/designer.html) | The Control panel itself - a standalone page for tank groups, cloneable settings profiles, and a feed-now button |
+| Control panel (`/jebao_local/designer.html`) | A separate, complementary tool for managing *several* pumps at once: named tank groups, settings profiles you save once and clone across a tank |
 
 **Prerequisite:** `jebao_local` itself is already installed (see the main
 [README](../README.md#quick-start-home-assistant)) and at least one pump has
 been added via its config flow.
 
-## 1. Install the Control panel page
+## The fast path: just add the card
 
-Copy the file into your HA config's `www/` folder, preserving the `jebao/`
-subfolder so it's served at `/local/jebao/designer.html`:
+Open any dashboard → **Edit** → **Add Card** → search **"Jebao Pump"** →
+add it. That's it - no config, no entity picking. It'll show every pump HA
+knows about, with only the controls each one actually supports (a dosing
+pump with no Feed mode just won't show that section).
 
+To scope a card to specific pumps (e.g. one card per tank), edit the card
+in the visual editor's YAML mode and add a `dids:` list:
+
+```yaml
+type: custom:jebao-pump-card
+dids: ["qp50gpt5i8h4mfkio0enik"]
 ```
-<homeassistant config dir>/
-  www/
-    jebao/
-      designer.html      <- copy it here
-```
 
-No restart needed - HA serves `www/` live. Open
-`http://<your-ha-host>:8123/local/jebao/designer.html` directly to confirm
-it loads before wiring it into a dashboard.
+`<did>` is the pump's device id (lowercased) - find it in any of its
+entity_ids (Developer Tools → States, filter `jebao_` is fastest), or in
+the config-flow discovery list from when you first added it.
 
-## 2. Add the Lovelace dashboard
+## The full example dashboard (tank sections + Control panel)
 
-Settings → Dashboards → **Add dashboard** → open it → top-right ⋮ → **Edit
-dashboard** → ⋮ → **Raw configuration editor** → paste in the contents of
-[`jebao-dashboard.yaml`](jebao-dashboard.yaml).
+If you want the tank-grouped layout with quick-action buttons and the
+embedded Control panel view ready-made: Settings → Dashboards → **Add
+dashboard** → open it → top-right ⋮ → **Edit dashboard** → ⋮ → **Raw
+configuration editor** → paste in the contents of
+[`jebao-dashboard.yaml`](jebao-dashboard.yaml), then edit the example
+`did`s for your own pumps.
 
-Then edit it for your own pumps: the file ships with one real example
-entity set (`qp50gpt5i8h4mfkio0enik`, wired to whichever pump this project
-was built against) and one placeholder "Frag tank" section. Duplicate the
-grid-section pattern per tank, and swap in your own pumps' `did`s. See the
-comment block at the top of the file for the exact entity_id pattern and
-how to find a pump's `did`.
-
-## 3. Add the tank scripts (optional, for tank-wide on/off and a reliable feed timer)
+## Tank scripts (optional, for tank-wide on/off and a reliable feed timer)
 
 Open [`jebao-tank-scripts.yaml`](jebao-tank-scripts.yaml), edit the example
 `did` to match your own pump(s) (duplicate the pattern for more tanks - see
@@ -59,27 +65,34 @@ scripts). Reload scripts (Developer Tools → YAML → Scripts, or restart HA),
 then the `script.<name>` entities referenced by the dashboard's "Display
 tank actions" card will exist.
 
-## 4. Get a Long-Lived Access Token for the Control panel
+## The Control panel (optional, for managing several pumps at once)
 
-The Control panel's Apply/Clone-to-tank/Feed-now buttons call HA's REST API
-directly from your browser - they need a token to authenticate:
+The native card is per-tank/per-pump; the Control panel is a separate tool
+for batch operations across many pumps - named tank groups, and settings
+profiles (wave mode/flow/frequency) you save once and clone onto every pump
+in a tank with one click. It's a standalone page, not a native card, so
+unlike the card above it needs a Long-Lived Access Token to call HA's REST
+API from your browser:
 
 Your HA user profile (click your name, bottom-left) → scroll to
 **Long-Lived Access Tokens** → **Create Token** → paste it into the Control
 panel's Setup tab. It's stored in that browser's `localStorage` only - never
-sent anywhere except your own HA instance.
-
-Leave the **HA base URL** field blank if you're opening the page through
-`/local/jebao/designer.html` from inside HA itself (same origin); fill it
-in only if you're opening the file some other way.
+sent anywhere except your own HA instance. Leave the **HA base URL** field
+blank if you're opening the panel from inside HA itself (same origin,
+`/jebao_local/designer.html` - reachable from the dashboard's Control panel
+view, or your sidebar if this HA version supports the iframe panel type);
+fill it in only if you're opening the page some other way.
 
 ## Known gap
 
-None of this - the dashboard, the scripts, or the Control panel's live HA
-calls - has been exercised against a running Home Assistant instance yet,
-because `jebao_local` itself hasn't (see the main README's Status table).
-The entity_id pattern is verified correct against the integration's actual
-code, and the Control panel's own tank/profile/timer logic was verified in
-a real browser (see `SPEC.md` Phase 8), but the HA-connected parts are
+None of this - the native card, the dashboard, the scripts, or the Control
+panel's live HA calls - has been exercised against a running Home Assistant
+instance yet, because `jebao_local` itself hasn't (see the main README's
+Status table). The card's rendering/feature-detection logic and the Control
+panel's tank/profile/timer logic were both verified against a mocked `hass`
+object in a real browser (see `SPEC.md`), but the actual HA-connected parts
+- the card's `hass.callService` calls, the panel's REST calls, and the
+Lovelace-resource/sidebar-panel auto-registration in `panel.py` - are
 untested end-to-end. Treat the install steps above as correct, but watch
-for surprises the first time you actually click a button that talks to HA.
+for surprises the first time you actually click a button that talks to a
+real HA instance.

@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import JebaoLocalCoordinator
+from .panel import async_register_card, async_register_panel
 
 PLATFORMS = [Platform.SWITCH, Platform.SELECT, Platform.NUMBER, Platform.BINARY_SENSOR]
 
@@ -25,6 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Idempotent (checked internally) - safe to call for every config entry,
+    # including the second/third pump added to the same HA instance.
+    await async_register_card(hass)
+    await async_register_panel(hass)
     return True
 
 

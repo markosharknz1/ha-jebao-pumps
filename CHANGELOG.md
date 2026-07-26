@@ -4,12 +4,26 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Native Lovelace card** (`custom:jebao-pump-card`): add it from the card
+  picker with zero YAML. It discovers this integration's pumps itself (via
+  HA's entity/device registries, with a fallback for older frontends) and
+  only renders the controls each pump's own entities actually support -
+  power, wave mode, flow, frequency, and feed mode with a live countdown
+  timer. No token needed - it calls HA's own switch/select/number services
+  as the logged-in user. Bundled and auto-registered by `panel.py`
+  (`async_register_card`), which also injects it as a Lovelace resource on
+  startup so there's no manual "Settings > Dashboards > Resources" step.
+- **Fixed a real HACS-delivery bug**: the Control panel (the tank-grouping/
+  settings-profile tool) originally shipped in `www/jebao/designer.html`,
+  outside `custom_components/` - but HACS only ever copies
+  `custom_components/`, so a HACS install would never have actually
+  delivered that file. Moved it to `custom_components/jebao_local/panel/
+  designer.html`, served (and given a sidebar entry where supported) by the
+  same `panel.py`, so both HACS and manual installs deliver it correctly.
 - **Tank dashboards**: `dashboards/jebao-dashboard.yaml` (Lovelace, pumps
-  grouped into tank sections) and `dashboards/jebao-tank-scripts.yaml`
-  (tank-wide on/off, feed mode with an auto-off timer). `www/jebao/
-  designer.html` is a control-panel web app for saving named tank groups
-  and settings profiles (wave mode/flow/frequency) and cloning a profile
-  across a tank with one click.
+  grouped into tank sections, now using the native card) and `dashboards/
+  jebao-tank-scripts.yaml` (tank-wide on/off, feed mode with an auto-off
+  timer).
 - **Entity IDs are now stable and ASCII** (`switch.jebao_<did>_switchon`,
   etc.) instead of being derived from the vendor's often non-ASCII product
   name, which HA's slugify could mangle unpredictably. Also added English

@@ -4,34 +4,34 @@
 #   Settings → Dashboards → Add dashboard → (open it) → top-right ⋮ →
 #   Edit dashboard → ⋮ → Raw configuration editor → paste this in.
 #
-#   Also copy www/jebao/designer.html into your HA config's www/ folder
-#   (so it's served at /local/jebao/designer.html) if you want the embedded
-#   Control panel view below, or the standalone tank-grouping/profile-clone/
-#   feed-timer tool it provides.
+#   Nothing else to install - the native card (custom:jebao-pump-card) and
+#   the Control panel below are both bundled inside the jebao_local
+#   integration itself and register themselves automatically (as a Lovelace
+#   resource and a static path respectively) the moment the integration
+#   loads, whether you installed it via HACS or by copying
+#   custom_components/jebao_local/ by hand. No "Settings > Dashboards >
+#   Resources" step, no separate www/ folder to manage.
 #
 # ADAPT IT
 #   * Group your pumps into tanks by editing the sections/views below.
-#   * Entity IDs follow the pattern:
-#         switch.jebao_<did>_switchon      (power)
-#         switch.jebao_<did>_feedswitch    (feed mode)
-#         select.jebao_<did>_mode          (wave pattern)
-#         number.jebao_<did>_flow
-#         number.jebao_<did>_frequency
-#         number.jebao_<did>_feedtime      (feed duration, minutes)
-#     <did> is the pump's device id (lowercased) - find it in any of its
+#   * Each card is `type: custom:jebao-pump-card` with an optional `dids:`
+#     list scoping it to specific pumps - omit `dids` entirely and a card
+#     shows every jebao_local pump HA knows about (handy for a quick
+#     one-card overview, see the bottom of the Overview view below).
+#   * The card reads each pump's own entities to decide what to show - a
+#     dosing pump with no Feed mode/Wave mode just won't render those rows,
+#     no configuration needed on your part.
+#   * <did> is the pump's device id (lowercased) - find it in any of its
 #     entity_ids (Developer Tools → States, filter "jebao_" is fastest, or
 #     Settings → Devices & Services → Devices → the pump → click any
 #     entity). It's also shown directly in the config-flow discovery list
 #     when you first add the pump. The example did below
 #     (qp50gpt5i8h4mfkio0enik) is a real pump from this project's own
 #     testing - replace it with yours.
-#     Not every Jebao product exposes every entity above (e.g. dosing pumps
-#     don't have FeedSwitch/FeedTime) - HA will just skip cards for entities
-#     that don't exist for a given device.
 # ---------------------------------------------------------------------------
 title: Jebao Pumps
 views:
-  # ---- OVERVIEW: tanks as sections, a compact card per pump ----
+  # ---- OVERVIEW: tanks as sections, a native card per tank ----
   - title: Overview
     path: overview
     type: sections
@@ -43,24 +43,8 @@ views:
             heading: Display tank
             heading_style: title
             icon: mdi:fishbowl
-          - type: entities
-            title: Pump qp50gpt5i8h4mfkio0enik
-            state_color: true
-            entities:
-              - entity: switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
-                name: Power
-              - entity: select.jebao_qp50gpt5i8h4mfkio0enik_mode
-                name: Wave mode
-              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_flow
-                name: Flow
-              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_frequency
-                name: Frequency
-              - type: section
-                label: Feed mode
-              - entity: switch.jebao_qp50gpt5i8h4mfkio0enik_feedswitch
-                name: Feed mode
-              - entity: number.jebao_qp50gpt5i8h4mfkio0enik_feedtime
-                name: Feed duration (min)
+          - type: custom:jebao-pump-card
+            dids: ["qp50gpt5i8h4mfkio0enik"]
           # Quick actions for the whole tank (see jebao-tank-scripts.yaml):
           - type: entities
             title: Display tank actions
@@ -75,32 +59,36 @@ views:
                 name: Feed now (with timer)
                 icon: mdi:food-drumstick
 
-      # ---- Add more tanks by copying a grid section like this ----
+      # ---- Add more tanks by copying a grid section like this. A card
+      # with several dids stacks all of them in one card - one per tank
+      # works well; use a separate card per pump instead if you want them
+      # individually reorderable. ----
       - type: grid
         cards:
           - type: heading
             heading: Frag tank (example — edit dids)
             heading_style: title
             icon: mdi:fishbowl-outline
-          - type: entities
-            title: Pump 00000001
-            state_color: true
-            entities:
-              - entity: switch.jebao_00000001_switchon
-                name: Power
-              - entity: select.jebao_00000001_mode
-                name: Wave mode
-              - entity: number.jebao_00000001_flow
-                name: Flow
-              - entity: number.jebao_00000001_frequency
-                name: Frequency
+          - type: custom:jebao-pump-card
+            dids: ["00000001", "00000002"]
 
-  # ---- CONTROL PANEL (embedded designer: tank groups, settings
-  # profiles, clone-to-tank, feed timer) ----
+      # ---- Everything at once, no dids needed - useful as a fast overview
+      # while you're still deciding how to group tanks. ----
+      - type: grid
+        cards:
+          - type: heading
+            heading: All pumps
+            heading_style: title
+            icon: mdi:view-grid
+          - type: custom:jebao-pump-card
+
+  # ---- CONTROL PANEL (tank groups, settings profiles, clone-to-tank,
+  # feed timer - a separate multi-pump management tool, complementary to
+  # the per-tank cards above) ----
   - title: Control panel
     path: control
     icon: mdi:tune
     cards:
       - type: iframe
-        url: /local/jebao/designer.html
+        url: /jebao_local/designer.html
         aspect_ratio: 120%

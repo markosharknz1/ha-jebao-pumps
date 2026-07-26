@@ -79,7 +79,8 @@ def test_no_requirement_version_conflicts():
 
 
 def test_jebao_local_modules_import_cleanly():
-    for mod in ["entity", "coordinator", "config_flow", "switch", "select", "number", "binary_sensor"]:
+    importlib.import_module("custom_components.jebao_local")
+    for mod in ["entity", "coordinator", "config_flow", "switch", "select", "number", "binary_sensor", "panel"]:
         importlib.import_module(f"custom_components.jebao_local.{mod}")
 
 
