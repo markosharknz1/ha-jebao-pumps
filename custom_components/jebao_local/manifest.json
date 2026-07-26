@@ -3,7 +3,7 @@
   "name": "Jebao Local",
   "codeowners": ["@markosharknz1"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http", "frontend"],
   "documentation": "https://github.com/markosharknz1/jebao-local-ha",
   "integration_type": "device",
   "iot_class": "local_polling",
