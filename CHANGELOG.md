@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Pumps with a speed control now get a native `fan` entity** instead of a
+  separate switch + number - matches `jrigling/homeassistant-jebao`'s own
+  precedent for a different Jebao model, gets a proper speed-slider UI for
+  free, and (unlike `number`) `fan` entities are exposed to Google
+  Assistant's smart-home API with real speed control. Applies to 13 of the
+  29 bundled products - 9 with a single `Motor_Speed` attribute (clean 1:1
+  fit) and the 4 wavemaker variants, where `Flow` becomes the fan's speed
+  and `Frequency` (a pulse rate, not a speed) stays a separate `number`.
+  `fan.py`'s `fan_attr_names()` decides per-product; `switch.py`/`number.py`
+  exclude whatever a fan claims so there's no duplicate entity. The native
+  card and the Control panel (`fan.jebao_<did>_fan` vs.
+  `switch.jebao_<did>_switchon` + `number.jebao_<did>_flow`) both handle
+  either shape automatically.
 - **Native Lovelace card** (`custom:jebao-pump-card`): add it from the card
   picker with zero YAML. It discovers this integration's pumps itself (via
   HA's entity/device registries, with a fallback for older frontends) and

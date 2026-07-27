@@ -25,7 +25,13 @@ been added via its config flow.
 Open any dashboard → **Edit** → **Add Card** → search **"Jebao Pump"** →
 add it. That's it - no config, no entity picking. It'll show every pump HA
 knows about, with only the controls each one actually supports (a dosing
-pump with no Feed mode just won't show that section).
+pump with no Feed mode just won't show that section). Pumps with a single
+clear speed attribute (like this project's wavemaker - Flow) get a combined
+power+speed control backed by a native `fan` entity instead of a separate
+on/off switch and a slider; pumps with no speed attribute just get plain
+on/off. The card figures out which is which itself - this only matters if
+you're writing your own automations against the raw entity_ids instead of
+using the card (see `jebao-tank-scripts.yaml` for both patterns).
 
 To scope a card to specific pumps (e.g. one card per tank), edit the card
 in the visual editor's YAML mode and add a `dids:` list:

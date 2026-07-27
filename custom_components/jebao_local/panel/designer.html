@@ -273,11 +273,34 @@ const MODES = [
 // ---- entity_id helpers (matches custom_components/jebao_local/entity.py's
 // suggested_object_id: jebao_<did>_<attr name lowercased>) ----
 const eidSwitchPower = did => `switch.jebao_${did.toLowerCase()}_switchon`;
+const eidFan         = did => `fan.jebao_${did.toLowerCase()}_fan`;
 const eidSwitchFeed  = did => `switch.jebao_${did.toLowerCase()}_feedswitch`;
 const eidSelectMode  = did => `select.jebao_${did.toLowerCase()}_mode`;
 const eidNumberFlow  = did => `number.jebao_${did.toLowerCase()}_flow`;
 const eidNumberFreq  = did => `number.jebao_${did.toLowerCase()}_frequency`;
 const eidNumberFeedT = did => `number.jebao_${did.toLowerCase()}_feedtime`;
+
+// Pumps with a single clear speed attribute (Flow, or Motor_Speed on other
+// product lines) get a native `fan` entity instead of a separate switch +
+// number - see custom_components/jebao_local/fan.py. This panel talks to HA
+// over plain REST rather than the live `hass` object the native card gets,
+// so it can't ask HA's entity registry directly - it checks for the fan
+// entity's existence instead, and falls back to the older switch+number
+// pair if that 404s. Cached per did since it doesn't change at runtime.
+const _fanCache = new Map();
+async function hasFan(did){
+  if(_fanCache.has(did)) return _fanCache.get(did);
+  let has = false;
+  try{ const r=await fetch(haBase()+"/api/states/"+eidFan(did),{headers:haHeaders()}); has = r.ok; }catch(e){}
+  _fanCache.set(did, has);
+  return has;
+}
+async function partitionByFan(dids){
+  const flags = await Promise.all(dids.map(hasFan));
+  const fanDids=[], plainDids=[];
+  dids.forEach((d,i)=> (flags[i] ? fanDids : plainDids).push(d));
+  return {fanDids, plainDids};
+}
 
 // ---- state ----
 let state = { tank: null, feedTimer: null, feedDeadline: 0 };
@@ -505,7 +528,9 @@ async function tankPower(on){
   if(!haToken()) return o.textContent="Paste an access token first.";
   o.textContent = (on?"Turning ON ":"Turning OFF ")+tank.pumps.length+" pump(s)…";
   try{
-    await haCall("switch/turn_"+(on?"on":"off"), tank.pumps.map(p=>eidSwitchPower(p.did)));
+    const {fanDids, plainDids} = await partitionByFan(tank.pumps.map(p=>p.did));
+    if(fanDids.length) await haCall("fan/turn_"+(on?"on":"off"), fanDids.map(eidFan));
+    if(plainDids.length) await haCall("switch/turn_"+(on?"on":"off"), plainDids.map(eidSwitchPower));
     o.textContent = "Tank "+(on?"ON":"OFF")+".";
     refreshPumpStatuses();
   }catch(e){ o.textContent = String(e.message||e); o.style.color="var(--warn)"; }
@@ -518,8 +543,10 @@ async function cloneProfileToTank(){
   showProfileOut(`Applying to ${tank.pumps.length} pump(s)…`);
   try{
     const dids=tank.pumps.map(x=>x.did);
+    const {fanDids, plainDids} = await partitionByFan(dids);
     await haCall("select/select_option", dids.map(eidSelectMode), {option:p.mode});
-    await haCall("number/set_value", dids.map(eidNumberFlow), {value:p.flow});
+    if(fanDids.length) await haCall("fan/set_percentage", fanDids.map(eidFan), {percentage:p.flow});
+    if(plainDids.length) await haCall("number/set_value", plainDids.map(eidNumberFlow), {value:p.flow});
     await haCall("number/set_value", dids.map(eidNumberFreq), {value:p.frequency});
     showProfileOut(`Applied to ${tank.pumps.length} pump(s).`);
     refreshPumpStatuses();
@@ -532,10 +559,13 @@ async function loadFromPump(){
   const did=tank.pumps[0].did;
   showProfileOut(`Loading from ${did}…`);
   try{
-    const [mode, flow, freq] = await Promise.all([
-      haGetState(eidSelectMode(did)), haGetState(eidNumberFlow(did)), haGetState(eidNumberFreq(did)),
+    const isFan = await hasFan(did);
+    const [mode, freq, flowSource] = await Promise.all([
+      haGetState(eidSelectMode(did)), haGetState(eidNumberFreq(did)),
+      isFan ? haGetState(eidFan(did)) : haGetState(eidNumberFlow(did)),
     ]);
-    applyProfileToForm({mode: mode.state, flow: Math.round(+flow.state), frequency: Math.round(+freq.state)});
+    const flow = isFan ? (flowSource.attributes.percentage ?? 0) : flowSource.state;
+    applyProfileToForm({mode: mode.state, flow: Math.round(+flow), frequency: Math.round(+freq.state)});
     updateExports();
     showProfileOut(`Loaded current settings from ${did}.`);
   }catch(e){ showProfileOut("Load failed: "+(e.message||e),true); }
@@ -546,7 +576,8 @@ async function refreshPumpStatuses(){
   await Promise.all(tank.pumps.map(async (p,i)=>{
     const card=cards[i]; if(!card) return;
     try{
-      const s=await haGetState(eidSwitchPower(p.did));
+      const isFan = await hasFan(p.did);
+      const s=await haGetState(isFan ? eidFan(p.did) : eidSwitchPower(p.did));
       card.querySelector('[data-role="dot"]').classList.toggle("on", s.state==="on");
       card.querySelector('[data-role="status"]').textContent = "Power: "+s.state;
     }catch(e){ card.querySelector('[data-role="status"]').textContent = "Unreachable"; }
@@ -562,10 +593,33 @@ function bindApply(){
 
 // ---- exports ----
 function tankDids(){ const t=activeTank(); return t ? t.pumps.map(p=>p.did) : ["<did-1>","<did-2>"]; }
-function updateExports(){
+async function updateExports(){
   const dids=tankDids();
   const p=currentProfile();
   const modeLabel=(MODES.find(m=>m.value===p.mode)||{}).label||"";
+  // Real dids (an actual tank selected) get checked for a fan entity so the
+  // exported YAML matches what the pump actually has; the placeholder
+  // <did-1>/<did-2> dids shown with no tank selected can't be checked
+  // against anything real, so they fall back to the switch+number form.
+  const real = activeTank() ? dids : [];
+  const {fanDids, plainDids} = real.length ? await partitionByFan(real) : {fanDids:[], plainDids:dids};
+
+  const flowBlocks = [];
+  if(fanDids.length) flowBlocks.push(
+`action: fan.set_percentage
+target:
+  entity_id:
+${fanDids.map(d=>`    - ${eidFan(d)}`).join("\n")}
+data:
+  percentage: ${p.flow}`);
+  if(plainDids.length) flowBlocks.push(
+`action: number.set_value
+target:
+  entity_id:
+${plainDids.map(d=>`    - ${eidNumberFlow(d)}`).join("\n")}
+data:
+  value: ${p.flow}`);
+
   document.getElementById("exProfile").textContent =
 `action: select.select_option
 target:
@@ -574,12 +628,7 @@ ${dids.map(d=>`    - ${eidSelectMode(d)}`).join("\n")}
 data:
   option: "${p.mode}"  # ${modeLabel}
 ---
-action: number.set_value
-target:
-  entity_id:
-${dids.map(d=>`    - ${eidNumberFlow(d)}`).join("\n")}
-data:
-  value: ${p.flow}
+${flowBlocks.join("\n---\n")}
 ---
 action: number.set_value
 target:
@@ -610,11 +659,18 @@ target:
   entity_id:
 ${dids.map(d=>`    - ${eidSwitchFeed(d)}`).join("\n")}`;
 
-  document.getElementById("exPower").textContent =
+  const powerBlocks = [];
+  if(fanDids.length) powerBlocks.push(
+`action: fan.turn_on   # or fan.turn_off
+target:
+  entity_id:
+${fanDids.map(d=>`    - ${eidFan(d)}`).join("\n")}`);
+  if(plainDids.length) powerBlocks.push(
 `action: switch.turn_on   # or switch.turn_off
 target:
   entity_id:
-${dids.map(d=>`    - ${eidSwitchPower(d)}`).join("\n")}`;
+${plainDids.map(d=>`    - ${eidSwitchPower(d)}`).join("\n")}`);
+  document.getElementById("exPower").textContent = powerBlocks.join("\n---\n");
 }
 
 function bindCopy(){

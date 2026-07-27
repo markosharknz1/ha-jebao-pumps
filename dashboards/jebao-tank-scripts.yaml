@@ -4,36 +4,46 @@
 # reload scripts. They chain a whole tank's pumps together: one tap turns
 # them all on/off, or runs feed mode with an auto-off timer that keeps
 # working even if the Control panel page isn't open (unlike the designer's
-# own client-side countdown — see www/jebao/designer.html's note).
+# own client-side countdown - see custom_components/jebao_local/panel/
+# designer.html's note).
 #
-# Entity IDs follow switch.jebao_<did>_<attr> - see jebao-dashboard.yaml's
-# header comment for the full pattern and how to find a pump's did. The
-# example below uses a real pump from this project's own testing
-# (qp50gpt5i8h4mfkio0enik) - replace it with yours.
+# Two entity_id patterns show up below, and which one your pump uses
+# depends on whether it has a single clear speed attribute (Flow, or
+# Motor_Speed on other product lines):
+#   - fan.jebao_<did>_fan            - on/off AND speed together (fan.py)
+#   - switch.jebao_<did>_<attr>      - on/off only, no speed control
+# The native `custom:jebao-pump-card` figures this out for you automatically
+# (see the main dashboard file); these scripts can't ask the pump what it
+# has, so pick whichever pattern matches yours - see jebao-dashboard.yaml's
+# header comment for how to find a pump's did either way. The example below
+# uses a real pump from this project's own testing (qp50gpt5i8h4mfkio0enik,
+# which does have a fan entity - Flow is its speed).
 # ---------------------------------------------------------------------------
 
 display_tank_all_on:
   alias: Display tank — all on
   icon: mdi:power
   sequence:
-    - action: switch.turn_on
+    - action: fan.turn_on
       target:
         entity_id:
-          - switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
+          - fan.jebao_qp50gpt5i8h4mfkio0enik_fan
 
 display_tank_all_off:
   alias: Display tank — all off
   icon: mdi:power-off
   sequence:
-    - action: switch.turn_off
+    - action: fan.turn_off
       target:
         entity_id:
-          - switch.jebao_qp50gpt5i8h4mfkio0enik_switchon
+          - fan.jebao_qp50gpt5i8h4mfkio0enik_fan
 
 display_tank_feed_now:
   alias: Display tank — feed now
   icon: mdi:food-drumstick
   sequence:
+    # FeedSwitch/FeedTime are always plain switch/number entities regardless
+    # of whether the pump also has a fan entity - feed mode isn't a "speed".
     # Uses whatever duration is currently set on each pump's Feed duration
     # number entity (falls back to 5 minutes if it can't be read). Set it
     # first with number.set_value if you want a different duration than
@@ -62,12 +72,12 @@ display_tank_apply_storm_profile:
           - select.jebao_qp50gpt5i8h4mfkio0enik_mode
       data:
         option: "随机造浪"  # Random wave
-    - action: number.set_value
+    - action: fan.set_percentage
       target:
         entity_id:
-          - number.jebao_qp50gpt5i8h4mfkio0enik_flow
+          - fan.jebao_qp50gpt5i8h4mfkio0enik_fan
       data:
-        value: 90
+        percentage: 90
     - action: number.set_value
       target:
         entity_id:
@@ -76,14 +86,21 @@ display_tank_apply_storm_profile:
         value: 80
 
 # ---- Copy the pattern for other tanks ----
-# frag_tank_all_on:
+# frag_tank_all_on:                     # a pump WITH a fan entity (speed control)
 #   alias: Frag tank — all on
+#   sequence:
+#     - action: fan.turn_on
+#       target:
+#         entity_id:
+#           - fan.jebao_<frag-did-1>_fan
+#
+# fowlr_tank_all_on:                    # a pump WITHOUT one (on/off only)
+#   alias: FOWLR tank — all on
 #   sequence:
 #     - action: switch.turn_on
 #       target:
 #         entity_id:
-#           - switch.jebao_<frag-did-1>_switchon
-#           - switch.jebao_<frag-did-2>_switchon
+#           - switch.jebao_<fowlr-did-1>_switchon
 #
 # frag_tank_feed_now:
 #   alias: Frag tank — feed now

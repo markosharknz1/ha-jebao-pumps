@@ -9,16 +9,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
+from .fan import fan_attr_names
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: JebaoLocalCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # If this product got a fan entity (see fan.py), its speed attribute is
+    # controlled there instead of as a standalone number.
+    fan_attrs = fan_attr_names(coordinator.schema)
+    fan_speed_name = fan_attrs[1] if fan_attrs else None
     entities = [
         JebaoNumber(coordinator, attr.name)
         for attr in coordinator.schema.attrs
         if attr.writable and attr.data_type == "uint8" and attr.uint_spec is not None
+        and attr.name != fan_speed_name
     ]
     async_add_entities(entities)
 

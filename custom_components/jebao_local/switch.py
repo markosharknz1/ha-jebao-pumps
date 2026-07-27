@@ -11,16 +11,21 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
+from .fan import fan_attr_names
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: JebaoLocalCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # If this product got a fan entity (see fan.py), its power attribute is
+    # controlled there instead of as a standalone switch.
+    fan_attrs = fan_attr_names(coordinator.schema)
+    fan_switch_name = fan_attrs[0] if fan_attrs else None
     entities = [
         JebaoSwitch(coordinator, attr.name)
         for attr in coordinator.schema.attrs
-        if attr.writable and attr.data_type == "bool"
+        if attr.writable and attr.data_type == "bool" and attr.name != fan_switch_name
     ]
     async_add_entities(entities)
 

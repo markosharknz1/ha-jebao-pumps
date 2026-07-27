@@ -16,11 +16,14 @@
  *
  * No token, no YAML entity lists required for the common case - just add the
  * card with no config and it discovers everything itself. Writes go through
- * HA's own switch/select/number services, authenticated as the logged-in
- * dashboard user - there is nothing to configure.
+ * HA's own fan/switch/select/number services, authenticated as the logged-in
+ * dashboard user - there is nothing to configure. Pumps with a single clear
+ * speed attribute get a native `fan` entity (see fan.py) instead of a
+ * separate switch + number - the card renders that as a proper speed slider
+ * with a combined power/speed control, same as HA's own fan card would.
  */
 
-const ENTITY_RE = /^(switch|select|number|binary_sensor)\.jebao_([a-z0-9]+)_(.+)$/;
+const ENTITY_RE = /^(switch|select|number|binary_sensor|fan)\.jebao_([a-z0-9]+)_(.+)$/;
 
 // Cosmetic English labels for the wave-mode enum - the device's Mode select
 // only speaks these Chinese strings (see custom_components/jebao_local/
@@ -128,10 +131,23 @@ class JebaoPumpCard extends HTMLElement {
     return this._hass.callService(domain, service, data);
   }
 
+  // Pumps with a single clear speed attribute (Flow, or Motor_Speed on other
+  // product lines) get a native `fan` entity instead of a separate switch +
+  // number - see fan.py. Power and speed both route through it there;
+  // pumps without one still use the plain switch.
   _togglePower(pump) {
-    const id = pump.entities.switchon;
-    const on = this._state(id)?.state === "on";
-    this._call("switch", on ? "turn_off" : "turn_on", { entity_id: id });
+    const e = pump.entities;
+    if (e.fan) {
+      const on = this._state(e.fan)?.state === "on";
+      this._call("fan", on ? "turn_off" : "turn_on", { entity_id: e.fan });
+      return;
+    }
+    const on = this._state(e.switchon)?.state === "on";
+    this._call("switch", on ? "turn_off" : "turn_on", { entity_id: e.switchon });
+  }
+
+  _setFanSpeed(pump, percentage) {
+    this._call("fan", "set_percentage", { entity_id: pump.entities.fan, percentage });
   }
 
   _setMode(pump, option) {
@@ -193,8 +209,13 @@ class JebaoPumpCard extends HTMLElement {
 
   _renderPump(pump) {
     const e = pump.entities;
-    const power = e.switchon ? this._state(e.switchon) : null;
+    const fan = e.fan ? this._state(e.fan) : null;
+    const power = fan || (e.switchon ? this._state(e.switchon) : null);
+    const isOn = power?.state === "on";
     const mode = e.mode ? this._state(e.mode) : null;
+    // Pumps with a fan entity absorb their speed attribute into it (see
+    // fan.py) - flow/motor_speed no longer exist as separate number
+    // entities there, so this only ever fires for pumps that didn't get one.
     const flow = e.flow ? this._state(e.flow) : null;
     const freq = e.frequency ? this._state(e.frequency) : null;
     const feedOn = e.feedswitch ? this._state(e.feedswitch)?.state === "on" : false;
@@ -207,10 +228,8 @@ class JebaoPumpCard extends HTMLElement {
         <div class="pump-head">
           <span class="pump-name">${title}</span>
           ${
-            e.switchon
-              ? `<button class="pw ${power?.state === "on" ? "on" : ""}" data-act="power">
-                   ${power?.state === "on" ? "On" : "Off"}
-                 </button>`
+            power
+              ? `<button class="pw ${isOn ? "on" : ""}" data-act="power">${isOn ? "On" : "Off"}</button>`
               : ""
           }
         </div>
@@ -237,6 +256,7 @@ class JebaoPumpCard extends HTMLElement {
             : ""
         }
 
+        ${fan ? this._fanSpeedRow(fan) : ""}
         ${flow ? this._sliderRow("Flow", "flow", flow) : ""}
         ${freq ? this._sliderRow("Frequency", "frequency", freq) : ""}
 
@@ -262,7 +282,18 @@ class JebaoPumpCard extends HTMLElement {
             : ""
         }
 
-        ${!e.switchon && !mode && !flow && !freq && !e.feedswitch ? `<div class="empty">No controllable attributes found for this pump.</div>` : ""}
+        ${!power && !mode && !flow && !freq && !e.feedswitch ? `<div class="empty">No controllable attributes found for this pump.</div>` : ""}
+      </div>`;
+  }
+
+  _fanSpeedRow(fanState) {
+    const value = Number(fanState.attributes.percentage) || 0;
+    const step = fanState.attributes.percentage_step || 1;
+    return `
+      <div class="row">
+        <label>Speed</label>
+        <input type="range" min="0" max="100" step="${step}" value="${value}" data-act="fanspeed">
+        <span class="val">${value}%</span>
       </div>`;
   }
 
@@ -323,13 +354,14 @@ class JebaoPumpCard extends HTMLElement {
     if (!pump) return;
     if (el.dataset.act === "mode") this._setMode(pump, el.value);
     else if (el.dataset.act === "slider") this._setNumber(pump.entities[el.dataset.suffix], Number(el.value));
+    else if (el.dataset.act === "fanspeed") this._setFanSpeed(pump, Number(el.value));
   }
 
   _onInput(e) {
     // Live-update the displayed slider value while dragging, without
     // spamming a service call per pixel - the actual write happens on
     // "change" (pointer release), handled above.
-    const el = e.target.closest('[data-act="slider"]');
+    const el = e.target.closest('[data-act="slider"], [data-act="fanspeed"]');
     if (!el) return;
     const valEl = el.parentElement.querySelector(".val");
     if (valEl) valEl.textContent = `${el.value}${el.dataset.suffix === "feedtime" ? " min" : "%"}`;

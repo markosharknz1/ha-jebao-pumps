@@ -38,6 +38,9 @@
     }
   },
   "entity": {
+    "fan": {
+      "fan": { "name": "Speed" }
+    },
     "switch": {
       "switchon": { "name": "Power" },
       "feedswitch": { "name": "Feed mode" },
@@ -51,7 +54,6 @@
       "linkage": { "name": "Linkage" }
     },
     "number": {
-      "flow": { "name": "Flow" },
       "frequency": { "name": "Frequency" },
       "feedtime": { "name": "Feed duration" },
       "autoflow": { "name": "Flow (scheduled)" },
