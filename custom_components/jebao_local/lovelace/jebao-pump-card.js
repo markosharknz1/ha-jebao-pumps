@@ -21,6 +21,10 @@
  * speed attribute get a native `fan` entity (see fan.py) instead of a
  * separate switch + number - the card renders that as a proper speed slider
  * with a combined power/speed control, same as HA's own fan card would.
+ *
+ * Has a visual editor (JebaoPumpCardEditor below) - editing the card in the
+ * dashboard UI gives a pump-picker dropdown instead of needing to hand-type
+ * a dids: list in YAML mode, for the common "one card per pump" layout.
  */
 
 const ENTITY_RE = /^(switch|select|number|binary_sensor|fan)\.jebao_([a-z0-9]+)_(.+)$/;
@@ -41,6 +45,47 @@ const MODE_LABELS = {
 const modeLabel = (v) => MODE_LABELS[v] || v;
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Shared between the card and its config editor, so "which pumps exist and
+// what are they called" is answered identically in both places.
+function discoverPumps(hass, dids) {
+  if (!hass) return [];
+  const want = dids ? new Set(dids.map((d) => String(d).toLowerCase())) : null;
+
+  const pumps = new Map(); // did -> {did, name, entities: {suffix: entity_id}}
+  const registryEntities = hass.entities;
+  const registryDevices = hass.devices;
+
+  const addFromEntityId = (entityId, deviceName) => {
+    const m = entityId.match(ENTITY_RE);
+    if (!m) return;
+    const [, , did, suffix] = m;
+    if (want && !want.has(did)) return;
+    if (!pumps.has(did)) pumps.set(did, { did, name: deviceName || did, entities: {} });
+    pumps.get(did).entities[suffix] = entityId;
+  };
+
+  if (registryEntities && registryDevices) {
+    // Preferred: the frontend's own entity/device registry cache (HA
+    // 2024.8+), so grouping is correct even if entity_id naming ever
+    // changes - no regex-on-device-name guessing.
+    for (const [entityId, ent] of Object.entries(registryEntities)) {
+      if (ent.platform !== "jebao_local") continue;
+      const device = ent.device_id ? registryDevices[ent.device_id] : null;
+      const name = device ? device.name_by_user || device.name : null;
+      addFromEntityId(entityId, name);
+    }
+  } else {
+    // Fallback for older frontends without hass.entities/hass.devices:
+    // pattern-match straight out of hass.states. Device name isn't known
+    // here, so the did itself is shown as a heading instead.
+    for (const entityId of Object.keys(hass.states)) {
+      addFromEntityId(entityId, null);
+    }
+  }
+
+  return [...pumps.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
 
 class JebaoPumpCard extends HTMLElement {
   constructor() {
@@ -64,6 +109,10 @@ class JebaoPumpCard extends HTMLElement {
     return {};
   }
 
+  static getConfigElement() {
+    return document.createElement("jebao-pump-card-editor");
+  }
+
   set hass(hass) {
     this._hass = hass;
     this._render();
@@ -72,44 +121,7 @@ class JebaoPumpCard extends HTMLElement {
   // -- discovering pumps ---------------------------------------------------
 
   _pumps() {
-    if (!this._hass) return [];
-    const want = this._config.dids
-      ? new Set(this._config.dids.map((d) => String(d).toLowerCase()))
-      : null;
-
-    const pumps = new Map(); // did -> {did, name, entities: {suffix: entity_id}}
-    const registryEntities = this._hass.entities;
-    const registryDevices = this._hass.devices;
-
-    const addFromEntityId = (entityId, deviceName) => {
-      const m = entityId.match(ENTITY_RE);
-      if (!m) return;
-      const [, , did, suffix] = m;
-      if (want && !want.has(did)) return;
-      if (!pumps.has(did)) pumps.set(did, { did, name: deviceName || did, entities: {} });
-      pumps.get(did).entities[suffix] = entityId;
-    };
-
-    if (registryEntities && registryDevices) {
-      // Preferred: the frontend's own entity/device registry cache (HA
-      // 2024.8+), so grouping is correct even if entity_id naming ever
-      // changes - no regex-on-device-name guessing.
-      for (const [entityId, ent] of Object.entries(registryEntities)) {
-        if (ent.platform !== "jebao_local") continue;
-        const device = ent.device_id ? registryDevices[ent.device_id] : null;
-        const name = device ? device.name_by_user || device.name : null;
-        addFromEntityId(entityId, name);
-      }
-    } else {
-      // Fallback for older frontends without hass.entities/hass.devices:
-      // pattern-match straight out of hass.states. Device name isn't known
-      // here, so the did itself is shown as a heading instead.
-      for (const entityId of Object.keys(this._hass.states)) {
-        addFromEntityId(entityId, null);
-      }
-    }
-
-    return [...pumps.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return discoverPumps(this._hass, this._config.dids);
   }
 
   // -- reading HA state ------------------------------------------------------
@@ -131,6 +143,15 @@ class JebaoPumpCard extends HTMLElement {
     return this._hass.callService(domain, service, data);
   }
 
+  // The power attribute's suffix varies by product - most use "switchon"
+  // but several (mostly light products) use plain "switch" instead (see
+  // fan.py's SWITCH_NAMES, which already accounts for both; found by
+  // rendering all 29 bundled products through this card and noticing
+  // lights showed no power toggle at all despite having a real entity).
+  _powerEntityId(pump) {
+    return pump.entities.switchon || pump.entities.switch || null;
+  }
+
   // Pumps with a single clear speed attribute (Flow, or Motor_Speed on other
   // product lines) get a native `fan` entity instead of a separate switch +
   // number - see fan.py. Power and speed both route through it there;
@@ -142,8 +163,9 @@ class JebaoPumpCard extends HTMLElement {
       this._call("fan", on ? "turn_off" : "turn_on", { entity_id: e.fan });
       return;
     }
-    const on = this._state(e.switchon)?.state === "on";
-    this._call("switch", on ? "turn_off" : "turn_on", { entity_id: e.switchon });
+    const powerId = this._powerEntityId(pump);
+    const on = this._state(powerId)?.state === "on";
+    this._call("switch", on ? "turn_off" : "turn_on", { entity_id: powerId });
   }
 
   _setFanSpeed(pump, percentage) {
@@ -210,7 +232,8 @@ class JebaoPumpCard extends HTMLElement {
   _renderPump(pump) {
     const e = pump.entities;
     const fan = e.fan ? this._state(e.fan) : null;
-    const power = fan || (e.switchon ? this._state(e.switchon) : null);
+    const powerId = this._powerEntityId(pump);
+    const power = fan || (powerId ? this._state(powerId) : null);
     const isOn = power?.state === "on";
     const mode = e.mode ? this._state(e.mode) : null;
     // Pumps with a fan entity absorb their speed attribute into it (see
@@ -399,6 +422,81 @@ class JebaoPumpCard extends HTMLElement {
 }
 
 customElements.define("jebao-pump-card", JebaoPumpCard);
+
+// Visual editor (HA's card-editor contract: setConfig/hass in, a
+// "config-changed" CustomEvent out). Lets you pick one pump from a
+// dropdown instead of hand-typing a dids: list in YAML mode - the point
+// of this being a native card in the first place.
+class JebaoPumpCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._hass = null;
+    this._config = {};
+    this._built = false;
+  }
+
+  setConfig(config) {
+    this._config = config || {};
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _render() {
+    if (!this._built) {
+      this.shadowRoot.innerHTML = `<style>
+          .wrap { padding: 12px 0; display: flex; flex-direction: column; gap: 14px; }
+          .field { display: flex; flex-direction: column; gap: 6px; }
+          label { font-size: 0.85rem; color: var(--secondary-text-color); }
+          select, input { font: inherit; padding: 6px 8px; border-radius: 6px;
+            border: 1px solid var(--divider-color, #ccc); background: var(--card-background-color, #fff);
+            color: var(--primary-text-color); }
+        </style>
+        <div class="wrap">
+          <div class="field">
+            <label for="pumpSel">Pump</label>
+            <select id="pumpSel"></select>
+          </div>
+          <div class="field">
+            <label for="nameInput">Heading override (optional, only used with one pump selected)</label>
+            <input id="nameInput" type="text" placeholder="Leave blank to use the device's own name">
+          </div>
+        </div>`;
+      this._built = true;
+      this.shadowRoot.getElementById("pumpSel").addEventListener("change", () => this._emit());
+      this.shadowRoot.getElementById("nameInput").addEventListener("input", () => this._emit());
+    }
+
+    const pumps = discoverPumps(this._hass, null);
+    const currentDid = ((this._config.dids || [])[0] || "").toLowerCase();
+    const sel = this.shadowRoot.getElementById("pumpSel");
+    const focused = this.shadowRoot.activeElement === sel;
+    sel.innerHTML =
+      `<option value="">All pumps</option>` +
+      pumps.map((p) => `<option value="${p.did}" ${p.did === currentDid ? "selected" : ""}>${p.name} (${p.did})</option>`).join("");
+    if (!focused) sel.value = currentDid || "";
+
+    const nameInput = this.shadowRoot.getElementById("nameInput");
+    if (this.shadowRoot.activeElement !== nameInput) nameInput.value = this._config.name || "";
+  }
+
+  _emit() {
+    const sel = this.shadowRoot.getElementById("pumpSel");
+    const name = this.shadowRoot.getElementById("nameInput").value.trim();
+    const newConfig = { ...this._config };
+    if (sel.value) newConfig.dids = [sel.value];
+    else delete newConfig.dids;
+    if (name) newConfig.name = name;
+    else delete newConfig.name;
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: newConfig }, bubbles: true, composed: true }));
+  }
+}
+customElements.define("jebao-pump-card-editor", JebaoPumpCardEditor);
 
 // Register in the card picker so it's discoverable from "Add Card" with no
 // YAML at all.

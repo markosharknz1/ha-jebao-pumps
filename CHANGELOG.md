@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **The Jebao Pump card now has a visual editor** - open a card's settings
+  (pencil icon) and pick a specific pump from a dropdown instead of typing
+  `dids: [...]` in YAML, for the common "one card per pump" dashboard
+  layout. Also fixed a real bug this surfaced: the card only ever looked
+  for a power attribute named `switchon`, but several products (mostly
+  lights) name theirs plain `switch` - those pumps had a real, working
+  power switch entity that the card simply never showed. Found by
+  rendering the card against all 29 bundled product schemas at once
+  (generated from the actual entity-dispatch rules in switch.py/number.py/
+  select.py/binary_sensor.py/fan.py, not guessed) rather than just the 2
+  hand-picked shapes used in earlier testing - all 29 now render correctly.
 - **Fixed two real bugs found on the first live Home Assistant install**
   (thank you for the log output): (1) schema loading did blocking file I/O
   (`Path.read_text`) directly on the event loop, in both the coordinator's

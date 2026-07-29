@@ -282,6 +282,22 @@ Both fixes verified via `python -m py_compile`, the full offline test suite, and
 
 ---
 
+## Phase 12 — Card verified against all 29 products, plus a visual editor
+
+**Goal:** The user has 4 real pumps of possibly-different models and wants one card per pump - confirm the card's per-product feature detection genuinely holds up beyond the 2 hand-picked mock shapes used in Phase 9's testing, and make "one card per pump" a dropdown pick instead of hand-typed YAML.
+
+**Status: BUILT (2026-07-26).**
+
+**Rigorous multi-product verification.** Rather than ask the user for their exact 4 models (they didn't have that to hand), built something that didn't need it: a Python script (`gen_all_products_fixture.py`, scratch-only) that computes, for all 29 bundled schemas, exactly which entities the *real* platform dispatch logic would create - replicating switch.py/number.py/select.py/binary_sensor.py's filter conditions and calling the real `fan_attr_names()` from `fan.py` - rather than guessing at a plausible-looking entity set. This produced a 29-device, 445-entity mock `hass` fixture straight from the actual code paths. Rendering the card against all 29 at once (no `dids` filter) found a real bug immediately: 9 products (mostly lights) name their power attribute plain `switch` rather than `switchon`, and the card's rendering code only ever checked for the `switchon` suffix specifically - so those pumps had a real, working power-switch entity that the card simply never displayed a toggle for. (`fan.py`'s own `SWITCH_NAMES` already accounted for both names correctly - this was an inconsistency between fan.py and the card, not a schema-data problem.) Fixed by adding a `_powerEntityId()` helper checking both suffixes, used everywhere the card previously hardcoded `entities.switchon`. Re-ran the full 29-product check afterward: 0 broken pumps, 0 blank names, and the previously-broken light products now correctly show a working power toggle that calls the right entity_id.
+
+**Visual editor.** Added `static getConfigElement()` (returning a `<jebao-pump-card-editor>`) implementing HA's card-editor contract - `setConfig`/`hass` in, a `config-changed` CustomEvent out. It lists every pump HA knows about (reusing the exact same `discoverPumps()` function the card itself uses, extracted to module scope so card and editor can never drift apart on "what counts as a pump") in a dropdown, plus an optional heading-override text field. Picking a specific pump sets `dids: [that_did]` on the card's config; picking "All pumps" clears it. This turns "one card per pump" from a hand-typed YAML edit into a dropdown pick - directly serving what the user asked for ("each card needs to treat each pump differently" - clarified via a follow-up question to mean both "each card should target just its own pump" and "different product models should get different controls").
+
+Verified in a browser against the 29-product fixture: the editor's dropdown lists all 29 with correct names; selecting a pump fires `config-changed` with the right `dids`; adding a name override preserves the selection; switching back to "All pumps" correctly clears `dids` while keeping the name. `getConfigElement()` on the card class returns a real, correctly-tagged `<jebao-pump-card-editor>` element.
+
+Bumped `panel.py`'s `CARD_VERSION` (0.1.0 → 0.2.0) to bust the browser's cached copy of the card on the next reload, since the file changed.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

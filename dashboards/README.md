@@ -33,8 +33,13 @@ on/off. The card figures out which is which itself - this only matters if
 you're writing your own automations against the raw entity_ids instead of
 using the card (see `jebao-tank-scripts.yaml` for both patterns).
 
-To scope a card to specific pumps (e.g. one card per tank), edit the card
-in the visual editor's YAML mode and add a `dids:` list:
+To scope a card to one pump - e.g. a separate card per pump instead of one
+card listing all of them - open the card's settings (pencil icon) and pick
+it from the **Pump** dropdown; no YAML needed. That's the visual editor
+(`jebao-pump-card-editor`), which lists every pump HA knows about by name.
+Add one card per pump this way for an "individual card per pump" layout.
+
+If you'd rather write the YAML directly:
 
 ```yaml
 type: custom:jebao-pump-card
