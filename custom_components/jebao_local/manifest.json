@@ -4,10 +4,10 @@
   "codeowners": ["@markosharknz1"],
   "config_flow": true,
   "dependencies": ["http", "frontend"],
-  "documentation": "https://github.com/markosharknz1/jebao-local-ha",
+  "documentation": "https://github.com/markosharknz1/ha-jebao-pumps",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/markosharknz1/jebao-local-ha/issues",
+  "issue_tracker": "https://github.com/markosharknz1/ha-jebao-pumps/issues",
   "requirements": [],
   "version": "0.1.0"
 }
