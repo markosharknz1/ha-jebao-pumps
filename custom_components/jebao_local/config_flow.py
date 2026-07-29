@@ -75,7 +75,10 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device.did)
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.ip})
 
-        if device.product_key not in known_product_keys():
+        # known_product_keys()/load_by_product_key() do blocking file I/O
+        # (Path.glob/read_text) - must not run directly on the event loop.
+        known_keys = await self.hass.async_add_executor_job(known_product_keys)
+        if device.product_key not in known_keys:
             return self.async_abort(
                 reason="unsupported_product",
                 description_placeholders={
@@ -84,7 +87,7 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        schema = load_by_product_key(device.product_key)
+        schema = await self.hass.async_add_executor_job(load_by_product_key, device.product_key)
         return self.async_create_entry(
             title=schema.name_en,
             data={

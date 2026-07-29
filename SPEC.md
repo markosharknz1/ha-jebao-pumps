@@ -270,6 +270,18 @@ Both the native card and the Control panel needed updating, since they'd both ha
 
 ---
 
+## Phase 11 — First real Home Assistant install, first real bugs
+
+**Status: FIXED (2026-07-25).** The user installed `jebao_local` on an actual running Home Assistant instance for the first time - every prior phase's "not yet tested against a live HA instance" caveat finally got real feedback, in the form of two genuine startup errors pulled straight from the HA log.
+
+**Bug 1 - blocking I/O on the event loop.** HA's `homeassistant.util.loop` guard flagged `Path.read_text`/`Path.open` calls happening directly inside the event loop, in `jebao_gizwits/schema.py`'s `load()`, called from two places: `coordinator.py`'s (synchronous) `__init__`, and `config_flow.py`'s `_finish` (an `async def` that called the blocking loader directly without an executor). Confirmed the exact scope by reading HA's actual `block_async_io.py` from the installed package rather than guessing what's instrumented: `Path.open`/`read_text`/`read_bytes`/`write_text`/`write_bytes`, `builtins.open`, `os.walk`/`listdir`/`scandir`, and `glob.glob`/`iglob` are wrapped - notably *not* `Path.glob()` (the method, as opposed to the `glob` module's functions) or `Path.is_file()`, so `known_product_keys()`'s `Path.glob("*.json")` call and `panel.py`'s `source.is_file()` checks were never actually flagged, even though they're also filesystem calls. Fixed anyway, on the principle that blocking I/O shouldn't run on the event loop regardless of whether today's guard happens to catch every instance of it: `coordinator.py` no longer loads the schema in `__init__` (left as `None` with a comment explaining why) - a new `async_load_schema()` does it via `hass.async_add_executor_job(load_by_product_key, ...)`, called from `__init__.py`'s `async_setup_entry` before the first refresh. `config_flow.py`'s `_finish` wraps both `known_product_keys()` and `load_by_product_key()` the same way. Grepped the whole `custom_components/jebao_local` tree for every blocking-I/O pattern in HA's instrumented list to confirm no other call site had the same problem - there was exactly one (already fixed, both call paths).
+
+**Bug 2 - invalid `entity_category`.** `binary_sensor.py` set `_attr_entity_category = "diagnostic"` (a plain string) instead of the `EntityCategory.DIAGNOSTIC` enum member. The user's HA version validates this strictly and raised `ValueError: entity_category must be a valid EntityCategory instance, got diagnostic` for every fault binary_sensor, 28 times in the log (one per fault attribute across however many pumps/products were configured) - a hard failure, not just a warning, so no fault sensors were registering at all. Fixed by importing `EntityCategory` from `homeassistant.const` and using the enum member; grepped the rest of the integration for the same raw-string mistake on other entity types (switch/select/number/fan) - none found, this was the only occurrence.
+
+Both fixes verified via `python -m py_compile`, the full offline test suite, and the real-`homeassistant`-import compat test - all still pass. Not yet re-verified against the user's actual live instance (that's the next step), since these were caught from log output, not from being able to reproduce them locally (no live HA instance available in this environment, per every prior phase's standing caveat).
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

@@ -42,8 +42,15 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # only used for the device page's "Connections" display (see
         # entity.py), so it's fine for it to just not show up there.
         self.mac: str | None = entry.data.get(CONF_MAC)
-        self.schema: DatapointSchema = load_by_product_key(self.product_key)
+        # Loaded by async_load_schema() (see __init__.py:async_setup_entry) -
+        # load_by_product_key() does blocking file I/O (Path.read_text), so
+        # it can't run directly here in a synchronous __init__ called from
+        # an async context; HA's event-loop guard flags it if it does.
+        self.schema: DatapointSchema = None  # type: ignore[assignment]
         self._session: GizwitsSession | None = None
+
+    async def async_load_schema(self) -> None:
+        self.schema = await self.hass.async_add_executor_job(load_by_product_key, self.product_key)
 
     async def _ensure_session(self) -> GizwitsSession:
         if self._session is None:

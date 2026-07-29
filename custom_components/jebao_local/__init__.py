@@ -20,6 +20,7 @@ PLATFORMS = [Platform.FAN, Platform.SWITCH, Platform.SELECT, Platform.NUMBER, Pl
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = entry.options.get("scan_interval", DEFAULT_SCAN_INTERVAL)
     coordinator = JebaoLocalCoordinator(hass, entry, scan_interval)
+    await coordinator.async_load_schema()
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

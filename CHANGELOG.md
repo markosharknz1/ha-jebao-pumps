@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Fixed two real bugs found on the first live Home Assistant install**
+  (thank you for the log output): (1) schema loading did blocking file I/O
+  (`Path.read_text`) directly on the event loop, in both the coordinator's
+  `__init__` and the config flow's `_finish` - HA's event-loop guard
+  correctly flagged this. Fixed by deferring the coordinator's schema load
+  to a new `async_load_schema()` (called via `hass.async_add_executor_job`
+  before the first refresh) and wrapping the config flow's equivalent call
+  the same way. (2) `binary_sensor.py` set `_attr_entity_category =
+  "diagnostic"` (a raw string) instead of `EntityCategory.DIAGNOSTIC` -
+  newer HA core validates this strictly and rejects the string, which was
+  crashing every fault binary_sensor's entity registration.
 - **Pumps with a speed control now get a native `fan` entity** instead of a
   separate switch + number - matches `jrigling/homeassistant-jebao`'s own
   precedent for a different Jebao model, gets a proper speed-slider UI for
