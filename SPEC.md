@@ -298,6 +298,20 @@ Bumped `panel.py`'s `CARD_VERSION` (0.1.0 → 0.2.0) to bust the browser's cache
 
 ---
 
+## Phase 13 — Logo and a real integration icon
+
+**Goal:** A logo (pump icon + JEBAO wordmark + UNOFFICIAL in red, to avoid any confusion with the real Jebao brand) and a real icon shown in HA/HACS instead of "icon not available", finished properly rather than left as source SVGs sitting in a scratch directory.
+
+**Status: BUILT (2026-07-31).** Researched the current (2026) mechanism rather than assuming the old one still applied: `home-assistant/brands` (the centralized repo custom integrations used to submit icons to via PR) now auto-closes PRs for `custom_integrations/*` and points at HA's newer brands-proxy API instead - since HA 2026.3, a custom integration ships its own `custom_components/<domain>/brand/{icon,icon@2x,logo,logo@2x}.png` and HA serves them locally with no manifest changes at all, taking priority over the CDN. Also checked GitHub's actual API surface for the repo social-preview image and confirmed there genuinely is no endpoint for it (manual upload only) before promising anything there.
+
+Designed three original SVGs (not copies of Jebao's real logo/trademark artwork - an original pump-icon illustration, referencing the brand name only as plain text): an icon-only badge (for `icon.png`), a stacked logo with the JEBAO wordmark and UNOFFICIAL in red beneath it (for `logo.png` and the README), and a horizontal banner sized for GitHub's recommended 1280×640 social-preview dimensions.
+
+Rasterizing them hit a real snag worth noting: this machine has no native SVG→PNG tool (`cairosvg` installs via pip but needs a native `libcairo` binary Windows doesn't have; no `rsvg-convert`/`inkscape` either). Worked around it with a browser `<canvas>` trick (draw the SVG as an `Image` at the target pixel size, `canvas.toDataURL`) - fully precise since the exact output dimensions are controlled directly, unlike a screenshot crop. Getting the resulting base64 PNGs out of the sandboxed browser and onto disk needed its own small fix: a tiny local `ThreadingHTTPServer` accepting `POST /<filename>` with a base64 body, decoding and writing it - the browser's `fetch()` reported "Failed to fetch" on every request after the first even once the server was confirmed working (verified via the server's own request log showing a real 200 response each time, and the resulting files on disk being valid, correctly-sized PNGs) - a quirk of this sandboxed browser's response handling, not a real failure, so subsequent uploads were done as separate script executions and verified by checking the file on disk rather than trusting the JS-side promise.
+
+Added `custom_components/jebao_local/brand/{icon.png, icon@2x.png, logo.png, logo@2x.png}` (256/512px square for the icon, 256×269/512×538 for the logo - HA's brands spec wants the logo's shortest dimension in the 128-256/256-512 range, aspect ratio following the actual logo rather than forced square). Embedded `logo.png` at the top of `README.md`. Source SVGs and the social-preview PNG live in `docs/logo/` for future edits and re-upload - the social-preview image still needs a one-time manual upload (Settings → General → Social preview) since GitHub has no API for it, confirmed rather than assumed.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Added a logo and a real integration icon.** An original pump-icon badge
+  (not a copy of Jebao's actual logo/trademark artwork - just referencing
+  the brand name in text, with UNOFFICIAL in red) now appears at the top
+  of the README and, via `custom_components/jebao_local/brand/{icon,logo}
+  .png` (HA's 2026.3+ brands-proxy convention - no manifest changes
+  needed), as this integration's actual icon in HA and HACS instead of
+  "icon not available". Source SVGs and a ready-to-upload GitHub
+  social-preview image are in `docs/logo/` - GitHub has no API for social
+  preview images, so that one still needs a manual upload (Settings →
+  General → Social preview).
 - **The Jebao Pump card now has a visual editor** - open a card's settings
   (pencil icon) and pick a specific pump from a dropdown instead of typing
   `dids: [...]` in YAML, for the common "one card per pump" dashboard

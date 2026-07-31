@@ -1,0 +1,31 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Jebao Local - unofficial - GitHub social preview</title>
+<desc>A horizontal banner: a teal pump-icon badge on the left, with the JEBAO wordmark and UNOFFICIAL in red on the right, on a white background.</desc>
+
+<rect x="0" y="0" width="1280" height="640" fill="#ffffff"/>
+
+<circle cx="330" cy="320" r="220" fill="#0b6e91"/>
+
+<rect x="203" y="278" width="84" height="58" rx="14" fill="#ffffff"/>
+<rect x="393" y="278" width="84" height="58" rx="14" fill="#ffffff"/>
+<circle cx="330" cy="307" r="77" fill="#ffffff"/>
+<circle cx="330" cy="307" r="27" fill="#0b6e91"/>
+<line x1="330" y1="284" x2="330" y2="264" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+<line x1="351" y1="326" x2="368" y2="337" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+<line x1="309" y1="326" x2="292" y2="337" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+
+<path d="M418 287 L437 307 L418 327" fill="none" stroke="#0b6e91" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M448 287 L467 307 L448 327" fill="none" stroke="#0b6e91" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+<path d="M225 425 Q255 393 285 425 Q315 457 345 425 Q375 393 405 425 Q435 457 465 425"
+      fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
+
+<text x="620" y="335" text-anchor="start" font-family="Arial, Helvetica, sans-serif"
+      font-size="120" font-weight="700" letter-spacing="3" fill="#0b2540">JEBAO</text>
+
+<text x="622" y="405" text-anchor="start" font-family="Arial, Helvetica, sans-serif"
+      font-size="42" font-weight="700" letter-spacing="9" fill="#dc2626">UNOFFICIAL</text>
+
+<text x="622" y="455" text-anchor="start" font-family="Arial, Helvetica, sans-serif"
+      font-size="24" font-weight="400" fill="#5b7286">Local (no-cloud) Home Assistant integration</text>
+</svg>

@@ -1,0 +1,26 @@
+<svg width="400" height="420" viewBox="0 0 400 420" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Jebao Local - unofficial</title>
+<desc>A logo showing a stylized pump icon in a teal circular badge, with the wordmark JEBAO below it and UNOFFICIAL in red beneath that.</desc>
+
+<circle cx="200" cy="150" r="120" fill="#0b6e91"/>
+
+<rect x="118" y="124" width="46" height="32" rx="8" fill="#ffffff"/>
+<rect x="236" y="124" width="46" height="32" rx="8" fill="#ffffff"/>
+<circle cx="200" cy="140" r="42" fill="#ffffff"/>
+<circle cx="200" cy="140" r="15" fill="#0b6e91"/>
+<line x1="200" y1="128" x2="200" y2="118" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+<line x1="211" y1="147" x2="220" y2="153" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+<line x1="189" y1="147" x2="180" y2="153" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+
+<path d="M252 132 L262 140 L252 148" fill="none" stroke="#0b6e91" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M266 132 L276 140 L266 148" fill="none" stroke="#0b6e91" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+<path d="M150 205 Q165 190 180 205 Q195 220 210 205 Q225 190 240 205 Q255 220 270 205"
+      fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+
+<text x="200" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+      font-size="56" font-weight="700" letter-spacing="2" fill="#0b2540">JEBAO</text>
+
+<text x="200" y="382" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+      font-size="22" font-weight="700" letter-spacing="5" fill="#dc2626">UNOFFICIAL</text>
+</svg>

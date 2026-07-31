@@ -1,0 +1,20 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Jebao Local pump icon</title>
+<desc>A stylized pump icon: a circular housing with inlet and outlet pipes and flow chevrons, on a teal circular badge.</desc>
+
+<circle cx="150" cy="150" r="145" fill="#0b6e91"/>
+
+<rect x="63" y="132" width="52" height="36" rx="9" fill="#ffffff"/>
+<rect x="185" y="132" width="52" height="36" rx="9" fill="#ffffff"/>
+<circle cx="150" cy="150" r="48" fill="#ffffff"/>
+<circle cx="150" cy="150" r="17" fill="#0b6e91"/>
+<line x1="150" y1="136" x2="150" y2="125" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+<line x1="163" y1="159" x2="173" y2="166" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+<line x1="137" y1="159" x2="127" y2="166" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+
+<path d="M204 141 L216 150 L204 159" fill="none" stroke="#0b6e91" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M221 141 L233 150 L221 159" fill="none" stroke="#0b6e91" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+<path d="M95 222 Q112 205 130 222 Q148 239 166 222 Q184 205 202 222 Q220 239 238 222"
+      fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+</svg>

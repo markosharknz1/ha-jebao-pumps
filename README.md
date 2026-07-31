@@ -1,3 +1,5 @@
+<img src="custom_components/jebao_local/brand/logo.png" alt="Jebao Local - unofficial" width="220">
+
 # Jebao Local Control
 
 Local (no-cloud) control of Jebao aquarium pumps, wavemakers, dosing pumps,
@@ -109,6 +111,7 @@ custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwi
   lovelace/jebao-pump-card.js    Native Lovelace card - auto-registered, zero YAML required
   panel/designer.html            Control panel: tank groups, cloneable settings profiles, feed timer
   panel.py                       Serves both of the above and registers the card/sidebar panel
+  brand/                         Integration icon/logo, served automatically via HA's brands proxy (2026.3+) - no manifest changes needed
 dashboards/                 Example Lovelace dashboard + tank scripts for grouping pumps by tank
 fixtures/                   Real captured bytes used as ground truth (discovery replies, status reads, write frames)
   captured_writes/          Real write frames captured from the vendor app's own debug log - the ground truth for the write protocol
@@ -117,6 +120,7 @@ tests/                      Offline regression tests against the captured fixtur
 docs/
   SUPPORTED_MODELS.md        Every product this project's schema-driven approach could support, and how connectivity type is determined
   product_catalog.json       Same, machine-readable
+  logo/                      Logo source SVGs and the GitHub social-preview image (manual upload only, GitHub has no API for it)
 scripts/                    One-off diagnostic/setup scripts used during development (kept for reference)
 SPEC.md                      Full build log, phase by phase, in the order things actually happened
 METHODOLOGY.md                Readable writeup of the reverse-engineering approach
