@@ -14,7 +14,10 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .panel import async_register_card, async_register_panel
 
-PLATFORMS = [Platform.FAN, Platform.SWITCH, Platform.SELECT, Platform.NUMBER, Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.FAN, Platform.SWITCH, Platform.SELECT, Platform.NUMBER,
+    Platform.BINARY_SENSOR, Platform.SENSOR, Platform.BUTTON,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -4,6 +4,7 @@
   "codeowners": ["@markosharknz1"],
   "config_flow": true,
   "dependencies": ["http", "frontend"],
+  "dhcp": [{"registered_devices": true}],
   "documentation": "https://github.com/markosharknz1/ha-jebao-pumps",
   "integration_type": "device",
   "iot_class": "local_polling",

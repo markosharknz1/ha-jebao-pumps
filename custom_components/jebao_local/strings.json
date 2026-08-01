@@ -25,7 +25,8 @@
     },
     "abort": {
       "already_configured": "This device is already configured.",
-      "unsupported_product": "This device's product_key ({product_key}) isn't in this integration's bundled schema list yet - see docs/SUPPORTED_MODELS.md."
+      "unsupported_product": "This device's product_key ({product_key}) isn't in this integration's bundled schema list yet - see docs/SUPPORTED_MODELS.md.",
+      "dhcp_mac_not_registered": "This DHCP lease doesn't match any configured Jebao pump."
     }
   },
   "options": {
@@ -59,6 +60,14 @@
       "autoflow": { "name": "Flow (scheduled)" },
       "autofreq": { "name": "Frequency (scheduled)" },
       "autofeedtime": { "name": "Feed duration (scheduled)" }
+    },
+    "sensor": {
+      "speed": { "name": "Speed" },
+      "state": { "name": "State" }
+    },
+    "button": {
+      "startfeed": { "name": "Start feed" },
+      "cancelfeed": { "name": "Cancel feed" }
     }
   }
 }

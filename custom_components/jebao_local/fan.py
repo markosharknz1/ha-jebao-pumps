@@ -58,6 +58,22 @@ def fan_attr_names(schema: DatapointSchema) -> tuple[str, str] | None:
     return None
 
 
+# Shared with sensor.py/button.py, which need the same "find an attribute by
+# candidate name, case-insensitively" logic for mode/feed-mode detection
+# that fan_attr_names above uses for power/speed.
+MODE_NAMES = ("mode",)
+FEED_NAMES = ("feedswitch",)
+FEEDTIME_NAMES = ("feedtime",)
+
+
+def find_attr_name(schema: DatapointSchema, names: tuple[str, ...], data_type: str) -> str | None:
+    by_lower: dict[str, str] = {}
+    for a in schema.attrs:
+        if a.writable and a.data_type == data_type:
+            by_lower.setdefault(a.name.lower(), a.name)
+    return next((by_lower[n] for n in names if n in by_lower), None)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:

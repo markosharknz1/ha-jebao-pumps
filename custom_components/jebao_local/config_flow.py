@@ -4,7 +4,7 @@ for onboarding UX), adapted to this project's actual LAN protocol."""
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -15,7 +15,35 @@ from .const import CONF_DID, CONF_MAC, CONF_PRODUCT_KEY, DEFAULT_SCAN_INTERVAL, 
 from .jebao_gizwits.discovery import DiscoveredDevice, discover, discover_one
 from .jebao_gizwits.schema import known_product_keys, load_by_product_key
 
+if TYPE_CHECKING:
+    # Only for type checkers - the actual import path has moved across HA
+    # versions (homeassistant.components.dhcp vs homeassistant.helpers.
+    # service_info.dhcp), and importing homeassistant.components.dhcp for
+    # real would pull in its aiodhcpwatcher dependency for no reason, since
+    # we only ever read plain attributes off the object HA hands us.
+    from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _normalize_mac(mac: str) -> str:
+    return (mac or "").lower().replace(":", "")
+
+
+def find_entry_by_mac(
+    entries: list[config_entries.ConfigEntry], mac: str
+) -> config_entries.ConfigEntry | None:
+    """Pulled out of async_step_dhcp so the matching logic (the part worth
+    getting right) is testable with plain fake entries, without needing to
+    fake HA's ConfigFlow/hass internals just to call _async_current_entries()."""
+    target = _normalize_mac(mac)
+    if not target:
+        return None
+    for entry in entries:
+        stored = _normalize_mac(entry.data.get(CONF_MAC) or "")
+        if stored and stored == target:
+            return entry
+    return None
 
 
 class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -98,6 +126,36 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
             options={"scan_interval": DEFAULT_SCAN_INTERVAL},
         )
+
+    async def async_step_dhcp(self, discovery_info: "DhcpServiceInfo") -> FlowResult:
+        """Recover a registered pump's IP after a DHCP lease renewal moves it.
+
+        Manifest's "dhcp": [{"registered_devices": true}] restricts this to
+        MACs already stored on one of our config entries - HA calls this on
+        every DHCP lease it observes matching a registered device, so this
+        fires proactively (no waiting for a read to fail first, unlike
+        coordinator.py's rediscovery-on-failure path, which stays as a
+        fallback for whenever DHCP watching itself doesn't catch a move -
+        e.g. a stale ARP cache, or the device never renewing its lease).
+        Never creates a new entry from DHCP alone - pattern borrowed from
+        jrigling/homeassistant-jebao, which found the same thing: a bare MAC
+        match isn't enough to safely identify an unconfigured pump's product
+        type, so new devices still go through LAN discovery/manual entry.
+        """
+        entry = find_entry_by_mac(self._async_current_entries(), discovery_info.macaddress)
+        if entry is None:
+            return self.async_abort(reason="dhcp_mac_not_registered")
+
+        if entry.data.get(CONF_HOST) != discovery_info.ip:
+            _LOGGER.info(
+                "DHCP recovery: %s moved %s -> %s",
+                entry.title, entry.data.get(CONF_HOST), discovery_info.ip,
+            )
+            self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_HOST: discovery_info.ip}
+            )
+            self.hass.async_create_task(self.hass.config_entries.async_reload(entry.entry_id))
+        return self.async_abort(reason="already_configured")
 
     @staticmethod
     def async_get_options_flow(entry: config_entries.ConfigEntry) -> "JebaoLocalOptionsFlow":

@@ -4,6 +4,35 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Three features mined from `jrigling/homeassistant-jebao`** (a reference
+  integration for a different Jebao model, already studied for the fan
+  entity pattern):
+  - **DHCP-based IP recovery** - `manifest.json` now declares
+    `"dhcp": [{"registered_devices": true}]`, and `config_flow.py` handles
+    `async_step_dhcp`: as soon as HA's own network watcher sees a
+    *registered* pump's MAC show up with a new IP anywhere on the network,
+    the config entry updates and reloads immediately - no waiting for a
+    read to fail first, unlike the existing rediscovery-on-failure path in
+    `coordinator.py`, which stays as a fallback. Closes a gap this project
+    had flagged since early on; we already had the MAC stored for the
+    device-page Connections display, so this reused that.
+  - **Speed and State sensors** (`sensor.py`) - Speed mirrors the fan
+    entity's percentage as a proper `SensorEntity` with
+    `state_class: measurement` (fan attributes alone don't get HA's
+    long-term statistics/history graphing; a real sensor does), only for
+    products that got a fan entity. State synthesizes several raw
+    datapoints into one glanceable value - `Off`, `Feeding`,
+    `Fault: Overcurrent`, `Running (经典造浪)` - for dashboards and
+    automations that would otherwise need to check several entities at once.
+  - **Start Feed / Cancel Feed buttons** (`button.py`) - one-shot
+    `ButtonEntity`s alongside the existing `FeedSwitch`/`FeedTime`
+    entities, the more semantically correct HA entity type for a momentary
+    trigger (useful for automations either way, regardless of whether a
+    given pump's firmware auto-clears feed mode on its own).
+
+  All three are schema-driven like everything else in this integration -
+  gated on whichever real attributes a given product actually has, verified
+  against all 29 bundled schemas, not just the wavemaker.
 - **Added a logo and a real integration icon.** An original pump-icon badge
   (not a copy of Jebao's actual logo/trademark artwork - just referencing
   the brand name in text, with UNOFFICIAL in red) now appears at the top
