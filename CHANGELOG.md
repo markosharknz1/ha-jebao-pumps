@@ -4,6 +4,38 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Translated the remaining Chinese labels shown in the UI.** Checked the
+  vendor app's own bundled i18n data first (it embeds 53 per-product
+  `language:{en:{...},zh:{...}}` objects) - real finding: even in "English"
+  mode, the app itself never translates a single datapoint label or enum
+  value, only unrelated things like company info and fault messages. No
+  vendor English source existed to adopt, so this project translated the
+  actual (small, closed) set itself: wave modes, a linkage (master/slave)
+  selector, calibration steps, and a day/night light-cycle selector - about
+  20 distinct terms across all 29 bundled schemas. Wave-mode selects
+  (`Mode`/`AutoMode`) and the `Linkage`/`CALSet` selects now show English
+  option labels via HA's own entity `state` translations (the underlying
+  value the protocol writes is untouched); the synthesized `State` sensor's
+  "Running (X)" text is translated too, in Python, since HA's translation
+  layer doesn't reach into a sensor's own formatted string.
+- **Schedule programming** - the 48 daily timer slots (`AutoTime00`..
+  `AutoTime47`) are now readable and writable, closing the last item on the
+  status table. The 8-byte-per-slot format
+  (`[startHour, startMinute, endHour, endMinute, mode, flow, frequency,
+  pulseTide]`) was never actually confirmed before now - only an unverified
+  Phase 1 guess existed. Confirmed this time from three independent static
+  sources agreeing byte-for-byte: the vendor app's own `encode`/`decode` JS
+  functions, the schema JSON's own byte_offset spacing, and the schema's own
+  per-attribute description text (see SPEC.md Phase 15 for the full trail).
+  New `jebao_local.set_schedule_slot` / `jebao_local.clear_schedule_slot`
+  services (targeting a device, not an entity - 48 slots x up to 8 fields
+  each is too many entities for one pump) and a new `Schedule` sensor
+  exposing the currently-programmed slots as an attribute for dashboards and
+  automations. `control.py`'s write-payload builder gained support for
+  `binary` (multi-byte) attributes, reusing the already-confirmed
+  byte-type placement rule rather than inventing a new one. Not yet
+  re-confirmed against a real captured write frame the way `SwitchON`/
+  `Flow`/`Frequency` were - see the "Known gaps" note below.
 - **Three features mined from `jrigling/homeassistant-jebao`** (a reference
   integration for a different Jebao model, already studied for the fan
   entity pattern):

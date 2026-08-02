@@ -330,6 +330,57 @@ Added `Platform.SENSOR` and `Platform.BUTTON` to `__init__.py`'s `PLATFORMS`, tr
 
 ---
 
+## Phase 15 — Schedule programming (the 48 daily timer slots)
+
+**Goal:** Close the last remaining item on the status table - decode and expose the 48 `AutoTimeNN` timer slots (`AutoTime00`..`AutoTime47`), which had only ever been decodable as raw opaque bytes, with their internal byte format never actually verified.
+
+**Status: BUILT (2026-08-02), byte format confirmed from static analysis, not yet tested against live hardware.**
+
+The bundled schema JSON has always described each `AutoTimeNN` attribute as `data_type: "binary"`, `byte_offset` 8/16/24/.../384 (exactly 8 bytes apart, back to back), `len: 8` - i.e. 48 opaque 8-byte blobs, with only a Phase-1-era, never-verified guess at what the 8 bytes meant ("start/end time, mode, flow, frequency, pulse/tide packed per slot"). This project's standing practice is to never invent frame formats and validate everything against real captured bytes, so before writing any decode/encode logic this needed real ground truth - not just the earlier inference.
+
+Checked `tools/logcat_capture.log` (a 151k-line capture already on disk from earlier phases) for real schedule write frames first - it only contains UI translation-label strings (`'DP-AutoTime42': '自动时间点42'`), no actual captured payload bytes, so it didn't help directly.
+
+Found real ground truth instead in the vendor app's own bundled React Native JS (`reference/jebao-apk/decompiled/.../com.gizwits.rn.jiebao.zaolang/index.js`, the wavemaker's own UI template) - it contains the app's actual `encode`/`decode` functions for a schedule slot:
+
+```js
+zt.encode = e => [e.startHour||0, e.startMinute||0, e.endHour||0, e.endMinute||0, e.mode||0, e.flow||0, e.frequency||0, e.pulseTide||0]
+zt.decode = e => { const t = e.match(/.{2}/g).map(x => parseInt(x,16)); return {startHour:t[0], startMinute:t[1], endHour:t[2], endMinute:t[3], mode:t[4], flow:t[5], frequency:t[6], pulseTide:t[7]} }
+```
+
+plus a labeled default-new-slot object a few lines later: `{startHour:0, startMinute:0, endHour:24, endMinute:0, mode:1, frequency:100, flow:100, pulseTide:0, id:1}`, and the same file's own default *device* state showing a populated example, `AutoTime00:[12,31,0,0,1,100]` (all other slots `[0,0,0,0,0,0]`, i.e. unused).
+
+This is confirmed from three independent sources agreeing byte-for-byte, not just one: (1) the JS `encode`/`decode` functions above, (2) the schema JSON's own byte_offset spacing already being exactly 8 bytes/slot, and (3) the schema JSON's own (Chinese) `desc` string on every `AutoTimeNN` attribute, which spells out `Byte0`..`Byte7` in this exact same field order. Also found, in the same JS file, the app's own rule for "this slot is unused": all 8 bytes `0x00` **or** all 8 bytes `0xEE` (its `At()` function filters out both hex strings before decoding) - both are treated as sentinels here too.
+
+Given this, and that the *placement mechanics* for a byte-type attribute were already confirmed against a real capture for `uint8` fields (Phase 4: byte-type fields go directly at `byte_offset`, no reversal, no bit math) - extending that same placement rule to a wider byte-type field (`binary`, 8 bytes instead of 1) isn't a new assumption, just a generalization of an already-proven rule. Implemented on that basis:
+
+- **`jebao_gizwits/schedule.py`** (new): `encode_slot()`/`decode_slot()`/`clear_slot()`/`slot_attr_name()`, plus the two disabled-sentinel checks.
+- **`control.py`**: `build_control_payload` gained a `data_type == "binary"` branch (previously only `uint8` was implemented for byte-type fields; `bit`-type bool/enum was already there) - raw bytes placed directly at `byte_offset`, same rule as uint8.
+- **`services.py`** (new): `jebao_local.set_schedule_slot` / `jebao_local.clear_schedule_slot`, targeting a device via HA's standard `device_id` selector rather than a per-pump entity - 48 slots x up to 8 fields each would be an unreasonable number of entities on one device, so this follows HA's own convention for "configure a numbered sub-resource" (services, not entities). Registered once per HA instance, not per config entry.
+- **`sensor.py`**: a `Schedule` sensor whose state is the count of currently-enabled slots and whose `slots` attribute is the full decoded list, for dashboards/automations that need to read the current programming back.
+
+Not yet re-confirmed against a real captured `AutoTimeNN` write frame the way `SwitchON`/`Flow`/`Frequency` were in Phase 4 - that would need either a fresh logcat capture while programming a real schedule via the app (the technique that originally cracked `SwitchON`), or live read-back testing against real hardware once the write is sent. Tests (`tests/test_schedule.py`, plus new cases in `tests/test_control.py`) cover the encode/decode round-trip against the two real examples above, both disabled sentinels, and that a binary write lands at the right byte offset without disturbing neighboring attributes - not a substitute for live hardware confirmation, but real assertions against the static ground truth found.
+
+---
+
+## Phase 16 — Translating the remaining Chinese enum values
+
+**Goal:** the user asked whether the app's Chinese labels could be translated to English, or whether there was a way to get the vendor's own English names for them.
+
+**Status: BUILT (2026-08-02).** First checked whether the vendor already had real English translations to adopt, rather than guessing or machine-translating blind. The app's main JS bundle (`index.android.bundle`) embeds 53 per-product-template `language:{en:{...}, zh:{...}, ja:{...}}` i18n objects (one per UI template, e.g. wavemaker, dosing pump, light). Extracted and merged all 53 - real finding, not assumed: the vendor's English locale genuinely translates plenty of things (company-info text, `ALARM_TEXT_1`..`7` fault messages like "Controller overvoltage"), but **every single `DP-<AttrName>` key - the datapoint labels, which is where enum values would be translated too - has identical text under `en` and `zh`.** i.e. the app's own "English mode" silently falls back to untranslated Chinese for every datapoint label (confirmed for `DP-Mode`, `DP-SwitchON`, `DP-Flow`, `DP-FeedTime`, `DP-AutoTime00`, etc. - all identical in both locales). So there is no vendor-provided English source to pull from for this specific gap.
+
+Audited where Chinese text actually reaches an HA user (not just where it exists in the schema - `display_name`/`desc` are parsed by `schema.py` but never read by any platform file, confirmed by grep, so they're inert metadata, not a real leak). Two real leaks found: (1) `select.py`'s `JebaoSelect` entities show the schema's raw enum values as their options/current state - `Mode`, `mode`, `AutoMode`, `Linkage`, `CALSet` are all Chinese strings across the 29 bundled schemas; (2) `sensor.py`'s `JebaoStateSensor` interpolates the raw mode value into `"Running ({mode})"`.
+
+Collected every distinct enum value across all 29 schemas' `enum` attrs (a small, closed set - 5 attributes, ~20 distinct terms total: 4 wave-mode names, a scheduled-mode set adding stop/feeding/auto, a master/slave/independent linkage set, 4 calibration-step labels, and a day/night light-cycle set) and translated them as this project's own work, since no vendor source existed - all standard, unambiguous domain vocabulary for aquarium wavemakers (classic/sine/random/constant-flow wave, master/slave linkage, etc.), not machine-translated guesswork.
+
+- **`jebao_gizwits/enum_translations.py`** (new): the `ENUM_TRANSLATIONS` dict and a `translate()` helper that's a safe no-op for anything not in the table (so a future bundled product's not-yet-seen enum value passes through unchanged instead of erroring).
+- **`sensor.py`**: `JebaoStateSensor` now runs the mode value through `translate()` before interpolating it into `"Running (X)"`.
+- **`strings.json`/`translations/en.json`**: added HA's own per-entity `state` translation blocks for the `mode`/`automode`/`linkage` selects (translates the dropdown options and current state in the UI without touching the underlying value the protocol actually writes), and added a `calset` entry (name + state) that had never been translated at all before this.
+- **`tests/test_enum_translations.py`** (new): asserts every enum value across all 29 bundled schemas has a translation entry - catches a future schema shipping with an untranslated value.
+
+Deliberately did not touch the schema JSON's own `enum` arrays (the underlying Chinese values) - `control.py`'s write path does `attr.enum_values.index(new_value)` to encode a write, so the wire format has to keep using the vendor's original Chinese strings; only the *display* layer gets translated, via HA's own translation mechanism where the entity is HA-native (selects), or directly in Python where it isn't (the synthesized State sensor string).
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

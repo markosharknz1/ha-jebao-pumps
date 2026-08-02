@@ -29,6 +29,12 @@ Confirmed against real captured frames (SwitchON true/false via logcat):
   forward from current status - the device only applies flagged attributes
   (confirmed by the flags mechanism itself), so this is safe and is what we
   do here too, matching the real app exactly rather than guessing.
+- attrVals_t "binary" fields (e.g. the AutoTimeNN schedule slots, see
+  jebao_gizwits/schedule.py): placed directly at byte_offset like uint8,
+  just multi-byte - this reuses the already-confirmed byte-type placement
+  rule above rather than a new one, since the SDK's byte-type placement
+  logic has no reason to care about a field's width. Not yet individually
+  confirmed against a real captured AutoTimeNN write frame.
 
 The p0 control-ack response (from GizwitsSession.send_control) is NOT a
 reliable success/failure signal - it returns the same "00 16 <did>" payload
@@ -120,6 +126,11 @@ def build_control_payload(
                     vals[dest_byte] |= 1 << dest_bit
                 else:
                     vals[dest_byte] &= ~(1 << dest_bit) & 0xFF
+        elif attr.data_type == "binary":
+            raw_bytes = bytes(new_value)
+            if len(raw_bytes) != p.len:
+                raise ValueError(f"{name}: expected {p.len} bytes, got {len(raw_bytes)}")
+            vals[p.byte_offset : p.byte_offset + p.len] = raw_bytes
         else:
             if attr.data_type != "uint8" or attr.uint_spec is None:
                 raise ValueError(f"writing data_type {attr.data_type!r} not implemented ({name})")

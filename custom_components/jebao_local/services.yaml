@@ -1,0 +1,85 @@
+set_schedule_slot:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: jebao_local
+    slot:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 47
+          mode: box
+    start_hour:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 24
+          mode: box
+    start_minute:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 59
+          mode: box
+    end_hour:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 24
+          mode: box
+    end_minute:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 59
+          mode: box
+    mode:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    flow:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    frequency:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    pulse_tide:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+
+clear_schedule_slot:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: jebao_local
+    slot:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 47
+          mode: box

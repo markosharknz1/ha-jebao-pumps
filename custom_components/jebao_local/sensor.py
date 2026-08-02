@@ -1,16 +1,20 @@
-"""Two sensors, both borrowed from jrigling/homeassistant-jebao's precedent
-(SPEC.md Phase 14):
+"""Three sensors:
 
-- Speed: mirrors the fan entity's percentage as a proper SensorEntity with
-  state_class=MEASUREMENT. A fan's percentage attribute alone doesn't get
-  HA's long-term statistics/history graphing - a real sensor does. Only
-  created for products that got a fan entity in the first place (fan.py).
-- State: a synthesized, human-readable "what is this pump doing right now"
-  summary (Off / Feeding / Fault: X / Running (mode)), combining several
-  raw datapoints into one glanceable value for dashboards and automations
-  that would otherwise need to check several entities at once. Degrades
-  gracefully for products missing some of those datapoints - only power
-  is required for it to report anything at all.
+- Speed and State are both borrowed from jrigling/homeassistant-jebao's
+  precedent (SPEC.md Phase 14). Speed mirrors the fan entity's percentage as
+  a proper SensorEntity with state_class=MEASUREMENT - a fan's percentage
+  attribute alone doesn't get HA's long-term statistics/history graphing, a
+  real sensor does. Only created for products that got a fan entity in the
+  first place (fan.py). State is a synthesized, human-readable "what is this
+  pump doing right now" summary (Off / Feeding / Fault: X / Running (mode)),
+  combining several raw datapoints into one glanceable value for dashboards
+  and automations that would otherwise need to check several entities at
+  once. Degrades gracefully for products missing some of those datapoints -
+  only power is required for it to report anything at all.
+- Schedule is a read-back of the 48-slot AutoTimeNN schedule (see
+  jebao_gizwits/schedule.py) - one entity, not 48+, since a slot isn't
+  naturally its own entity and this project's set_schedule_slot/
+  clear_schedule_slot services (services.py) already cover writing.
 """
 from __future__ import annotations
 
@@ -25,6 +29,10 @@ from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
 from .fan import FEED_NAMES, MODE_NAMES, SWITCH_NAMES as POWER_NAMES, fan_attr_names, find_attr_name as _find_attr_name
+from .jebao_gizwits.enum_translations import translate as _translate_enum
+from .jebao_gizwits.schedule import SLOT_COUNT, ScheduleSlot, decode_slot, slot_attr_name
+
+_SCHEDULE_PROBE_ATTR = slot_attr_name(0)  # AutoTime00 - presence implies all 48 slots exist
 
 
 async def async_setup_entry(
@@ -34,7 +42,17 @@ async def async_setup_entry(
     entities: list[JebaoLocalEntity] = [JebaoStateSensor(coordinator)]
     if fan_attr_names(coordinator.schema):
         entities.append(JebaoSpeedSensor(coordinator))
+    if _has_schedule(coordinator.schema):
+        entities.append(JebaoScheduleSensor(coordinator))
     async_add_entities(entities)
+
+
+def _has_schedule(schema) -> bool:
+    try:
+        schema.by_name(_SCHEDULE_PROBE_ATTR)
+        return True
+    except KeyError:
+        return False
 
 
 class JebaoSpeedSensor(JebaoLocalEntity, SensorEntity):
@@ -89,7 +107,42 @@ class JebaoStateSensor(JebaoLocalEntity, SensorEntity):
             if self._mode_attr:
                 mode_val = data.get(self._mode_attr)
                 if isinstance(mode_val, str):
-                    return f"Running ({mode_val})"
+                    return f"Running ({_translate_enum(mode_val)})"
             return "On"
 
         return None
+
+
+class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
+    """State is the number of programmed (enabled) slots; the full decoded
+    schedule is exposed as an attribute for automations/dashboards to
+    consume via templates, since a state string can't hold a list."""
+
+    _attr_icon = "mdi:calendar-clock"
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "schedule")
+        self._attr_translation_key = "schedule"
+
+    def _decoded_slots(self) -> list[ScheduleSlot]:
+        if self.coordinator.data is None:
+            return []
+        slots = []
+        for index in range(SLOT_COUNT):
+            raw = self.coordinator.data.get(slot_attr_name(index))
+            if not isinstance(raw, (bytes, bytearray)):
+                continue
+            slot = decode_slot(index, raw)
+            if slot is not None:
+                slots.append(slot)
+        return slots
+
+    @property
+    def native_value(self) -> int | None:
+        if self.coordinator.data is None:
+            return None
+        return len(self._decoded_slots())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        return {"slots": [vars(slot) for slot in self._decoded_slots()]}

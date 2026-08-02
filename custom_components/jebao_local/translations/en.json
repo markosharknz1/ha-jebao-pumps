@@ -50,9 +50,51 @@
       "autopulsetide": { "name": "Pulse tide (scheduled)" }
     },
     "select": {
-      "mode": { "name": "Wave mode" },
-      "automode": { "name": "Mode (scheduled)" },
-      "linkage": { "name": "Linkage" }
+      "mode": {
+        "name": "Wave mode",
+        "state": {
+          "经典造浪": "Classic wave",
+          "正弦造浪": "Sine wave",
+          "随机造浪": "Random wave",
+          "恒流造浪": "Constant flow",
+          "夜晚": "Night",
+          "定时": "Timer",
+          "手动": "Manual",
+          "日出": "Sunrise",
+          "日落": "Sunset",
+          "早晨": "Morning",
+          "白天": "Day"
+        }
+      },
+      "automode": {
+        "name": "Mode (scheduled)",
+        "state": {
+          "停机": "Stop",
+          "喂食": "Feeding",
+          "恒流造浪": "Constant flow",
+          "正弦造浪": "Sine wave",
+          "经典造浪": "Classic wave",
+          "自动": "Auto",
+          "随机造浪": "Random wave"
+        }
+      },
+      "linkage": {
+        "name": "Linkage",
+        "state": {
+          "主机": "Master",
+          "从机": "Slave",
+          "独立": "Independent"
+        }
+      },
+      "calset": {
+        "name": "Calibration",
+        "state": {
+          "校准1": "Calibration 1",
+          "校准2": "Calibration 2",
+          "校准3": "Calibration 3",
+          "校准4": "Calibration 4"
+        }
+      }
     },
     "number": {
       "frequency": { "name": "Frequency" },
@@ -63,11 +105,38 @@
     },
     "sensor": {
       "speed": { "name": "Speed" },
-      "state": { "name": "State" }
+      "state": { "name": "State" },
+      "schedule": { "name": "Schedule" }
     },
     "button": {
       "startfeed": { "name": "Start feed" },
       "cancelfeed": { "name": "Cancel feed" }
+    }
+  },
+  "services": {
+    "set_schedule_slot": {
+      "name": "Set schedule slot",
+      "description": "Programs one of a pump's 48 daily timer slots.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "The Jebao pump." },
+        "slot": { "name": "Slot", "description": "Slot index, 0-47." },
+        "start_hour": { "name": "Start hour", "description": "0-24." },
+        "start_minute": { "name": "Start minute", "description": "0-59." },
+        "end_hour": { "name": "End hour", "description": "0-24." },
+        "end_minute": { "name": "End minute", "description": "0-59." },
+        "mode": { "name": "Mode", "description": "Wave mode index for this slot." },
+        "flow": { "name": "Flow", "description": "Flow percent, 0-100." },
+        "frequency": { "name": "Frequency", "description": "Pulse frequency percent, 0-100. Optional." },
+        "pulse_tide": { "name": "Pulse tide", "description": "Pulse tide setting for this slot. Optional." }
+      }
+    },
+    "clear_schedule_slot": {
+      "name": "Clear schedule slot",
+      "description": "Disables one of a pump's 48 daily timer slots.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "The Jebao pump." },
+        "slot": { "name": "Slot", "description": "Slot index, 0-47." }
+      }
     }
   }
 }

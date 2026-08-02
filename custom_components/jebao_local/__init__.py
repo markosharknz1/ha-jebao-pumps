@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .panel import async_register_card, async_register_panel
+from .services import async_register_services
 
 PLATFORMS = [
     Platform.FAN, Platform.SWITCH, Platform.SELECT, Platform.NUMBER,
@@ -35,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # including the second/third pump added to the same HA instance.
     await async_register_card(hass)
     await async_register_panel(hass)
+    async_register_services(hass)
     return True
 
 
