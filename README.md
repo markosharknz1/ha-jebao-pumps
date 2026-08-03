@@ -29,7 +29,8 @@ down with it.
 | Native Lovelace card | ✅ `custom:jebao-pump-card` - add from the card picker with zero YAML; auto-discovers your pumps and only shows the controls each one actually has |
 | Tank dashboards | ✅ Example Lovelace dashboard + tank scripts ([`dashboards/`](dashboards/)) and a Control panel for managing several pumps at once (tank groups, cloneable settings profiles, feed mode with a timer) - both bundled inside the integration, no separate file copying |
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
-| Schedule programming (the 48 daily timer slots) | ✅ Read via a Schedule sensor, written via `jebao_local.set_schedule_slot`/`clear_schedule_slot` services - byte format confirmed from three independent static sources (see SPEC.md), not yet tested against live hardware |
+| Schedule programming (the 48 daily timer slots) | ✅ Visual editor in the Jebao Pump card (list/add/edit/delete periods), plus `jebao_local.set_schedule_slot`/`clear_schedule_slot` services and a Schedule sensor for automations - byte format confirmed from three independent static sources (see SPEC.md), not yet tested against live hardware |
+| Clock sync (schedules fire off the pump's own clock) | ✅ `jebao_local.sync_clock` service + a Sync button in the card, with a diagnostic Device clock sensor to spot drift - encoding confirmed from the vendor app's own `sendLocalTime` |
 
 See [SPEC.md](SPEC.md) for the full phase-by-phase build log (what was tried,
 what worked, what didn't, in the order it happened) and

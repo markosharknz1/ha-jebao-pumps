@@ -17,9 +17,11 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
+from .jebao_gizwits.clock import HMS_ATTR, YMD_ATTR, encode_clock
 from .jebao_gizwits.schedule import SLOT_COUNT, clear_slot, encode_slot, slot_attr_name
 
 ATTR_DEVICE_ID = "device_id"
@@ -35,6 +37,7 @@ ATTR_PULSE_TIDE = "pulse_tide"
 
 SERVICE_SET_SCHEDULE_SLOT = "set_schedule_slot"
 SERVICE_CLEAR_SCHEDULE_SLOT = "clear_schedule_slot"
+SERVICE_SYNC_CLOCK = "sync_clock"
 
 _SLOT_SCHEMA = vol.All(int, vol.Range(min=0, max=SLOT_COUNT - 1))
 _BYTE_SCHEMA = vol.All(int, vol.Range(min=0, max=255))
@@ -58,6 +61,12 @@ CLEAR_SCHEDULE_SLOT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_SLOT): _SLOT_SCHEMA,
+    }
+)
+
+SYNC_CLOCK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 
@@ -86,6 +95,16 @@ def _require_schedule_support(coordinator: JebaoLocalCoordinator, slot: int) -> 
     return attr_name
 
 
+def _require_clock_support(coordinator: JebaoLocalCoordinator) -> None:
+    try:
+        coordinator.schema.by_name(YMD_ATTR)
+        coordinator.schema.by_name(HMS_ATTR)
+    except KeyError:
+        raise ServiceValidationError(
+            f"{coordinator.schema.name_en} does not have a settable clock"
+        ) from None
+
+
 def async_register_services(hass: HomeAssistant) -> None:
     if hass.data.get(_SERVICES_REGISTERED_KEY):
         return
@@ -110,10 +129,22 @@ def async_register_services(hass: HomeAssistant) -> None:
         attr_name = _require_schedule_support(coordinator, call.data[ATTR_SLOT])
         await coordinator.async_write({attr_name: clear_slot()})
 
+    async def _handle_sync_clock(call: ServiceCall) -> None:
+        coordinator = _resolve_coordinator(hass, call.data[ATTR_DEVICE_ID])
+        _require_clock_support(coordinator)
+        # Local wall-clock time, not UTC - the pump has no timezone concept
+        # and its schedule slots are wall-clock times; the vendor app's own
+        # sendLocalTime syncs local time too (see jebao_gizwits/clock.py).
+        now = dt_util.now()
+        await coordinator.async_write(encode_clock(now))
+
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SCHEDULE_SLOT, _handle_set_schedule_slot, schema=SET_SCHEDULE_SLOT_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_SCHEDULE_SLOT, _handle_clear_schedule_slot, schema=CLEAR_SCHEDULE_SLOT_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SYNC_CLOCK, _handle_sync_clock, schema=SYNC_CLOCK_SCHEMA
     )
     hass.data[_SERVICES_REGISTERED_KEY] = True

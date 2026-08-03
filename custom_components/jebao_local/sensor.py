@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import ranged_value_to_percentage
@@ -29,6 +29,7 @@ from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
 from .fan import FEED_NAMES, MODE_NAMES, SWITCH_NAMES as POWER_NAMES, fan_attr_names, find_attr_name as _find_attr_name
+from .jebao_gizwits.clock import HMS_ATTR, YMD_ATTR, decode_clock
 from .jebao_gizwits.enum_translations import translate as _translate_enum
 from .jebao_gizwits.schedule import SLOT_COUNT, ScheduleSlot, decode_slot, slot_attr_name
 
@@ -44,15 +45,22 @@ async def async_setup_entry(
         entities.append(JebaoSpeedSensor(coordinator))
     if _has_schedule(coordinator.schema):
         entities.append(JebaoScheduleSensor(coordinator))
+    if _has_attrs(coordinator.schema, (YMD_ATTR, HMS_ATTR)):
+        entities.append(JebaoDeviceClockSensor(coordinator))
     async_add_entities(entities)
 
 
-def _has_schedule(schema) -> bool:
+def _has_attrs(schema, names: tuple[str, ...]) -> bool:
     try:
-        schema.by_name(_SCHEDULE_PROBE_ATTR)
+        for name in names:
+            schema.by_name(name)
         return True
     except KeyError:
         return False
+
+
+def _has_schedule(schema) -> bool:
+    return _has_attrs(schema, (_SCHEDULE_PROBE_ATTR,))
 
 
 class JebaoSpeedSensor(JebaoLocalEntity, SensorEntity):
@@ -146,3 +154,34 @@ class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         return {"slots": [vars(slot) for slot in self._decoded_slots()]}
+
+
+class JebaoDeviceClockSensor(JebaoLocalEntity, SensorEntity):
+    """The pump's own internal clock (YMDData/HMSData), which the 48 timer
+    slots fire off. Diagnostic - its point is making clock drift visible
+    (and giving the card's schedule editor something to show next to its
+    Sync button). Reported as a plain string, not device_class TIMESTAMP:
+    a timestamp sensor needs a timezone-aware value, and inventing a
+    timezone for a device that has no concept of one would misrepresent
+    what the pump actually stores (a wall-clock time)."""
+
+    _attr_icon = "mdi:clock-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "deviceclock")
+        self._attr_translation_key = "deviceclock"
+
+    @property
+    def native_value(self) -> str | None:
+        if self.coordinator.data is None:
+            return None
+        ymd = self.coordinator.data.get(YMD_ATTR)
+        hms = self.coordinator.data.get(HMS_ATTR)
+        if not isinstance(ymd, (bytes, bytearray)) or not isinstance(hms, (bytes, bytearray)):
+            return None
+        clock = decode_clock(ymd, hms)
+        when = clock.as_datetime()
+        if when is None:
+            return "Not set"
+        return when.strftime("%Y-%m-%d %H:%M:%S")

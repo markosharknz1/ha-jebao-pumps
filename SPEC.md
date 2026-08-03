@@ -381,6 +381,30 @@ Deliberately did not touch the schema JSON's own `enum` arrays (the underlying C
 
 ---
 
+## Phase 17 — Clock sync and a visual schedule editor in the card
+
+**Goal:** make the Phase 15 schedule feature actually *usable*: (a) the 48 timer slots fire off the pump's own internal clock, which nothing but the vendor app had ever set - a pump that lost power or drifted fires schedules at the wrong times; (b) programming slots by hand-filling service-call fields is functional but clunky.
+
+**Status: BUILT (2026-08-03), browser-verified with mocked HA; not yet live-hardware-verified (same standing as the Phase 15 write itself).**
+
+**Clock sync.** The schema has always had writable `YMDData`/`HMSData` datapoints (bytes 392-399, right after the schedule region). Encoding confirmed from the vendor app's own `sendLocalTime` function in the wavemaker template JS, with a second independent call site (the manual date-picker path) agreeing, and both matching the schema's own desc text: `YMDData = [year//100, year%100, month(1-based), day]`, `HMSData = [0, hour, minute, second]` - and notably the app sends *local* wall-clock time, not UTC (the pump has no timezone concept; slot times are wall-clock). Implemented as:
+
+- **`jebao_gizwits/clock.py`** (new): `encode_clock()`/`decode_clock()`/`DeviceClock`, with `as_datetime()` returning None for the all-zero "never set" state instead of inventing a date.
+- **`jebao_local.sync_clock` service** (services.py): writes HA's current local time (`dt_util.now()`), gated on the schema actually having both clock attrs (the Aquarium Light doesn't, covered by a negative test).
+- **Device clock diagnostic sensor** (sensor.py): decodes the clock read-back so drift is visible on the device page and in the card. Deliberately a plain string, not `device_class: TIMESTAMP` - a timestamp entity requires a timezone-aware value and the pump's clock has no timezone to claim.
+
+**Schedule editor in the card** (`jebao-pump-card.js`, CARD_VERSION 0.2.0 → 0.3.0): a collapsible Schedule section per pump - device clock + Sync button, each programmed period as a row (`08:00–20:00 · Classic wave · 75%`) with Edit/delete, and an add/edit form (time pickers, mode dropdown, flow/frequency/pulse fields, defaults matching the vendor app's own new-slot object). Slot-mode numbers 0-5 labeled per the schema's own desc (`0=Stop, 1=Classic, 2=Sine, 3=Random, 4=Constant flow, 5=Feeding`). Mechanics worth recording:
+
+- The services target a HA `device_id`, which the card only knows via the registry discovery path - `discoverPumps()` now captures it, and the section quietly doesn't render on the old-frontend fallback path where it's unknowable.
+- `sensor` joined the card's entity regex so the Schedule/Device-clock sensors are discoverable per-pump; slot data comes from the Schedule sensor's `slots` attribute, no extra API.
+- An HTML `<input type="time">` can't express 24:00, but the device (and the app's own default slot) uses end 24:00 for "until end of day" - a midnight end is treated as that, noted in the input's tooltip.
+- HA pushes a fresh `hass` object every poll (~10s), and the card re-renders by innerHTML replacement - which would wipe an open form mid-typing. Re-renders are skipped while a form is open (form fields sync into card state on input, explicit UI actions force-render), verified in-browser by pushing a new hass object mid-edit and confirming the form survived.
+- New-slot saves auto-pick the lowest unused slot index rather than making the user know slot numbers exist.
+
+Verified in a real browser against a mocked `hass` (harness emulating the backend round-trip: service calls mutate mock slot state and re-push, like a coordinator refresh): expand/collapse, sync (correct `device_id`, clock display updates on push), delete (row disappears), add (midnight→24:00 conversion, auto slot pick, all fields land), edit (form pre-filled from the existing slot), cancel, and the mid-edit-refresh survival case. Zero console errors. Unit tests: `tests/test_clock.py` (encoding vs. the app's own example shape, round-trip, never-set state, length guards) plus clock-gating cases in `tests/test_services.py`.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

@@ -21,6 +21,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from custom_components.jebao_local.services import (  # noqa: E402
     CLEAR_SCHEDULE_SLOT_SCHEMA,
     SET_SCHEDULE_SLOT_SCHEMA,
+    _require_clock_support,
     _require_schedule_support,
 )
 from custom_components.jebao_local.jebao_gizwits.schema import load_by_product_key  # noqa: E402
@@ -79,3 +80,16 @@ def test_non_schedule_product_is_rejected():
     coordinator = _FakeCoordinator(load_by_product_key(NON_SCHEDULE_PRODUCT_KEY))
     with pytest.raises(ServiceValidationError):
         _require_schedule_support(coordinator, 0)
+
+
+def test_wavemaker_supports_clock_sync():
+    coordinator = _FakeCoordinator(load_by_product_key(WAVEMAKER_PRODUCT_KEY))
+    _require_clock_support(coordinator)  # must not raise
+
+
+def test_non_clock_product_is_rejected_for_clock_sync():
+    from homeassistant.exceptions import ServiceValidationError
+
+    coordinator = _FakeCoordinator(load_by_product_key(NON_SCHEDULE_PRODUCT_KEY))
+    with pytest.raises(ServiceValidationError):
+        _require_clock_support(coordinator)

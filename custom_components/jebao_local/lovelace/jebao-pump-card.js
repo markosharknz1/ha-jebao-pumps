@@ -27,7 +27,7 @@
  * a dids: list in YAML mode, for the common "one card per pump" layout.
  */
 
-const ENTITY_RE = /^(switch|select|number|binary_sensor|fan)\.jebao_([a-z0-9]+)_(.+)$/;
+const ENTITY_RE = /^(switch|select|number|binary_sensor|fan|sensor)\.jebao_([a-z0-9]+)_(.+)$/;
 
 // Cosmetic English labels for the wave-mode enum - the device's Mode select
 // only speaks these Chinese strings (see custom_components/jebao_local/
@@ -44,7 +44,19 @@ const MODE_LABELS = {
 };
 const modeLabel = (v) => MODE_LABELS[v] || v;
 
+// Numeric mode values inside a schedule slot (AutoTimeNN Byte4) - from the
+// schema's own desc text: 0停机 1.经典造浪 2.正弦造浪 3.随机造浪 4.恒流造浪 5.喂食.
+const SLOT_MODE_LABELS = {
+  0: "Stop",
+  1: "Classic wave",
+  2: "Sine wave",
+  3: "Random wave",
+  4: "Constant flow",
+  5: "Feeding",
+};
+
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const pad2 = (n) => String(n).padStart(2, "0");
 
 // Shared between the card and its config editor, so "which pumps exist and
 // what are they called" is answered identically in both places.
@@ -56,13 +68,17 @@ function discoverPumps(hass, dids) {
   const registryEntities = hass.entities;
   const registryDevices = hass.devices;
 
-  const addFromEntityId = (entityId, deviceName) => {
+  const addFromEntityId = (entityId, deviceName, deviceId) => {
     const m = entityId.match(ENTITY_RE);
     if (!m) return;
     const [, , did, suffix] = m;
     if (want && !want.has(did)) return;
-    if (!pumps.has(did)) pumps.set(did, { did, name: deviceName || did, entities: {} });
+    if (!pumps.has(did)) pumps.set(did, { did, name: deviceName || did, deviceId: null, entities: {} });
     pumps.get(did).entities[suffix] = entityId;
+    // The schedule/clock services target a HA device_id, which only the
+    // registry path can supply - the fallback path leaves it null and the
+    // card hides the schedule editor for that pump.
+    if (deviceId) pumps.get(did).deviceId = deviceId;
   };
 
   if (registryEntities && registryDevices) {
@@ -73,14 +89,14 @@ function discoverPumps(hass, dids) {
       if (ent.platform !== "jebao_local") continue;
       const device = ent.device_id ? registryDevices[ent.device_id] : null;
       const name = device ? device.name_by_user || device.name : null;
-      addFromEntityId(entityId, name);
+      addFromEntityId(entityId, name, ent.device_id || null);
     }
   } else {
     // Fallback for older frontends without hass.entities/hass.devices:
     // pattern-match straight out of hass.states. Device name isn't known
     // here, so the did itself is shown as a heading instead.
     for (const entityId of Object.keys(hass.states)) {
-      addFromEntityId(entityId, null);
+      addFromEntityId(entityId, null, null);
     }
   }
 
@@ -94,6 +110,8 @@ class JebaoPumpCard extends HTMLElement {
     this._hass = null;
     this._config = {};
     this._feedTimers = new Map(); // did -> {deadline, intervalId}
+    this._schedOpen = new Set(); // dids with the schedule section expanded
+    this._editSlot = new Map(); // did -> {slot|null (null = new), ...form values}
     this._built = false;
   }
 
@@ -218,6 +236,66 @@ class JebaoPumpCard extends HTMLElement {
     this._feedTimers.delete(did);
   }
 
+  // -- schedule editing ----------------------------------------------------
+
+  _scheduleSlots(pump) {
+    const s = this._state(pump.entities.schedule);
+    return (s && Array.isArray(s.attributes.slots)) ? s.attributes.slots : [];
+  }
+
+  _saveSlot(pump) {
+    const form = this._editSlot.get(pump.did);
+    if (!form) return;
+    const [sh, sm] = form.start.split(":").map(Number);
+    let [eh, em] = form.end.split(":").map(Number);
+    // An HTML time input can't express 24:00, but the device (and the
+    // vendor app's own default slot) uses end 24:00 for "until end of
+    // day" - treat a midnight end as that.
+    if (eh === 0 && em === 0) eh = 24;
+    this._call("jebao_local", "set_schedule_slot", {
+      device_id: pump.deviceId,
+      slot: form.slot ?? this._nextFreeSlot(pump),
+      start_hour: sh, start_minute: sm,
+      end_hour: eh, end_minute: em,
+      mode: Number(form.mode),
+      flow: clamp(Number(form.flow) || 0, 0, 255),
+      frequency: clamp(Number(form.frequency) || 0, 0, 255),
+      pulse_tide: clamp(Number(form.pulse_tide) || 0, 0, 255),
+    });
+    this._editSlot.delete(pump.did);
+    this._render();
+  }
+
+  _deleteSlot(pump, slot) {
+    this._call("jebao_local", "clear_schedule_slot", { device_id: pump.deviceId, slot });
+  }
+
+  _syncClock(pump) {
+    this._call("jebao_local", "sync_clock", { device_id: pump.deviceId });
+  }
+
+  _nextFreeSlot(pump) {
+    const used = new Set(this._scheduleSlots(pump).map((s) => s.index));
+    for (let i = 0; i < 48; i++) if (!used.has(i)) return i;
+    return 47;
+  }
+
+  _openEditor(pump, slot) {
+    const existing = slot != null ? this._scheduleSlots(pump).find((s) => s.index === slot) : null;
+    this._editSlot.set(pump.did, existing
+      ? {
+          slot,
+          start: `${pad2(existing.start_hour)}:${pad2(existing.start_minute)}`,
+          end: `${pad2(existing.end_hour === 24 ? 0 : existing.end_hour)}:${pad2(existing.end_minute)}`,
+          mode: existing.mode, flow: existing.flow,
+          frequency: existing.frequency, pulse_tide: existing.pulse_tide,
+        }
+      // Same defaults as the vendor app's own "new slot" object (see
+      // jebao_gizwits/schedule.py's module docstring).
+      : { slot: null, start: "00:00", end: "00:00", mode: 1, flow: 100, frequency: 100, pulse_tide: 0 });
+    this._render(true);
+  }
+
   _feedCountdownText(did) {
     const t = this._feedTimers.get(did);
     if (!t) return null;
@@ -305,7 +383,77 @@ class JebaoPumpCard extends HTMLElement {
             : ""
         }
 
+        ${this._scheduleSection(pump)}
+
         ${!power && !mode && !flow && !freq && !e.feedswitch ? `<div class="empty">No controllable attributes found for this pump.</div>` : ""}
+      </div>`;
+  }
+
+  // The schedule editor needs the pump's HA device_id (the services target
+  // devices, not entities) - only known via the registry discovery path, so
+  // the section quietly doesn't render on the old-frontend fallback path.
+  _scheduleSection(pump) {
+    if (!pump.entities.schedule || !pump.deviceId) return "";
+    const slots = this._scheduleSlots(pump);
+    const open = this._schedOpen.has(pump.did);
+    const clockState = pump.entities.deviceclock ? this._state(pump.entities.deviceclock) : null;
+    const form = this._editSlot.get(pump.did);
+
+    return `
+      <div class="sched">
+        <button class="schedhead" data-act="schedtoggle">
+          <span>${open ? "▾" : "▸"} Schedule</span>
+          <span class="schedcount">${slots.length ? `${slots.length} period${slots.length === 1 ? "" : "s"}` : "none set"}</span>
+        </button>
+        ${!open ? "" : `
+          ${clockState ? `
+            <div class="row">
+              <label>Device clock</label>
+              <span class="clockval">${clockState.state}</span>
+              <button class="small2" data-act="syncclock" title="Set the pump's clock to Home Assistant's current time - schedules fire off this clock">Sync</button>
+            </div>` : ""}
+          ${slots.map((s) => `
+            <div class="slotrow" data-slot="${s.index}">
+              <span class="slottime">${pad2(s.start_hour)}:${pad2(s.start_minute)}&ndash;${pad2(s.end_hour)}:${pad2(s.end_minute)}</span>
+              <span class="slotmode">${SLOT_MODE_LABELS[s.mode] ?? `Mode ${s.mode}`}${s.mode !== 0 ? ` &middot; ${s.flow}%` : ""}</span>
+              <button class="small2" data-act="schededit" data-slot="${s.index}">Edit</button>
+              <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}">✕</button>
+            </div>`).join("")}
+          ${form ? this._slotForm(form) : `<button class="addslot" data-act="schedadd">+ Add period</button>`}
+        `}
+      </div>`;
+  }
+
+  _slotForm(form) {
+    return `
+      <div class="slotform">
+        <div class="row">
+          <label>${form.slot != null ? `Edit period (slot ${form.slot})` : "New period"}</label>
+        </div>
+        <div class="row">
+          <label>Start&ndash;end</label>
+          <input type="time" data-form="start" value="${form.start}">
+          <input type="time" data-form="end" value="${form.end}" title="00:00 as the end time means end of day (24:00)">
+        </div>
+        <div class="row">
+          <label>Mode</label>
+          <select data-form="mode">
+            ${Object.entries(SLOT_MODE_LABELS).map(([v, l]) =>
+              `<option value="${v}" ${Number(v) === Number(form.mode) ? "selected" : ""}>${l}</option>`).join("")}
+          </select>
+        </div>
+        <div class="row">
+          <label>Flow %</label>
+          <input type="number" min="0" max="100" data-form="flow" value="${form.flow}">
+          <label class="inline">Freq %</label>
+          <input type="number" min="0" max="100" data-form="frequency" value="${form.frequency}">
+          <label class="inline">Pulse</label>
+          <input type="number" min="0" max="255" data-form="pulse_tide" value="${form.pulse_tide}">
+        </div>
+        <div class="row">
+          <button class="feednow half" data-act="schedsave">Save</button>
+          <button class="half" data-act="schedcancel">Cancel</button>
+        </div>
       </div>`;
   }
 
@@ -334,7 +482,12 @@ class JebaoPumpCard extends HTMLElement {
       </div>`;
   }
 
-  _render() {
+  _render(force) {
+    // Skip state-driven re-renders while a slot form is open - innerHTML
+    // replacement would wipe what the user is typing. Explicit UI actions
+    // pass force=true; the form's own inputs sync into _editSlot on
+    // "input" so nothing is lost either way.
+    if (!force && this._built && this._editSlot.size) return;
     const pumps = this._pumps();
 
     if (!this._built) {
@@ -368,9 +521,30 @@ class JebaoPumpCard extends HTMLElement {
     else if (act === "feedtoggle") this._toggleFeedSwitch(pump, !(this._state(pump.entities.feedswitch)?.state === "on"));
     else if (act === "feednow") this._feedNow(pump);
     else if (act === "stopfeed") this._stopFeed(pump);
+    else if (act === "schedtoggle") {
+      this._schedOpen.has(pump.did) ? this._schedOpen.delete(pump.did) : this._schedOpen.add(pump.did);
+      this._render(true);
+    } else if (act === "syncclock") this._syncClock(pump);
+    else if (act === "schedadd") this._openEditor(pump, null);
+    else if (act === "schededit") this._openEditor(pump, Number(el.dataset.slot));
+    else if (act === "scheddelete") this._deleteSlot(pump, Number(el.dataset.slot));
+    else if (act === "schedsave") this._saveSlot(pump);
+    else if (act === "schedcancel") {
+      this._editSlot.delete(pump.did);
+      this._render(true);
+    }
   }
 
   _onChange(e) {
+    // Belt-and-braces for the slot form's select/time inputs - some
+    // browsers only fire "change" (not "input") for these.
+    const formEl = e.target.closest("[data-form]");
+    if (formEl) {
+      const formPump = this._pumpFor(formEl);
+      const form = formPump && this._editSlot.get(formPump.did);
+      if (form) form[formEl.dataset.form] = formEl.value;
+      return;
+    }
     const el = e.target.closest("[data-act]");
     if (!el) return;
     const pump = this._pumpFor(el);
@@ -381,6 +555,15 @@ class JebaoPumpCard extends HTMLElement {
   }
 
   _onInput(e) {
+    // Slot-form fields sync straight into _editSlot so the form survives
+    // any re-render (see _render's skip-while-editing note).
+    const formEl = e.target.closest("[data-form]");
+    if (formEl) {
+      const pump = this._pumpFor(formEl);
+      const form = pump && this._editSlot.get(pump.did);
+      if (form) form[formEl.dataset.form] = formEl.value;
+      return;
+    }
     // Live-update the displayed slider value while dragging, without
     // spamming a service call per pixel - the actual write happens on
     // "change" (pointer release), handled above.
@@ -413,6 +596,24 @@ class JebaoPumpCard extends HTMLElement {
       .feednow { width: 100%; margin-top: 2px; background: var(--primary); color: var(--text-primary-color, #fff); border-color: transparent; }
       .countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--primary); }
       .empty { color: var(--secondary-text-color); font-size: 0.9rem; padding: 8px 0; }
+      .sched { margin-top: 10px; border-top: 1px dashed var(--divider-color, #eee); padding-top: 6px; }
+      .schedhead { width: 100%; display: flex; justify-content: space-between; align-items: center;
+        border: none; background: none; padding: 4px 0; font-size: 0.9rem; color: var(--primary-text-color); }
+      .schedcount { color: var(--secondary-text-color); font-size: 0.82rem; }
+      .clockval { flex: 1; font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--secondary-text-color); }
+      .slotrow { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 0.88rem; }
+      .slottime { font-variant-numeric: tabular-nums; font-weight: 500; }
+      .slotmode { flex: 1; color: var(--secondary-text-color); }
+      .small2 { padding: 2px 10px; font-size: 0.8rem; }
+      .danger { color: var(--error-color, #db4437); }
+      .addslot { width: 100%; margin-top: 4px; border-style: dashed; color: var(--secondary-text-color); }
+      .slotform { border: 1px solid var(--divider-color, #ccc); border-radius: 8px; padding: 8px 10px; margin-top: 6px; }
+      .slotform input[type=time], .slotform input[type=number] { font: inherit; padding: 3px 6px; border-radius: 6px;
+        border: 1px solid var(--divider-color, #ccc); background: var(--card-background-color, #fff);
+        color: var(--primary-text-color); }
+      .slotform input[type=number] { width: 60px; }
+      .slotform label.inline { min-width: unset; }
+      .half { flex: 1; }
     </style>`;
   }
 

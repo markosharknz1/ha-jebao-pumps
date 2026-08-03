@@ -83,3 +83,11 @@ clear_schedule_slot:
           min: 0
           max: 47
           mode: box
+
+sync_clock:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: jebao_local

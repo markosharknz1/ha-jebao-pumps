@@ -106,7 +106,8 @@
     "sensor": {
       "speed": { "name": "Speed" },
       "state": { "name": "State" },
-      "schedule": { "name": "Schedule" }
+      "schedule": { "name": "Schedule" },
+      "deviceclock": { "name": "Device clock" }
     },
     "button": {
       "startfeed": { "name": "Start feed" },
@@ -136,6 +137,13 @@
       "fields": {
         "device_id": { "name": "Device", "description": "The Jebao pump." },
         "slot": { "name": "Slot", "description": "Slot index, 0-47." }
+      }
+    },
+    "sync_clock": {
+      "name": "Sync clock",
+      "description": "Sets the pump's internal clock to Home Assistant's current local time. The 48 daily timer slots fire off this clock, so sync it after a power loss or if schedules fire at the wrong time.",
+      "fields": {
+        "device_id": { "name": "Device", "description": "The Jebao pump." }
       }
     }
   }

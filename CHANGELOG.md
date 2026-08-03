@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Clock sync + a visual schedule editor in the card.** The 48 timer
+  slots fire off the pump's own internal clock, which nothing but the
+  vendor app had ever set - so a new `jebao_local.sync_clock` service
+  writes Home Assistant's current local time to the pump
+  (`YMDData`/`HMSData`, encoding confirmed from the vendor app's own
+  `sendLocalTime` function), and a diagnostic "Device clock" sensor makes
+  drift visible. The Jebao Pump card gained a collapsible Schedule
+  section: each programmed period shown as a row with edit/delete, an
+  add form with time pickers and a mode dropdown (defaults matching the
+  vendor app's own new-slot defaults), and the device clock with a Sync
+  button - so schedules are programmed visually instead of by
+  hand-filling service-call fields. Browser-verified against a mocked
+  Home Assistant including the mid-edit-refresh case; not yet verified
+  against live hardware (same standing as the schedule write itself).
 - **Translated the remaining Chinese labels shown in the UI.** Checked the
   vendor app's own bundled i18n data first (it embeds 53 per-product
   `language:{en:{...},zh:{...}}` objects) - real finding: even in "English"
