@@ -7,15 +7,23 @@ on:
 
 jobs:
   tests:
-    name: Logic tests
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pytest
-      - run: pytest tests/ -q
+      # homeassistant is a real test dependency, not an optional extra.
+      # This job used to install pytest alone, on the assumption the suite
+      # was pure protocol logic - but most of it now imports through
+      # custom_components.jebao_local, whose __init__ imports HA, so those
+      # tests were quietly erroring at collection (not skipping) and the
+      # coverage they were supposed to provide never actually ran in CI.
+      - run: pip install pytest homeassistant
+      # -p no:socket / no:homeassistant match how the suite is run locally;
+      # harmless no-ops when those plugins aren't installed.
+      - run: pytest tests/ -q -p no:socket -p no:homeassistant
 
   hassfest:
     name: Home Assistant manifest (hassfest)
