@@ -23,7 +23,10 @@ async def async_setup_entry(
     entities = [
         JebaoNumber(coordinator, attr.name)
         for attr in coordinator.schema.attrs
-        if attr.writable and attr.data_type == "uint8" and attr.uint_spec is not None
+        # uint16 as well as uint8 - a handful of products (dosing-pump
+        # liquid volumes, light colour temperature in Kelvin) need more
+        # than a byte, and were previously dropped entirely.
+        if attr.writable and attr.data_type in ("uint8", "uint16") and attr.uint_spec is not None
         and attr.name != fan_speed_name
     ]
     async_add_entities(entities)

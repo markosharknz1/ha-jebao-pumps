@@ -25,7 +25,7 @@ down with it.
 | Write boolean/enum attributes (power on/off, mode, feed switch) | ✅ Encoding verified against real captured frames; power on/off confirmed live |
 | Home Assistant integration | ✅ Built (`custom_components/jebao_local/`), not yet tested against a running HA instance |
 | Coexists with other HA integrations | ✅ Verified against a second real integration ([`aipai-light-ha`](https://github.com/markosharknz1/aipai-light-ha)) - no domain/dependency conflicts, see [`tests/test_ha_integration_compat.py`](tests/test_ha_integration_compat.py) |
-| Multi-product support | ✅ 30 WiFi-capable product schemas bundled (wavemakers, dosing pumps, lights, filters, pumps) - see [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) |
+| Multi-product support | ✅ 48 WiFi-capable product schemas bundled (wavemakers, dosing pumps, lights, filters, pumps) - see [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) |
 | Native Lovelace card | ✅ `custom:jebao-pump-card` - add from the card picker with zero YAML; auto-discovers your pumps and only shows the controls each one actually has |
 | Tank dashboards | ✅ Example Lovelace dashboard + tank scripts ([`dashboards/`](dashboards/)) and a Control panel for managing several pumps at once (tank groups, cloneable settings profiles, feed mode with a timer) - both bundled inside the integration, no separate file copying |
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
@@ -108,7 +108,7 @@ no file copying, on HACS or a manual install alike. See
 
 ```
 jebao_gizwits/              Core Python library (protocol, discovery, session, schema, control)
-custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwits + bundles 30 product schemas)
+custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwits + bundles 48 product schemas)
   lovelace/jebao-pump-card.js    Native Lovelace card - auto-registered, zero YAML required
   panel/designer.html            Control panel: tank groups, cloneable settings profiles, feed timer
   panel.py                       Serves both of the above and registers the card/sidebar panel
@@ -137,7 +137,7 @@ and reproducible from documentation in SPEC.md, not meant to be versioned.
 This project was built and verified against a Jebao wavemaker
 (`本地造浪泵_WIFI_BLE`, product_key `54114ccdac1e41c0bb17e222887c07ba`). The
 protocol implementation itself is schema-driven (not hardcoded to that one
-product), and 30 WiFi-capable Jebao product schemas are bundled - see
+product), and 48 WiFi-capable Jebao product schemas are bundled - see
 [docs/SUPPORTED_MODELS.md](docs/SUPPORTED_MODELS.md) for the full list
 (dosing pumps, lights, filters, other pumps). Byte-type writes and the
 `SwitchON` bit-type write are confirmed working live; other bit-type

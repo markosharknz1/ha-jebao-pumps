@@ -58,7 +58,7 @@ encoder, not covered here.
 
 ## Full catalog
 
-30 WiFi-capable (8 of those dual-mode WiFi+BLE), 12 Bluetooth-only, 1 naming exception (flagged with ⚠️ below).
+The 42 products the app ships locally: 30 WiFi-capable (8 of those dual-mode WiFi+BLE), 12 Bluetooth-only, 1 naming exception (flagged with ⚠️ below). A further 18 cloud-fetched products are listed in the section after this table.
 
 | Product (English) | Original name | product_key | protocolType | Connectivity | # datapoints |
 |---|---|---|---|---|---|
@@ -105,3 +105,33 @@ encoder, not covered here.
 | Water Pump Speed Controller (WiFi+BLE) | 水泵调速器WiFi_BLE | `35abf13fa5444553b4a7cd0d184f3430` | standard | WiFi + Bluetooth (dual mode, by name) | 66 |
 | Wavemaker (base/legacy) | 造浪泵 | `f65982cb65da43baa0c722c84dd2740b` | standard | WiFi only (by name) | 19 |
 | Wireless Timer Switch | 无线定时开关 | `db6a58856402414283ec174642629eea` | standard | WiFi only (by name) | 71 |
+
+## Products added from the cloud (not in the app's bundled productConfig)
+
+The app declares 62 product keys in its JS bundle but only ships 42
+productConfig files - the rest are fetched at runtime. These were added
+with [`tools/fetch_product_schema.py`](../tools/fetch_product_schema.py);
+almost all are "Pro" variants or newer multi-head dosing pumps, i.e. models
+newer than the app's offline cache. **None have been verified against real
+hardware** - they rest on the vendor's own schema being accurate.
+
+| English name | Vendor name | product_key | protocolType | Source | Attrs |
+|---|---|---|---|---|---|
+| Aquatic Plant Light Pro (WiFi+BLE) | 水草灯Pro_WiFi_BLE | `0375bc204ea846b784cd819bb01d3029` | standard | fetched from cloud (not in app's bundled productConfig) | 52 |
+| DC Pump Pro (WiFi+BLE) | DC泵Pro_WIFI_BLE | `0696a19599bc484f8e1866f5ccf4ee7e` | standard | fetched from cloud (not in app's bundled productConfig) | 67 |
+| Single-Head Dosing Pump Pro (WiFi+BLE) | 单头滴定泵Pro_WiFi_BL | `0ca4e3d3fda143929ab49fbe8c7363a0` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| 4-Head Dosing Pump (WiFi+BLE) | 4头滴定泵WiFi_BLE | `1aa33c38ba9d4b78a9e7796705b2fad7` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| Single-Head Dosing Pump (Bluetooth-named, standard protocol) | 蓝牙单头滴定泵 | `1b834098d4aa4802a118a6ac73abbca9` | standard | fetched from cloud (not in app's bundled productConfig) | 25 |
+| Marine Light Pro (WiFi+BLE) | 海水灯Pro_WiFi_BLE | `40ab8468f8434e24b7cc2269ff8718df` | standard | fetched from cloud (not in app's bundled productConfig) | 178 |
+| Marine Light 2 Pro (WiFi+BLE) | 海水灯2_Pro_WiFi_BL | `490eda6893d349e7b7227007683e9795` | standard | fetched from cloud (not in app's bundled productConfig) | 180 |
+| 5-Head Dosing Pump (WiFi+BLE) | 5头滴定泵WiFi_BLE | `5ab6019f2dbb4ae7a42b48d2b8ce0530` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| D-D Marine Light (WiFi+BLE) | D_D海水灯_WiFi_BLE | `877bbcc8df614559864db4de18014286` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| 6-Head Dosing Pump Pro (WiFi+BLE) | 6头滴定泵Pro_WiFi_BL | `89e5084088ea4063bb5019664abb93c3` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| Feeder Pro (WiFi+BLE) | 喂食器Pro_WiFi_BLE | `94a8f30590dc4e5490d887f95f7135a7` | standard | fetched from cloud (not in app's bundled productConfig) | 22 |
+| Single-Head Dosing Pump (WiFi+BLE) | 单头滴定泵WiFi_BLE | `995613fe416e421cb5ab7b4cf5a8572f` | standard | fetched from cloud (not in app's bundled productConfig) | 25 |
+| 5-Head Dosing Pump (Bluetooth-named, standard protocol) | 蓝牙5头滴定泵 | `a8e62ba39843412c846faa7811ae7b6e` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| Multi-Channel Marine Light Pro (WiFi+BLE) | 多路控制海水灯Pro_Wi_BL | `b9abf138966f4c2fb444820bf5e8318c` | standard | fetched from cloud (not in app's bundled productConfig) | 96 |
+| 5-Head Dosing Pump Pro (WiFi+BLE) | 5头滴定泵Pro_WiFi_BL | `bc1c4f4c62cb45e4858c85943f827a45` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| Feeder (WiFi+BLE) | 喂食器_WiFi_BLE | `c2178a3d89ba4023a9d7d87d649572de` | standard | fetched from cloud (not in app's bundled productConfig) | 22 |
+| 4-Head Dosing Pump Pro (WiFi+BLE) | 4头滴定泵Pro_WiFi_BL | `cd51508718ab4aa9b36208c5156c1757` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |
+| 6-Head Dosing Pump (WiFi+BLE) | 6多头滴定泵WiFi_BLE | `d772dfc90e404572ace59d9e2cc15128` | standard | fetched from cloud (not in app's bundled productConfig) | 42 |

@@ -53,6 +53,14 @@ async def async_setup_entry(
         entities.append(JebaoScheduleSensor(coordinator))
     if _has_attrs(coordinator.schema, (YMD_ATTR, HMS_ATTR)):
         entities.append(JebaoDeviceClockSensor(coordinator))
+    # status_readonly attrs match no other platform's filter (they're
+    # neither writable nor faults), so without this they'd be read from the
+    # device every poll and then silently dropped.
+    entities.extend(
+        JebaoReadonlySensor(coordinator, attr.name)
+        for attr in coordinator.schema.attrs
+        if attr.is_readonly_status and attr.data_type == "uint8"
+    )
     async_add_entities(entities)
 
 
@@ -100,7 +108,9 @@ class JebaoStateSensor(JebaoLocalEntity, SensorEntity):
         self._power_attr = fan_attrs[0] if fan_attrs else _find_attr_name(schema, POWER_NAMES, "bool")
         self._mode_attr = _find_attr_name(schema, MODE_NAMES, "enum")
         self._feed_attr = _find_attr_name(schema, FEED_NAMES, "bool")
-        self._fault_attrs = [a.name for a in schema.attrs if a.is_fault and a.data_type == "bool"]
+        # is_problem, not is_fault - 'alert' attrs are fault conditions too
+        # (see binary_sensor.py) and should show up in the State summary.
+        self._fault_attrs = [a.name for a in schema.attrs if a.is_problem and a.data_type == "bool"]
 
     @property
     def native_value(self) -> str | None:
@@ -203,3 +213,31 @@ class JebaoDeviceClockSensor(JebaoLocalEntity, SensorEntity):
         if when is None:
             return "Not set"
         return when.strftime("%Y-%m-%d %H:%M:%S")
+
+
+class JebaoReadonlySensor(JebaoLocalEntity, SensorEntity):
+    """A 'status_readonly' datapoint - readable, not writable, not a fault.
+
+    Only appears on products outside the app's locally-bundled set (SPEC.md
+    Phase 20), where it's always `time1`, a uint8 the device reports and
+    the vendor app displays. Diagnostic rather than primary state, and
+    deliberately not given a device_class/unit: the schema carries no unit
+    for it and inventing one (minutes? seconds?) would be a guess dressed
+    up as fact.
+    """
+
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: JebaoLocalCoordinator, attr_name: str) -> None:
+        super().__init__(coordinator, attr_name)
+        self._attr_name = attr_name
+        self._attr_translation_key = attr_name.lower()
+        self.attr_name = attr_name
+
+    @property
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
+        value = self.coordinator.data.get(self.attr_name)
+        return value if isinstance(value, (int, float)) else None

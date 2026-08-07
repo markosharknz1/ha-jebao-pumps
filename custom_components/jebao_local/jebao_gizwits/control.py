@@ -132,13 +132,19 @@ def build_control_payload(
                 raise ValueError(f"{name}: expected {p.len} bytes, got {len(raw_bytes)}")
             vals[p.byte_offset : p.byte_offset + p.len] = raw_bytes
         else:
-            if attr.data_type != "uint8" or attr.uint_spec is None:
+            if attr.data_type not in ("uint8", "uint16") or attr.uint_spec is None:
                 raise ValueError(f"writing data_type {attr.data_type!r} not implemented ({name})")
             us = attr.uint_spec
             raw_v = round((float(new_value) - us.addition) / us.ratio)
             if not (us.min <= raw_v <= us.max):
                 raise ValueError(f"{name}: value {new_value} out of range {us.min}..{us.max}")
-            vals[p.byte_offset] = raw_v & 0xFF
+            if attr.data_type == "uint16":
+                # Big-endian, same convention as decode_status - see the
+                # note there; consistent with the rest of the protocol but
+                # not confirmed against a captured uint16 write.
+                vals[p.byte_offset : p.byte_offset + 2] = (raw_v & 0xFFFF).to_bytes(2, "big")
+            else:
+                vals[p.byte_offset] = raw_v & 0xFF
 
     flags = bytes(reversed(flags))
     return bytes([P0_ACTION_CONTROL_DEVICE]) + flags + bytes(vals)

@@ -101,10 +101,49 @@ def test_binary_write_does_not_disturb_other_attrs():
     assert built_switch_only[vals_start + byte_offset : vals_start + byte_offset + 8] == bytes(8)
 
 
+def test_uint16_round_trips_big_endian():
+    """uint16 datapoints (light Colour_Kelvin, dosing-pump liquid volumes)
+    were dropped entirely before Phase 20 - number.py only handled uint8.
+    Big-endian matches every other multi-byte field in this protocol
+    (discovery.py's ">H", the frame header) but is not itself confirmed
+    against a captured uint16 write - see SPEC.md Phase 20."""
+    schema = _ha_load_schema(
+        ROOT / "custom_components" / "jebao_local" / "jebao_gizwits" / "schemas"
+        / "877bbcc8df614559864db4de18014286.json"
+    )
+    attr = schema.by_name("Colour_Kelvin")
+    assert attr.data_type == "uint16"
+
+    built = _ha_build_control_payload(schema, {"Colour_Kelvin": 10000})
+    vals_start = 1 + _ha_attr_flags_size(schema)
+    off = attr.position.byte_offset
+    assert built[vals_start + off : vals_start + off + 2] == bytes([0x27, 0x10])
+
+    # ...and decode_status reads it back to the same number.
+    raw = bytearray(schema.status_size_bytes)
+    raw[off : off + 2] = bytes([0x27, 0x10])
+    assert schema.decode_status(bytes(raw))["Colour_Kelvin"] == 10000
+
+
+def test_uint16_range_is_enforced():
+    schema = _ha_load_schema(
+        ROOT / "custom_components" / "jebao_local" / "jebao_gizwits" / "schemas"
+        / "877bbcc8df614559864db4de18014286.json"
+    )
+    try:
+        _ha_build_control_payload(schema, {"Colour_Kelvin": 70000})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("expected ValueError for an out-of-range uint16")
+
+
 if __name__ == "__main__":
     test_switchon_false_matches_capture()
     test_switchon_true_matches_capture()
     test_binary_write_places_bytes_directly_at_byte_offset()
     test_binary_write_wrong_length_is_rejected()
     test_binary_write_does_not_disturb_other_attrs()
+    test_uint16_round_trips_big_endian()
+    test_uint16_range_is_enforced()
     print("All control.py regression tests passed.")

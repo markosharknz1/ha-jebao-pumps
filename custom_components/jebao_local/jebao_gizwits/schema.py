@@ -46,6 +46,23 @@ class Attr:
     def is_fault(self) -> bool:
         return self.dp_type == "fault"
 
+    @property
+    def is_alert(self) -> bool:
+        """'alert' is a second fault-ish dp_type that only appears on
+        products outside the app's locally-bundled set (SPEC.md Phase 20) -
+        in this catalog it's always a real fault condition (OpenCircuit,
+        OverTemp, OverCurrent, Fault_Fan, Fault_UART)."""
+        return self.dp_type == "alert"
+
+    @property
+    def is_problem(self) -> bool:
+        """Anything that should surface as a PROBLEM binary sensor."""
+        return self.is_fault or self.is_alert
+
+    @property
+    def is_readonly_status(self) -> bool:
+        return self.dp_type == "status_readonly"
+
 
 @dataclass(frozen=True)
 class DatapointSchema:
@@ -100,6 +117,15 @@ class DatapointSchema:
                 if attr.data_type == "uint8" and attr.uint_spec is not None:
                     us = attr.uint_spec
                     values[attr.name] = chunk[0] * us.ratio + us.addition
+                elif attr.data_type == "uint16" and attr.uint_spec is not None:
+                    # Big-endian, matching every other multi-byte field in
+                    # this protocol (see discovery.py's ">H" reads and the
+                    # frame header in protocol.py). Consistent with the
+                    # established convention rather than newly assumed, but
+                    # not itself confirmed against a captured uint16 value -
+                    # see SPEC.md Phase 20.
+                    us = attr.uint_spec
+                    values[attr.name] = int.from_bytes(chunk[:2], "big") * us.ratio + us.addition
                 else:
                     values[attr.name] = chunk
         return values

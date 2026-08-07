@@ -54,4 +54,54 @@ def test_speed_sensor_only_for_fan_products():
     # Matches the count already locked in by test_fan_dispatch.py - the
     # Speed sensor's gate (`if fan_attr_names(...)`) reuses that exact
     # function, so this is really asserting the gate hasn't drifted.
-    assert fan_count == 14
+    assert fan_count == 15
+
+
+# --- dp_types that only appear outside the app's bundled set (Phase 20) ---
+# 'alert' and 'status_readonly' matched no platform's filter at all before
+# Phase 20: every one gates on `writable` or `is_fault`, so these were read
+# from the device every poll and silently dropped.
+
+
+def test_alert_attrs_are_treated_as_problems_not_dropped():
+    from custom_components.jebao_local.jebao_gizwits.schema import known_product_keys
+
+    alert_attrs = [
+        (pk, a)
+        for pk in known_product_keys()
+        for a in load_by_product_key(pk).attrs
+        if a.is_alert
+    ]
+    assert alert_attrs, "no 'alert' attrs bundled - this test has lost its subject"
+    for _pk, a in alert_attrs:
+        assert a.is_problem, f"{a.name} is an alert but wouldn't get a binary_sensor"
+        assert not a.writable, f"{a.name} unexpectedly writable"
+
+
+def test_every_alert_attr_really_is_a_fault_condition():
+    # The premise of folding 'alert' in with 'fault': in this catalog every
+    # alert is a genuine fault condition. If a future product uses 'alert'
+    # for something benign, this catches it before it shows as a PROBLEM.
+    from custom_components.jebao_local.jebao_gizwits.schema import known_product_keys
+
+    names = {
+        a.name
+        for pk in known_product_keys()
+        for a in load_by_product_key(pk).attrs
+        if a.is_alert
+    }
+    assert names <= {"OpenCircuit", "OverTemp", "OverCurrent", "Fault_Fan", "Fault_UART"}, names
+
+
+def test_readonly_status_attrs_are_exposed():
+    from custom_components.jebao_local.jebao_gizwits.schema import known_product_keys
+
+    ro = [
+        a
+        for pk in known_product_keys()
+        for a in load_by_product_key(pk).attrs
+        if a.is_readonly_status
+    ]
+    assert ro, "no status_readonly attrs bundled - this test has lost its subject"
+    # sensor.py only builds these for uint8; anything else would be dropped.
+    assert all(a.data_type == "uint8" for a in ro), {a.name: a.data_type for a in ro}

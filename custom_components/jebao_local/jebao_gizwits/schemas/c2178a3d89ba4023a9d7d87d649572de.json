@@ -1,0 +1,625 @@
+{
+  "name": "喂食器_WiFi_BLE",
+  "name_en": "Feeder (WiFi+BLE)",
+  "packetVersion": "0x00000004",
+  "protocolType": "standard",
+  "product_key": "c2178a3d89ba4023a9d7d87d649572de",
+  "entities": [
+    {
+      "display_name": "机智云开发套件",
+      "attrs": [
+        {
+          "display_name": "开关",
+          "name": "SwitchON",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 0,
+          "desc": ""
+        },
+        {
+          "display_name": "模式",
+          "name": "Mode",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "status_writable",
+          "id": 1,
+          "desc": "模式切换，0:AP控制，1：Wireless控制"
+        },
+        {
+          "display_name": "手动",
+          "name": "Manual",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 2
+          },
+          "type": "status_writable",
+          "id": 2,
+          "desc": "手动喂食开关"
+        },
+        {
+          "display_name": "定时开关",
+          "name": "TimerON",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 3
+          },
+          "type": "status_writable",
+          "id": 3,
+          "desc": "定时器开关，0：关闭，1：定时"
+        },
+        {
+          "display_name": "份量",
+          "name": "Deal",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 1,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 4,
+          "desc": "手动喂食份量"
+        },
+        {
+          "display_name": "日期数据",
+          "name": "YMDData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 2,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 5,
+          "desc": "日期，Byte1年千位百位，byte2年十位个位，byte3月，byte4日"
+        },
+        {
+          "display_name": "时间数据",
+          "name": "HMSData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 6,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 6,
+          "desc": "时间，Byte1空，byte2时，byte3分，byte4秒"
+        },
+        {
+          "display_name": "定时段1",
+          "name": "Timer1",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 10,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 7,
+          "desc": "喂食定时时间段1，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段2",
+          "name": "Timer2",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 14,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 8,
+          "desc": "喂食定时时间段2，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段3",
+          "name": "Timer3",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 18,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 9,
+          "desc": "喂食定时时间段3，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段4",
+          "name": "Timer4",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 22,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 10,
+          "desc": "喂食定时时间段4，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段5",
+          "name": "Timer5",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 26,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 11,
+          "desc": "喂食定时时间段5，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段6",
+          "name": "Timer6",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 30,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 12,
+          "desc": "喂食定时时间段6，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段7",
+          "name": "Timer7",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 34,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 13,
+          "desc": "喂食定时时间段7，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段8",
+          "name": "Timer8",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 38,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 14,
+          "desc": "喂食定时时间段8，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段9",
+          "name": "Timer9",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 42,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 15,
+          "desc": "喂食定时时间段9，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段10",
+          "name": "Timer10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 46,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 16,
+          "desc": "喂食定时时间段10，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段11",
+          "name": "Timer11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 50,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 17,
+          "desc": "喂食定时时间段11，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "定时段12",
+          "name": "Timer12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 54,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 18,
+          "desc": "喂食定时时间段12，Byte1开始时，byte2开始分，byte3空，byte4喂食份量"
+        },
+        {
+          "display_name": "开路",
+          "name": "OpenCircuit",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 58,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "alert",
+          "id": 19,
+          "desc": "线路断开"
+        },
+        {
+          "display_name": "过流",
+          "name": "OverCurrent",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 58,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "alert",
+          "id": 20,
+          "desc": "过载，电流过大"
+        },
+        {
+          "display_name": "串口连接故障",
+          "name": "Fault_UART",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 59,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "fault",
+          "id": 21,
+          "desc": "模块与主板通讯不上"
+        }
+      ],
+      "name": "entity0",
+      "id": 0
+    }
+  ],
+  "ui": {
+    "object": {
+      "version": 4,
+      "showEditButton": false
+    },
+    "sections": [
+      {
+        "elements": [
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.SwitchON"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.SwitchON",
+            "title": "开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Mode"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Mode",
+            "title": "模式"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Manual"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Manual",
+            "title": "手动"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.TimerON"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.TimerON",
+            "title": "定时开关"
+          },
+          {
+            "title": "份量",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Deal"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Deal",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "日期数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.YMDData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.YMDData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "时间数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.HMSData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.HMSData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段1",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer1"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer1",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段2",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer2"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer2",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段3",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer3"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer3",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段4",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer4"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer4",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段5",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer5"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer5",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段6",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer6"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer6",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段7",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer7"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer7",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段8",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer8"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer8",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段9",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer9"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer9",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer10",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer11",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时段12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer12",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          }
+        ]
+      }
+    ]
+  }
+}

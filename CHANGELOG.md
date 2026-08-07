@@ -4,6 +4,29 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **The product catalog went from 30 to 48**, and four classes of device
+  data that were being silently thrown away now reach Home Assistant.
+  The original catalog was built by listing the app's bundled
+  `productConfig` folder (42 files) - but that's a *cache*, not a list of
+  supported products. The app's own JS declares **62** product keys, so 22
+  were invisible to this project from day one (almost all of them "Pro"
+  variants and newer multi-head dosing pumps - the bundled cache is
+  effectively a snapshot of the older product line). 19 of the 22 speak
+  the LAN protocol; 18 are now bundled.
+  - **Fault "alert" flags were never surfaced.** 54 attributes across the
+    new products - `OpenCircuit`, `OverTemp`, `OverCurrent`, and two
+    literally named `Fault_*` - used a datapoint type no platform
+    handled, so an over-temperature condition the device was actively
+    reporting simply never appeared. They're binary sensors now.
+  - **`uint16` values were never decoded** - light colour temperature
+    (Kelvin) and dosing-pump liquid volumes. This one affected two
+    products that have been bundled since the very first release, so
+    those readings have been missing all along.
+  - Read-only status values (`time1`) now get a diagnostic sensor, and the
+    D-D marine light's power switch (named `Light_On`, matching neither
+    of the two names we looked for) is now found.
+  - A coverage sweep now confirms **no attribute on any of the 48
+    products fails to surface as an entity** - it was 74 before.
 - **Local Wavemaker Pro is now supported** (30th bundled product). It had
   no schema anywhere in the vendor app's local assets - the app fetches
   that one from Gizwits at runtime. Turns out that endpoint is plain HTTP

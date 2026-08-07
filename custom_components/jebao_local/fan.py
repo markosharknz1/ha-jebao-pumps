@@ -32,7 +32,12 @@ from .jebao_gizwits.schema import Attr, DatapointSchema
 # docs/product_catalog.json / SPEC.md Phase 9). Order matters for SPEED_NAMES:
 # "flow" is preferred where a product has it (the wavemaker family calls its
 # speed "Flow", distinct from "Frequency" which is a pulse-rate, not a speed).
-SWITCH_NAMES = ("switchon", "switch")
+# Power/on-off attribute names, in priority order. Most products use
+# SwitchON; several (mostly lights) use plain Switch; the D-D marine light
+# uses Light_On. Verified to cover every bundled product - see
+# tests/test_sensors.py::test_every_bundled_product_has_a_detectable_power_attr,
+# which is what caught Light_On when that light was bundled.
+SWITCH_NAMES = ("switchon", "switch", "light_on")
 SPEED_NAMES = ("flow", "motor_speed")
 
 

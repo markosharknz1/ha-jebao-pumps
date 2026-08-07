@@ -1,0 +1,1326 @@
+{
+  "name": "D_D海水灯_WiFi_BLE",
+  "name_en": "D-D Marine Light (WiFi+BLE)",
+  "packetVersion": "0x00000004",
+  "protocolType": "standard",
+  "product_key": "877bbcc8df614559864db4de18014286",
+  "entities": [
+    {
+      "display_name": "机智云开发套件",
+      "attrs": [
+        {
+          "display_name": "灯开关",
+          "name": "Light_On",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 0,
+          "desc": "海水灯开关，1为开，0为关"
+        },
+        {
+          "display_name": "自动调光",
+          "name": "Auto_Dim",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "status_writable",
+          "id": 1,
+          "desc": "自动调光功能，1为开，0为关；开启表示灯光亮度降低50%。"
+        },
+        {
+          "display_name": "风扇_自动模式",
+          "name": "Automatic_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 2
+          },
+          "type": "status_writable",
+          "id": 2,
+          "desc": "风扇_自动模式,1为开，0为关"
+        },
+        {
+          "display_name": "风扇_持续运行",
+          "name": "Constant_Running",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 3
+          },
+          "type": "status_writable",
+          "id": 3,
+          "desc": "风扇_持续运行，1为开，0为关"
+        },
+        {
+          "display_name": "定时开关",
+          "name": "Enable_Schedule",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 4
+          },
+          "type": "status_writable",
+          "id": 4,
+          "desc": "作用：点击该按键，执行定时任务"
+        },
+        {
+          "display_name": "喂食模式开关",
+          "name": "Feed_Mode",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 5
+          },
+          "type": "status_writable",
+          "id": 5,
+          "desc": "作用：把该数据点改成，设备详情里面的3灯三次的功能数据点。"
+        },
+        {
+          "display_name": "月运周期开关",
+          "name": "Lunar_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 6
+          },
+          "type": "status_writable",
+          "id": 6,
+          "desc": "月运周期开关，1开启，0为关闭"
+        },
+        {
+          "display_name": "适应周期开关",
+          "name": "Adaptation_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 7
+          },
+          "type": "status_writable",
+          "id": 7,
+          "desc": "适应周期开关,1开启，0关闭"
+        },
+        {
+          "display_name": "风扇转速",
+          "name": "Fan_Speed",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 1,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 8,
+          "desc": "风扇转速，范围为0~100百分比"
+        },
+        {
+          "display_name": "模式",
+          "name": "Mode",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 2,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 9,
+          "desc": "模式，互斥关系，0为Manual Control，1为Schedule，2为Acclimation Mode"
+        },
+        {
+          "display_name": "白色",
+          "name": "White",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 3,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 10,
+          "desc": "手动模式页面，Live Demo里面的白色灯光，范围是0~100%"
+        },
+        {
+          "display_name": "暖白",
+          "name": "Warm_White",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 4,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 11,
+          "desc": "手动模式页面，Live Demo里面的暖白灯光，范围是0~100%"
+        },
+        {
+          "display_name": "宝蓝色",
+          "name": "Sapphire_Blue",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 5,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 12,
+          "desc": "手动模式页面，Live Demo里面的宝蓝色灯光，范围是0~125%"
+        },
+        {
+          "display_name": "蓝色",
+          "name": "Blue",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 6,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 13,
+          "desc": "手动模式页面，Live Demo里面的蓝色灯光，范围是0~125%"
+        },
+        {
+          "display_name": "UV",
+          "name": "UV",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 7,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 14,
+          "desc": "手动模式页面，Live Demo里面的UV灯光，范围是0~167%"
+        },
+        {
+          "display_name": "紫色",
+          "name": "Purple",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 8,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 15,
+          "desc": "手动模式页面，Live Demo里面的紫色灯光，范围是0~167%"
+        },
+        {
+          "display_name": "色温功耗值",
+          "name": "Colour_Temp_Power",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 9,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 16,
+          "desc": "色温功耗值表示灯功率，范围为0~150W"
+        },
+        {
+          "display_name": "月运周期功率",
+          "name": "Lunar_Power",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 10,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 17,
+          "desc": "月运周期功率设置，范围为0~100"
+        },
+        {
+          "display_name": "适应周期功率",
+          "name": "Adaptation_Power",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 11,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 18,
+          "desc": "适应周期功率，范围是0~100"
+        },
+        {
+          "display_name": "适应周期天数",
+          "name": "Adaptation_Period_Days",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 12,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 19,
+          "desc": "适应周期天数，范围是0~255"
+        },
+        {
+          "display_name": "色温值",
+          "name": "Colour_Kelvin",
+          "data_type": "uint16",
+          "position": {
+            "byte_offset": 13,
+            "unit": "byte",
+            "len": 2,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 65535,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 20,
+          "desc": "色温开尔文值，范围为5000K~20000K"
+        },
+        {
+          "display_name": "定时_1",
+          "name": "Timer_1",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 15,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 21,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_2",
+          "name": "Timer_2",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 23,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 22,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_3",
+          "name": "Timer_3",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 31,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 23,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_4",
+          "name": "Timer_4",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 39,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 24,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_5",
+          "name": "Timer_5",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 47,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 25,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_6",
+          "name": "Timer_6",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 55,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 26,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_7",
+          "name": "Timer_7",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 63,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 27,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_8",
+          "name": "Timer_8",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 71,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 28,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_9",
+          "name": "Timer_9",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 79,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 29,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_10",
+          "name": "Timer_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 87,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 30,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_11",
+          "name": "Timer_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 95,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 31,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "定时_12",
+          "name": "Timer_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 103,
+            "unit": "byte",
+            "len": 8,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 32,
+          "desc": "Byte0为时，Byte1为分，Byte2为白色，Byte3为暖白，Byte4为宝蓝色，Byte5为蓝色，Byte6为UV，Byte7为紫色"
+        },
+        {
+          "display_name": "轻松设置",
+          "name": "Easy_Setup",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 111,
+            "unit": "byte",
+            "len": 12,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 33,
+          "desc": "Byte0为日出时间-时，Byte1为日出时间-分，Byte2为日落时间-时，Byte3为日落时间-分，Byte4为渐变时间-时，Byte5为渐变时间-分，Byte6为白色，Byte7为暖白，Byte8为宝蓝色，Byte9为蓝色，Byte10为UV，Byte11为紫色"
+        },
+        {
+          "display_name": "日期数据",
+          "name": "YMDData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 123,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 34,
+          "desc": "日期, Byte1年千位百位, byte2年十位个位, byte3月, byte4日"
+        },
+        {
+          "display_name": "时间数据",
+          "name": "HMSData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 127,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 35,
+          "desc": "时间, Byte1空, byte2时, byte3分, byte4秒"
+        },
+        {
+          "display_name": "设置获取当前定时亮度时间",
+          "name": "set_brightness_time",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 131,
+            "unit": "byte",
+            "len": 2,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 36,
+          "desc": "Byte0为时，Byte1为分"
+        },
+        {
+          "display_name": "获取当前定时亮度",
+          "name": "get_scheduled_brightness",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 133,
+            "unit": "byte",
+            "len": 6,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 37,
+          "desc": "Byte0为白色，Byte1为暖白，Byte2为宝蓝色，Byte3为蓝色，Byte4为UV，Byte5为紫色"
+        },
+        {
+          "display_name": "过温",
+          "name": "OverTemp",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 139,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "alert",
+          "id": 38,
+          "desc": "温度过高"
+        },
+        {
+          "display_name": "过流",
+          "name": "OverCurrent",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 139,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "alert",
+          "id": 39,
+          "desc": "过流"
+        },
+        {
+          "display_name": "风扇失效",
+          "name": "Fault_Fan",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 139,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 2
+          },
+          "type": "alert",
+          "id": 40,
+          "desc": "风扇失效"
+        },
+        {
+          "display_name": "串口连接故障",
+          "name": "Fault_UART",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 139,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 3
+          },
+          "type": "alert",
+          "id": 41,
+          "desc": "模块与主板通讯不上"
+        }
+      ],
+      "name": "entity0",
+      "id": 0
+    }
+  ],
+  "ui": {
+    "object": {
+      "version": 4,
+      "showEditButton": false
+    },
+    "sections": [
+      {
+        "elements": [
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Light_On"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Light_On",
+            "title": "灯开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Auto_Dim"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Auto_Dim",
+            "title": "自动调光"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Automatic_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Automatic_onoff",
+            "title": "风扇_自动模式"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Constant_Running"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Constant_Running",
+            "title": "风扇_持续运行"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Enable_Schedule"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Enable_Schedule",
+            "title": "定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Feed_Mode"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Feed_Mode",
+            "title": "喂食模式开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Lunar_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Lunar_onoff",
+            "title": "月运周期开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Adaptation_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Adaptation_onoff",
+            "title": "适应周期开关"
+          },
+          {
+            "title": "风扇转速",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Fan_Speed"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Fan_Speed",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "模式",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Mode"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Mode",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "白色",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.White"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.White",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "暖白",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Warm_White"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Warm_White",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "宝蓝色",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Sapphire_Blue"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Sapphire_Blue",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "蓝色",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Blue"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Blue",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "UV",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.UV"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.UV",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "紫色",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Purple"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Purple",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "色温功耗值",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Colour_Temp_Power"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Colour_Temp_Power",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "月运周期功率",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Lunar_Power"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Lunar_Power",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "适应周期功率",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Adaptation_Power"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Adaptation_Power",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "适应周期天数",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Adaptation_Period_Days"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Adaptation_Period_Days",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "色温值",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Colour_Kelvin"
+              ],
+              "uint_spec": {
+                "max": 65535,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Colour_Kelvin",
+            "maximumValue": 65535,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_1",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_1"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_1",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_2",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_2"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_2",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_3",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_3"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_3",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_4",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_4"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_4",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_5",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_5"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_5",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_6",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_6"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_6",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_7",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_7"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_7",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_8",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_8"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_8",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_9",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_9"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_9",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_10",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_11",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "定时_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Timer_12",
+            "maxLength": 16,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "轻松设置",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Easy_Setup"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Easy_Setup",
+            "maxLength": 24,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "日期数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.YMDData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.YMDData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "时间数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.HMSData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.HMSData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "设置获取当前定时亮度时间",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.set_brightness_time"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.set_brightness_time",
+            "maxLength": 4,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "获取当前定时亮度",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.get_scheduled_brightness"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.get_scheduled_brightness",
+            "maxLength": 12,
+            "type": "QMultilineElement"
+          }
+        ]
+      }
+    ]
+  }
+}

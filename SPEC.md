@@ -448,6 +448,33 @@ Five existing tests failed on the new schema and all five were *correct* to fail
 
 ---
 
+## Phase 20 — The catalog was never complete: 30 → 48 products
+
+**Goal:** answer "how did the Pro not get picked up sooner, when the app version never changed?" - and act on the answer.
+
+**Status: BUILT (2026-08-03).**
+
+**The blind spot was ours, not the app's.** Phase 8 built the product catalog by enumerating the app's `assets/productConfig/` folder - 42 JSON files, which looked complete and authoritative. But that folder is a *cache of schemas the app has downloaded*, not a *manifest of products it supports*. The app's real product list lives in the JS bundle, which declares **62 product keys**. Nothing ever cross-checked the 42 against the 62, so **22 products were invisible from day one** - the Pro among them.
+
+The gap is systematic, not random: almost every missing product is a **"Pro" variant or a newer multi-head dosing pump** (`本地造浪泵Pro`, `DC泵Pro`, `喂食器Pro`, `水草灯Pro`, `海水灯Pro`, `海水灯2_Pro`, `多路控制海水灯Pro`, `4/5/6头滴定泵` and their Pro versions). The bundled cache is effectively a snapshot of the older product line; newer models are fetched on demand - which is exactly why the app itself goes to the network for them.
+
+Probed all 22 via Phase 19's fetch tool: 19 `standard`, 3 `var_len` (out of scope). One (`50dbc922`) was already bundled, so **18 were added**, taking the catalog from 30 to **48**.
+
+**Bundling them exposed four real defects, all of the same kind - data the integration was reading from the device every poll and then silently discarding:**
+
+1. **`alert` dp_type had no handler.** 54 attributes across the new products, every one a genuine fault condition (`OpenCircuit`, `OverTemp`, `OverCurrent`, and two literally named `Fault_Fan`/`Fault_UART`). Every platform gates on `writable` or `is_fault`, so `alert` matched nothing - an over-temperature flag the device was actively reporting never reached HA. Added `Attr.is_alert`/`is_problem`; binary_sensor.py and the State sensor now use `is_problem`. A test asserts every bundled alert really is a fault condition, so a future product using `alert` for something benign gets caught rather than silently shown as a PROBLEM.
+2. **`status_readonly` had no handler** - 14 attributes (`time1`), same silent-drop. Now a diagnostic sensor. Deliberately given no unit: the schema carries none, and guessing minutes-vs-seconds would be inventing a fact.
+3. **`uint16` was never implemented** - 6 attributes (`Colour_Kelvin` on the lights, `liquid1` on dosing pumps). This one **predates this phase**: two affected products were in the original 29, so those attrs have been invisible the whole time. `decode_status`/`build_control_payload`/`number.py` now handle it, big-endian - which is the convention every other multi-byte field in this protocol already uses (`discovery.py`'s `>H`, the frame header), so it's consistency rather than a fresh guess, but it is *not* confirmed against a captured uint16 value and is flagged as such in the code.
+4. **The D-D marine light's power attribute is `Light_On`**, matching neither `switchon` nor `switch`, so its State sensor would have reported nothing. `SWITCH_NAMES` extended; the existing "every bundled product has a detectable power attr" test is what caught it.
+
+After these, a coverage sweep confirms **zero attributes across all 48 products fail to surface as some entity** - previously 74 were being dropped.
+
+Four existing tests failed on the new schemas and all four were correct to fail (two counts, the new `校准5`-`校准8` calibration values on 5/6-head dosing pumps, and the power-attr check catching `Light_On`).
+
+**Caveats.** Only the base wavemaker has ever been verified against real hardware; all 47 others rest on the vendor's own schema being accurate. Two products named `蓝牙` ("Bluetooth") report `protocolType: standard`, unlike every other 蓝牙-prefixed product in the catalog - bundled because the encoding is one we implement, but whether those units have WiFi to be discovered over LAN is untested, and their `name_en` says so.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

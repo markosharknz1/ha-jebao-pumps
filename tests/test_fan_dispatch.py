@@ -55,7 +55,7 @@ def test_expected_number_of_bundled_products_get_a_fan():
     # matching rule did, either of which is worth a second look. Was 13 of
     # 29 until the Local Wavemaker Pro was added in Phase 19.
     count = sum(1 for pk in known_product_keys() if fan_attr_names(load_by_product_key(pk)) is not None)
-    assert count == 14
+    assert count == 15
 
 
 def test_percentage_round_trips_for_a_plain_0_100_range():

@@ -51,11 +51,16 @@ ENUM_TRANSLATIONS: dict[str, str] = {
     "独立": "Independent",
     "同步从机": "Slave (synchronised)",
     "异步从机": "Slave (alternating)",
-    # CALSet (calibration step selector)
+    # CALSet (calibration step selector - one per dosing head, so the
+    # 5- and 6-head pumps go beyond the 4 the original catalog showed)
     "校准1": "Calibration 1",
     "校准2": "Calibration 2",
     "校准3": "Calibration 3",
     "校准4": "Calibration 4",
+    "校准5": "Calibration 5",
+    "校准6": "Calibration 6",
+    "校准7": "Calibration 7",
+    "校准8": "Calibration 8",
 }
 
 

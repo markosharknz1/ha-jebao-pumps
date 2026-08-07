@@ -1,0 +1,5298 @@
+{
+  "name": "海水灯Pro_WiFi_BLE",
+  "name_en": "Marine Light Pro (WiFi+BLE)",
+  "packetVersion": "0x00000004",
+  "protocolType": "standard",
+  "product_key": "40ab8468f8434e24b7cc2269ff8718df",
+  "entities": [
+    {
+      "display_name": "机智云开发套件",
+      "attrs": [
+        {
+          "display_name": "开关",
+          "name": "switch",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 0,
+          "desc": "开关"
+        },
+        {
+          "display_name": "快速调节",
+          "name": "quick_adjust_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "status_writable",
+          "id": 1,
+          "desc": "快速调节开关"
+        },
+        {
+          "display_name": "每日_定时开关",
+          "name": "Timer",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 2
+          },
+          "type": "status_writable",
+          "id": 2,
+          "desc": "每日_定时开关，打开\"运行\"后置1，关闭\"运行\"后置0"
+        },
+        {
+          "display_name": "周日定时开关",
+          "name": "Sun_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 3
+          },
+          "type": "status_writable",
+          "id": 3,
+          "desc": "周日定时开关"
+        },
+        {
+          "display_name": "周一定时开关",
+          "name": "Mon_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 4
+          },
+          "type": "status_writable",
+          "id": 4,
+          "desc": "周一定时开关"
+        },
+        {
+          "display_name": "周二定时开关",
+          "name": "Tue_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 5
+          },
+          "type": "status_writable",
+          "id": 5,
+          "desc": "周二定时开关"
+        },
+        {
+          "display_name": "周三定时开关",
+          "name": "Wed_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 6
+          },
+          "type": "status_writable",
+          "id": 6,
+          "desc": "周三定时开关"
+        },
+        {
+          "display_name": "周四定时开关",
+          "name": "Thu_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 7
+          },
+          "type": "status_writable",
+          "id": 7,
+          "desc": "周四定时开关"
+        },
+        {
+          "display_name": "周五定时开关",
+          "name": "Fir_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 8
+          },
+          "type": "status_writable",
+          "id": 8,
+          "desc": "周五定时开关"
+        },
+        {
+          "display_name": "周六定时开关",
+          "name": "Sat_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 9
+          },
+          "type": "status_writable",
+          "id": 9,
+          "desc": "周六定时开关"
+        },
+        {
+          "display_name": "适应周期开关",
+          "name": "Adt_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 10
+          },
+          "type": "status_writable",
+          "id": 10,
+          "desc": "适应周期开关"
+        },
+        {
+          "display_name": "月圆周期开关",
+          "name": "Moon_onoff",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 0,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 11
+          },
+          "type": "status_writable",
+          "id": 11,
+          "desc": "月运周期开关"
+        },
+        {
+          "display_name": "白光",
+          "name": "color_white",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 2,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 12,
+          "desc": "白光"
+        },
+        {
+          "display_name": "蓝光",
+          "name": "color_blue",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 3,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 13,
+          "desc": "蓝光"
+        },
+        {
+          "display_name": "月光",
+          "name": "color_moon",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 4,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 14,
+          "desc": "月光"
+        },
+        {
+          "display_name": "运行时间",
+          "name": "run_timer",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 5,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 60,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 15,
+          "desc": "手动模式设备运行时间设置，默认运行30分钟，运行时间范围为1~60分钟"
+        },
+        {
+          "display_name": "每日",
+          "name": "Data",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 6,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 16,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周日",
+          "name": "Sun",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 7,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 17,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周一",
+          "name": "Mon",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 8,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 18,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周二",
+          "name": "Tue",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 9,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 19,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周三",
+          "name": "Wed",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 10,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 20,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周四",
+          "name": "Thu",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 11,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 21,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周五",
+          "name": "Fir",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 12,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 22,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "周六",
+          "name": "Sat",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 13,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 23,
+          "desc": "方案选择：1为默认程序1（默认为默认程序1）；2为默认程序2；3为默认程序3；4为自定义程序1；5为自定义程序2；6为自定义程序3；"
+        },
+        {
+          "display_name": "预设程序",
+          "name": "TimerGroup",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 14,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 24,
+          "desc": "预设程序:0表示程序1；1表示程序2；2表示程序3；默认程序1"
+        },
+        {
+          "display_name": "持续时间",
+          "name": "Dut_time",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 15,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 25,
+          "desc": "可设定持续时间（时间范围为2~99天）"
+        },
+        {
+          "display_name": "初始亮度",
+          "name": "Init_brg",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 16,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 100,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 26,
+          "desc": "可设定初始亮度（亮度范围为1%~100%）"
+        },
+        {
+          "display_name": "起始日",
+          "name": "Start_data",
+          "data_type": "uint8",
+          "position": {
+            "byte_offset": 17,
+            "unit": "byte",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "uint_spec": {
+            "addition": 0,
+            "max": 255,
+            "ratio": 1,
+            "min": 0
+          },
+          "type": "status_writable",
+          "id": 27,
+          "desc": "起始日一共八个选项：0为新月、1为峨眉月、2为上弦月、3为渐盈凸月、4为满月、5为渐亏凸月、6为下弦月、7为残月"
+        },
+        {
+          "display_name": "自动时间点1_00",
+          "name": "AutoTime1_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 18,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 28,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:适应周期的白光目标亮度，Byte3:适应周期的蓝光目标亮度，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_01",
+          "name": "AutoTime1_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 25,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 29,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_02",
+          "name": "AutoTime1_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 32,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 30,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_03",
+          "name": "AutoTime1_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 39,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 31,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_04",
+          "name": "AutoTime1_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 46,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 32,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_05",
+          "name": "AutoTime1_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 53,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 33,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_06",
+          "name": "AutoTime1_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 60,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 34,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_07",
+          "name": "AutoTime1_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 67,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 35,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_08",
+          "name": "AutoTime1_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 74,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 36,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_09",
+          "name": "AutoTime1_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 81,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 37,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_10",
+          "name": "AutoTime1_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 88,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 38,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_11",
+          "name": "AutoTime1_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 95,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 39,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_12",
+          "name": "AutoTime1_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 102,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 40,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_13",
+          "name": "AutoTime1_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 109,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 41,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_14",
+          "name": "AutoTime1_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 116,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 42,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_15",
+          "name": "AutoTime1_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 123,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 43,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_16",
+          "name": "AutoTime1_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 130,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 44,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_17",
+          "name": "AutoTime1_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 137,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 45,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_18",
+          "name": "AutoTime1_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 144,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 46,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_19",
+          "name": "AutoTime1_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 151,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 47,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_20",
+          "name": "AutoTime1_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 158,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 48,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_21",
+          "name": "AutoTime1_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 165,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 49,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_22",
+          "name": "AutoTime1_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 172,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 50,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点1_23",
+          "name": "AutoTime1_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 179,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 51,
+          "desc": "【自定义程序1】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_00",
+          "name": "AutoTime2_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 186,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 52,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_01",
+          "name": "AutoTime2_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 193,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 53,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_02",
+          "name": "AutoTime2_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 200,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 54,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_03",
+          "name": "AutoTime2_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 207,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 55,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_04",
+          "name": "AutoTime2_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 214,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 56,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_05",
+          "name": "AutoTime2_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 221,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 57,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_06",
+          "name": "AutoTime2_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 228,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 58,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_07",
+          "name": "AutoTime2_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 235,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 59,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_08",
+          "name": "AutoTime2_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 242,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 60,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_09",
+          "name": "AutoTime2_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 249,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 61,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_10",
+          "name": "AutoTime2_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 256,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 62,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_11",
+          "name": "AutoTime2_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 263,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 63,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_12",
+          "name": "AutoTime2_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 270,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 64,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_13",
+          "name": "AutoTime2_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 277,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 65,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_14",
+          "name": "AutoTime2_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 284,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 66,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_15",
+          "name": "AutoTime2_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 291,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 67,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_16",
+          "name": "AutoTime2_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 298,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 68,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_17",
+          "name": "AutoTime2_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 305,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 69,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_18",
+          "name": "AutoTime2_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 312,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 70,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_19",
+          "name": "AutoTime2_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 319,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 71,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_20",
+          "name": "AutoTime2_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 326,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 72,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_21",
+          "name": "AutoTime2_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 333,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 73,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_22",
+          "name": "AutoTime2_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 340,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 74,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点2_23",
+          "name": "AutoTime2_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 347,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 75,
+          "desc": "【自定义程序2】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_00",
+          "name": "AutoTime3_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 354,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 76,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_01",
+          "name": "AutoTime3_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 361,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 77,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_02",
+          "name": "AutoTime3_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 368,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 78,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_03",
+          "name": "AutoTime3_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 375,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 79,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_04",
+          "name": "AutoTime3_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 382,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 80,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_05",
+          "name": "AutoTime3_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 389,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 81,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_06",
+          "name": "AutoTime3_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 396,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 82,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_07",
+          "name": "AutoTime3_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 403,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 83,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_08",
+          "name": "AutoTime3_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 410,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 84,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_09",
+          "name": "AutoTime3_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 417,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 85,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_10",
+          "name": "AutoTime3_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 424,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 86,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_11",
+          "name": "AutoTime3_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 431,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 87,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_12",
+          "name": "AutoTime3_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 438,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 88,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_13",
+          "name": "AutoTime3_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 445,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 89,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_14",
+          "name": "AutoTime3_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 452,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 90,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_15",
+          "name": "AutoTime3_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 459,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 91,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_16",
+          "name": "AutoTime3_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 466,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 92,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_17",
+          "name": "AutoTime3_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 473,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 93,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_18",
+          "name": "AutoTime3_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 480,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 94,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_19",
+          "name": "AutoTime3_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 487,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 95,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_20",
+          "name": "AutoTime3_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 494,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 96,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_21",
+          "name": "AutoTime3_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 501,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 97,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_22",
+          "name": "AutoTime3_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 508,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 98,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "自动时间点3_23",
+          "name": "AutoTime3_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 515,
+            "unit": "byte",
+            "len": 7,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 99,
+          "desc": "【自定义程序3】Byte0：时间点时，Byte1：时间点分,Byte2:预留填写00，Byte3:预留填写00，Byte4：白光，Byte5：蓝光，Byte6：月光"
+        },
+        {
+          "display_name": "天气自动时间点1_00",
+          "name": "WthrAutoTime1_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 522,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 100,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_01",
+          "name": "WthrAutoTime1_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 527,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 101,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_02",
+          "name": "WthrAutoTime1_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 532,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 102,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_03",
+          "name": "WthrAutoTime1_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 537,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 103,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_04",
+          "name": "WthrAutoTime1_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 542,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 104,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_05",
+          "name": "WthrAutoTime1_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 547,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 105,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_06",
+          "name": "WthrAutoTime1_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 552,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 106,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_07",
+          "name": "WthrAutoTime1_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 557,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 107,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_08",
+          "name": "WthrAutoTime1_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 562,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 108,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_09",
+          "name": "WthrAutoTime1_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 567,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 109,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_10",
+          "name": "WthrAutoTime1_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 572,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 110,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_11",
+          "name": "WthrAutoTime1_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 577,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 111,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_12",
+          "name": "WthrAutoTime1_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 582,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 112,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_13",
+          "name": "WthrAutoTime1_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 587,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 113,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_14",
+          "name": "WthrAutoTime1_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 592,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 114,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_15",
+          "name": "WthrAutoTime1_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 597,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 115,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_16",
+          "name": "WthrAutoTime1_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 602,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 116,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_17",
+          "name": "WthrAutoTime1_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 607,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 117,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_18",
+          "name": "WthrAutoTime1_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 612,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 118,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_19",
+          "name": "WthrAutoTime1_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 617,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 119,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_20",
+          "name": "WthrAutoTime1_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 622,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 120,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_21",
+          "name": "WthrAutoTime1_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 627,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 121,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_22",
+          "name": "WthrAutoTime1_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 632,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 122,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点1_23",
+          "name": "WthrAutoTime1_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 637,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 123,
+          "desc": "【自定义程序1】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_00",
+          "name": "WthrAutoTime2_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 642,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 124,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_01",
+          "name": "WthrAutoTime2_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 647,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 125,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_02",
+          "name": "WthrAutoTime2_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 652,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 126,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_03",
+          "name": "WthrAutoTime2_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 657,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 127,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_04",
+          "name": "WthrAutoTime2_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 662,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 128,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_05",
+          "name": "WthrAutoTime2_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 667,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 129,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_06",
+          "name": "WthrAutoTime2_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 672,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 130,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_07",
+          "name": "WthrAutoTime2_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 677,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 131,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_08",
+          "name": "WthrAutoTime2_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 682,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 132,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_09",
+          "name": "WthrAutoTime2_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 687,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 133,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_10",
+          "name": "WthrAutoTime2_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 692,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 134,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_11",
+          "name": "WthrAutoTime2_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 697,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 135,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_12",
+          "name": "WthrAutoTime2_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 702,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 136,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_13",
+          "name": "WthrAutoTime2_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 707,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 137,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_14",
+          "name": "WthrAutoTime2_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 712,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 138,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_15",
+          "name": "WthrAutoTime2_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 717,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 139,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_16",
+          "name": "WthrAutoTime2_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 722,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 140,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_17",
+          "name": "WthrAutoTime2_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 727,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 141,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_18",
+          "name": "WthrAutoTime2_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 732,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 142,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_19",
+          "name": "WthrAutoTime2_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 737,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 143,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_20",
+          "name": "WthrAutoTime2_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 742,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 144,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_21",
+          "name": "WthrAutoTime2_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 747,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 145,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_22",
+          "name": "WthrAutoTime2_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 752,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 146,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点2_23",
+          "name": "WthrAutoTime2_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 757,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 147,
+          "desc": "【自定义程序2】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_00",
+          "name": "WthrAutoTime3_00",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 762,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 148,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_01",
+          "name": "WthrAutoTime3_01",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 767,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 149,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_02",
+          "name": "WthrAutoTime3_02",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 772,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 150,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_03",
+          "name": "WthrAutoTime3_03",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 777,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 151,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_04",
+          "name": "WthrAutoTime3_04",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 782,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 152,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_05",
+          "name": "WthrAutoTime3_05",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 787,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 153,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_06",
+          "name": "WthrAutoTime3_06",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 792,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 154,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_07",
+          "name": "WthrAutoTime3_07",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 797,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 155,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_08",
+          "name": "WthrAutoTime3_08",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 802,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 156,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_09",
+          "name": "WthrAutoTime3_09",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 807,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 157,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_10",
+          "name": "WthrAutoTime3_10",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 812,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 158,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_11",
+          "name": "WthrAutoTime3_11",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 817,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 159,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_12",
+          "name": "WthrAutoTime3_12",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 822,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 160,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_13",
+          "name": "WthrAutoTime3_13",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 827,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 161,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_14",
+          "name": "WthrAutoTime3_14",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 832,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 162,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_15",
+          "name": "WthrAutoTime3_15",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 837,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 163,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_16",
+          "name": "WthrAutoTime3_16",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 842,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 164,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_17",
+          "name": "WthrAutoTime3_17",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 847,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 165,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_18",
+          "name": "WthrAutoTime3_18",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 852,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 166,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_19",
+          "name": "WthrAutoTime3_19",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 857,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 167,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_20",
+          "name": "WthrAutoTime3_20",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 862,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 168,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_21",
+          "name": "WthrAutoTime3_21",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 867,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 169,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_22",
+          "name": "WthrAutoTime3_22",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 872,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 170,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "天气自动时间点3_23",
+          "name": "WthrAutoTime3_23",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 877,
+            "unit": "byte",
+            "len": 5,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 171,
+          "desc": "【自定义程序3】Byte0：开始时，Byte1：开始分,Byte2:结束时，Byte3:结束分，Byte4：天气参数，1表示少云，2表示多云，3表示阴天"
+        },
+        {
+          "display_name": "日期数据",
+          "name": "YMDData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 882,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 172,
+          "desc": "日期, Byte1年千位百位, byte2年十位个位, byte3月, byte4日"
+        },
+        {
+          "display_name": "时间数据",
+          "name": "HMSData",
+          "data_type": "binary",
+          "position": {
+            "byte_offset": 886,
+            "unit": "byte",
+            "len": 4,
+            "bit_offset": 0
+          },
+          "type": "status_writable",
+          "id": 173,
+          "desc": "时间, Byte1空, byte2时, byte3分, byte4秒"
+        },
+        {
+          "display_name": "过温",
+          "name": "OverTemp",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 890,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "alert",
+          "id": 174,
+          "desc": "温度过高"
+        },
+        {
+          "display_name": "过流",
+          "name": "OverCurrent",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 890,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "alert",
+          "id": 175,
+          "desc": "过流"
+        },
+        {
+          "display_name": "风扇失效",
+          "name": "Fault_Fan",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 891,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 0
+          },
+          "type": "fault",
+          "id": 176,
+          "desc": "风扇失效"
+        },
+        {
+          "display_name": "串口连接故障",
+          "name": "Fault_UART",
+          "data_type": "bool",
+          "position": {
+            "byte_offset": 891,
+            "unit": "bit",
+            "len": 1,
+            "bit_offset": 1
+          },
+          "type": "fault",
+          "id": 177,
+          "desc": "模块与主板通讯不上"
+        }
+      ],
+      "name": "entity0",
+      "id": 0
+    }
+  ],
+  "ui": {
+    "object": {
+      "version": 4,
+      "showEditButton": false
+    },
+    "sections": [
+      {
+        "elements": [
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.switch"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.switch",
+            "title": "开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.quick_adjust_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.quick_adjust_onoff",
+            "title": "快速调节"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Timer"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Timer",
+            "title": "每日_定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Sun_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Sun_onoff",
+            "title": "周日定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Mon_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Mon_onoff",
+            "title": "周一定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Tue_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Tue_onoff",
+            "title": "周二定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Wed_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Wed_onoff",
+            "title": "周三定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Thu_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Thu_onoff",
+            "title": "周四定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Fir_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Fir_onoff",
+            "title": "周五定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Sat_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Sat_onoff",
+            "title": "周六定时开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Adt_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Adt_onoff",
+            "title": "适应周期开关"
+          },
+          {
+            "boolValue": false,
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Moon_onoff"
+              ],
+              "perm": "W"
+            },
+            "type": "QBooleanElement",
+            "key": "entity0.Moon_onoff",
+            "title": "月圆周期开关"
+          },
+          {
+            "title": "白光",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.color_white"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.color_white",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "蓝光",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.color_blue"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.color_blue",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "月光",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.color_moon"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.color_moon",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "运行时间",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.run_timer"
+              ],
+              "uint_spec": {
+                "max": 60,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.run_timer",
+            "maximumValue": 60,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "每日",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Data"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Data",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周日",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Sun"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Sun",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周一",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Mon"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Mon",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周二",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Tue"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Tue",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周三",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Wed"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Wed",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周四",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Thu"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Thu",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周五",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Fir"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Fir",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "周六",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Sat"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Sat",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "预设程序",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.TimerGroup"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.TimerGroup",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "持续时间",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Dut_time"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Dut_time",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "初始亮度",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Init_brg"
+              ],
+              "uint_spec": {
+                "max": 100,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Init_brg",
+            "maximumValue": 100,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "title": "起始日",
+            "bind": "floatValue:float",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.Start_data"
+              ],
+              "uint_spec": {
+                "max": 255,
+                "step": 1,
+                "min": 0
+              },
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.Start_data",
+            "maximumValue": 255,
+            "minimumValue": 0,
+            "type": "QFloatElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_00",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_01",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_02",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_03",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_04",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_05",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_06",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_07",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_08",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_09",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_10",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_11",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_12",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_13",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_14",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_15",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_16",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_17",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_18",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_19",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_20",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_21",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_22",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点1_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime1_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime1_23",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_00",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_01",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_02",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_03",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_04",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_05",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_06",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_07",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_08",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_09",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_10",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_11",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_12",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_13",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_14",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_15",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_16",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_17",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_18",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_19",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_20",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_21",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_22",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点2_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime2_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime2_23",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_00",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_01",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_02",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_03",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_04",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_05",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_06",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_07",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_08",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_09",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_10",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_11",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_12",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_13",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_14",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_15",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_16",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_17",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_18",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_19",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_20",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_21",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_22",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "自动时间点3_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.AutoTime3_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.AutoTime3_23",
+            "maxLength": 14,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_00",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_01",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_02",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_03",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_04",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_05",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_06",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_07",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_08",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_09",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_10",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_11",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_12",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_13",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_14",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_15",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_16",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_17",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_18",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_19",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_20",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_21",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_22",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点1_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime1_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime1_23",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_00",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_01",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_02",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_03",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_04",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_05",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_06",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_07",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_08",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_09",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_10",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_11",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_12",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_13",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_14",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_15",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_16",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_17",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_18",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_19",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_20",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_21",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_22",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点2_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime2_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime2_23",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_00",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_00"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_00",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_01",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_01"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_01",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_02",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_02"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_02",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_03",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_03"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_03",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_04",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_04"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_04",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_05",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_05"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_05",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_06",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_06"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_06",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_07",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_07"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_07",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_08",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_08"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_08",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_09",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_09"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_09",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_10",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_10"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_10",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_11",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_11"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_11",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_12",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_12"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_12",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_13",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_13"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_13",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_14",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_14"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_14",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_15",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_15"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_15",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_16",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_16"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_16",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_17",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_17"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_17",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_18",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_18"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_18",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_19",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_19"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_19",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_20",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_20"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_20",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_21",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_21"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_21",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_22",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_22"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_22",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "天气自动时间点3_23",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.WthrAutoTime3_23"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.WthrAutoTime3_23",
+            "maxLength": 10,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "日期数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.YMDData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.YMDData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          },
+          {
+            "keyboardType": "NumbersAndPunctuation",
+            "title": "时间数据",
+            "object": {
+              "action": "entity0",
+              "bind": [
+                "entity0.HMSData"
+              ],
+              "perm": "W"
+            },
+            "value": 0,
+            "key": "entity0.HMSData",
+            "maxLength": 8,
+            "type": "QMultilineElement"
+          }
+        ]
+      }
+    ]
+  }
+}
