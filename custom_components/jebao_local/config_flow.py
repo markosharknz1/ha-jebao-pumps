@@ -30,6 +30,28 @@ def _normalize_mac(mac: str) -> str:
     return (mac or "").lower().replace(":", "")
 
 
+def _product_names(product_keys: set[str]) -> dict[str, str | None]:
+    """product_key -> English product name from the bundled schema, or None
+    for a model this integration has no schema for. Blocking file I/O -
+    call via async_add_executor_job."""
+    names: dict[str, str | None] = {}
+    for key in product_keys:
+        try:
+            names[key] = load_by_product_key(key).name_en
+        except KeyError:
+            names[key] = None
+    return names
+
+
+def discovery_label(device: DiscoveredDevice, name_en: str | None) -> str:
+    """Human label for the discovery picker: what the device *is*, where it
+    is, and enough MAC to tell identical models apart against a router's
+    client list - not the raw cloud did, which means nothing to a person."""
+    name = name_en or f"Unsupported model ({device.product_key[:8]}...)"
+    mac_tail = device.mac_hex[-4:] if device.mac_hex else "????"
+    return f"{name} - {device.ip} (MAC ...{mac_tail})"
+
+
 def find_entry_by_mac(
     entries: list[config_entries.ConfigEntry], mac: str
 ) -> config_entries.ConfigEntry | None:
@@ -63,24 +85,48 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         devices = await discover(timeout=DISCOVERY_TIMEOUT)
         configured_dids = {e.data[CONF_DID] for e in self._async_current_entries()}
         candidates = [d for d in devices if d.did not in configured_dids]
+        already = len(devices) - len(candidates)
 
         if not candidates:
+            # Distinguish "found nothing at all" from "found only pumps you
+            # already have" - otherwise a fully-configured setup reads as a
+            # discovery failure.
+            reason = (
+                f"All {already} pump(s) found on the network are already configured."
+                if already
+                else "No pumps responded to LAN discovery within "
+                f"{DISCOVERY_TIMEOUT:.0f}s. Make sure the pump is powered on and on "
+                "the same network/VLAN as Home Assistant (LAN discovery is a UDP "
+                "broadcast, which many routers do not forward between VLANs or "
+                "between 2.4GHz guest/IoT networks). You can also add it manually "
+                "if you know its IP."
+            )
             return self.async_show_form(
                 step_id="discover",
                 errors={"base": "no_devices_found"},
-                description_placeholders={
-                    "reason": "No new pumps responded to LAN discovery within "
-                    f"{DISCOVERY_TIMEOUT:.0f}s. Make sure the pump is powered on, "
-                    "on the same network/VLAN as Home Assistant, and not already "
-                    "configured. You can also add it manually if you know its IP."
-                },
+                description_placeholders={"reason": reason},
             )
 
         self._discovered = {d.did: d for d in candidates}
-        options = {d.did: f"{d.did} ({d.ip}, product_key={d.product_key[:8]}...)" for d in candidates}
+        names = await self.hass.async_add_executor_job(
+            _product_names, {d.product_key for d in candidates}
+        )
+        options = {d.did: discovery_label(d, names[d.product_key]) for d in candidates}
+        # Same-model pumps read identically except for IP/MAC - sort by
+        # label so they at least group together in the picker.
+        options = dict(sorted(options.items(), key=lambda kv: kv[1]))
         return self.async_show_form(
             step_id="discover",
             data_schema=vol.Schema({vol.Required("device"): vol.In(options)}),
+            description_placeholders={
+                # Say how many were seen in total, so a device that's missing
+                # from this list because it's already added doesn't look like
+                # discovery failed to find it.
+                "found": str(len(devices)),
+                "already": (
+                    f" {already} already configured (not listed)." if already else ""
+                ),
+            },
         )
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:

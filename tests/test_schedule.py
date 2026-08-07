@@ -18,8 +18,14 @@ from custom_components.jebao_local.jebao_gizwits.schedule import (
     decode_slot,
     encode_slot,
     is_slot_enabled,
+    schedule_slot_len,
     slot_attr_name,
+    slot_fields,
 )
+from custom_components.jebao_local.jebao_gizwits.schema import load_by_product_key
+
+BASE_WAVEMAKER_KEY = "54114ccdac1e41c0bb17e222887c07ba"
+PRO_WAVEMAKER_KEY = "50dbc92221fd4d33ae69a1fedd43b555"
 
 
 def test_encode_matches_the_real_app_default_slot_example():
@@ -103,3 +109,69 @@ def test_slot_attr_name_bounds():
         slot_attr_name(48)
     with pytest.raises(ValueError):
         slot_attr_name(-1)
+
+
+# --- per-product slot layouts (SPEC.md Phase 19) -------------------------
+# The Local Wavemaker Pro uses 9-byte slots whose trailing fields differ
+# from the base wavemaker's 8-byte ones. Hardcoding 8 anywhere would make
+# that product's schedule sensor raise instead of decode.
+
+
+def test_slot_length_comes_from_each_products_own_schema():
+    assert schedule_slot_len(load_by_product_key(BASE_WAVEMAKER_KEY)) == 8
+    assert schedule_slot_len(load_by_product_key(PRO_WAVEMAKER_KEY)) == 9
+
+
+def test_product_without_a_schedule_reports_no_slot_length():
+    light = load_by_product_key("efc08baa6b0a4de38d4bc9bce04ad350")
+    assert schedule_slot_len(light) is None
+
+
+def test_the_two_layouts_have_different_trailing_fields():
+    # Shared prefix through frequency, then they diverge - this is the
+    # whole reason the layout can't be assumed.
+    assert slot_fields(8)[:7] == slot_fields(9)[:7]
+    assert slot_fields(8)[7:] == ("pulse_tide",)
+    assert slot_fields(9)[7:] == ("feed_time", "cust_wave_freq")
+
+
+def test_pro_nine_byte_slot_round_trips():
+    raw = encode_slot(
+        start_hour=9, start_minute=30, end_hour=18, end_minute=45,
+        mode=4, flow=80, frequency=60, feed_time=3, cust_wave_freq=55,
+        slot_len=9,
+    )
+    assert raw == bytes([9, 30, 18, 45, 4, 80, 60, 3, 55])
+    slot = decode_slot(2, raw)
+    assert slot.slot_len == 9
+    assert (slot.feed_time, slot.cust_wave_freq) == (3, 55)
+    assert slot.pulse_tide is None  # the Pro has no such field
+
+
+def test_decode_picks_the_layout_from_the_byte_count():
+    eight = decode_slot(0, bytes([8, 0, 20, 0, 1, 75, 50, 2]))
+    assert eight.pulse_tide == 2 and eight.feed_time is None
+    nine = decode_slot(0, bytes([8, 0, 20, 0, 1, 75, 50, 2, 33]))
+    assert nine.feed_time == 2 and nine.cust_wave_freq == 33
+    assert nine.pulse_tide is None
+
+
+def test_as_dict_only_reports_fields_the_product_actually_has():
+    nine = decode_slot(1, bytes([9, 30, 18, 45, 4, 80, 60, 3, 55]))
+    d = nine.as_dict()
+    assert "cust_wave_freq" in d and "pulse_tide" not in d
+    eight = decode_slot(1, bytes([8, 0, 20, 0, 1, 75, 50, 2]))
+    assert "pulse_tide" in eight.as_dict() and "cust_wave_freq" not in eight.as_dict()
+
+
+def test_nine_byte_disabled_sentinels():
+    assert decode_slot(0, bytes(9)) is None
+    assert decode_slot(0, bytes([0xEE] * 9)) is None
+    assert clear_slot(9) == bytes(9)
+
+
+def test_an_undecoded_slot_length_is_refused_not_guessed():
+    with pytest.raises(ValueError):
+        decode_slot(0, bytes(7))
+    with pytest.raises(ValueError):
+        encode_slot(1, 0, 2, 0, mode=1, flow=50, slot_len=12)

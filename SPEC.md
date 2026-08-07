@@ -405,6 +405,49 @@ Verified in a real browser against a mocked `hass` (harness emulating the backen
 
 ---
 
+## Phase 18 — Discovery reliability and naming, and an unsupported product found in the wild
+
+**Goal:** the user looked at the config flow's device picker and asked whether raw cloud IDs were really the best we could do. Investigating that surfaced two further problems, both only visible against a real multi-device network.
+
+**Status: BUILT (2026-08-03), except the unsupported-product issue, which is open.**
+
+**1. The picker showed nothing a human could use.** It listed `DBaDWkpGq20NUtEw8ysPRw (10.42.1.88, product_key=50dbc922...)` - the Gizwits cloud `did`, which is meaningless to a person and actively useless when several identical pumps are on one network. Every bundled schema already carries `name_en` (added several phases ago for the device/entry title), so the picker just wasn't using data we had. Now: `Local Wavemaker (WiFi+BLE) - 10.42.1.82 (MAC ...9e01)` - what it is, where it is, and enough MAC to cross-reference a router's client list. Sorted by label so identical models group together. Products with no bundled schema are labelled `Unsupported model (50dbc922...)` up front rather than only failing at the abort after selection. `discovery_label()`/`_product_names()` are module-level so they're testable without faking a ConfigFlow (same reasoning as Phase 14's `find_entry_by_mac`); schema loads go through `async_add_executor_job` (blocking file I/O, per Phase 11's bug).
+
+**2. Discovery was under-reporting devices.** The user reported 5 devices of 3 types; discovery showed 4 of 2. Root cause found by reading `discover()`: it sent **exactly one** UDP broadcast and waited. UDP is lossy, these are cheap WiFi modules, and one dropped packet in either direction means a device is simply never seen. Fixed by re-probing across the listen window (`PROBE_OFFSETS`, front-loaded so a normal scan still resolves fast), deduplicating by did - extra replies are free. `discover_one()` got the same retry treatment plus an early return once the device answers, instead of always burning the full 5s timeout on the manual-entry path. `tests/test_discovery_retry.py` drives the real `discover()` with a faked datagram endpoint (so the actual probe/collect loop is exercised, not a reimplementation): more than one probe is sent, a device that answers only the *third* probe is still found, probes never exceed the timeout window, and `discover_one` returns early.
+
+The other half of the 5-vs-4 gap is benign: already-configured devices were filtered out of the candidate list with no indication, so a configured pump read as "discovery missed it". The form now reports how many were found in total and how many aren't listed because they're already set up, and the empty case distinguishes "found nothing" (with a VLAN/broadcast-forwarding hint, the usual real cause) from "found only pumps you already have".
+
+**3. Open: an unsupported product on a real user's network.** Three of the user's devices report `product_key=50dbc92221fd4d33ae69a1fedd43b555`, which is **not among the 29 bundled schemas, nor in the 42-product catalog** - our original extraction missed it entirely. Found in the app's JS bundle as `com.jiebao.rn.aquariumPumpPro.1` ("Aquarium Pump Pro"), with a datapoint list (`SwitchON`, `Mode`, `Flow`, `Frequency`, `TimerON`, the usual fault set, `uint_spec`s) but **no byte positions** - and positions are exactly what decoding needs. It's absent from `assets/productConfig/` too (which holds all 42 catalogued products), so the app must fetch this one's schema from the Gizwits cloud at runtime.
+
+Tested the obvious shortcut before considering it: could positions be *derived* from the ordered attribute list (bit-type attrs packed LSB-first into a leading bitfield, byte-type attrs following)? Validated that derivation against all 29 schemas whose real positions we know - **it reproduced 0 of 29**. Fault-type attrs land in their own region and the byte region starts elsewhere; the layout is not a simple function of the attribute list. So no schema is being fabricated for this product. Getting it supported needs real position data: capturing the app's cloud schema fetch for that product_key (the same class of technique that cracked the write format in Phase 4), or obtaining the productConfig JSON another way.
+
+---
+
+## Phase 19 — Capturing an unbundled product schema from the cloud
+
+**Goal:** support the three "Aquarium Pump Pro" devices Phase 18 found on the user's network, whose `product_key` (`50dbc92221fd4d33ae69a1fedd43b555`) had no schema anywhere in the app's local assets.
+
+**Status: BUILT (2026-08-03).** Solved without the emulator/Frida route that was expected.
+
+**The capture.** Phase 1's own notes already contained the answer, recorded and then never acted on: `discovery/findings.md` documented the app issuing `GET /app/datapoint?product_key=...` to `usapi.gizwits.com` **over plain HTTP** with headers `x-gizwits-application-id: c3703c4888ec4736a3a0d9425c321604` and a user token - and noted the response was a `304 Not Modified` at the time, so it was dismissed as "not new information". Replaying that request today returns `200` with the full schema, and it turns out the **user token isn't required** - the application-id alone is enough. No TLS interception, no emulator, no Frida.
+
+Validated before trusting it: re-fetched `54114ccd...` (the base wavemaker, whose bundled schema is known-good and live-verified) and diffed against the bundled copy - **byte-for-byte identical**. That's what makes the response trustworthy for a product we *don't* have. Saved as `tools/fetch_product_schema.py`, with a `--check` mode that does exactly that diff for any bundled key (both bundled wavemakers verify clean).
+
+**What came back:** `本地造浪泵Pro_WIFI_BL` - a **Local Wavemaker Pro**, `standard` protocolType, 70 attrs, with real byte positions. Now bundled as the 30th schema (`name_en: "Local Wavemaker Pro (WiFi+BLE)"`).
+
+**And it immediately broke assumptions the codebase had baked in** - which is the real value of getting a second wavemaker variant:
+
+- **Schedule slots are 9 bytes, not 8**, and the trailing fields differ: base is `[…, flow, frequency, pulse_tide]`, Pro is `[…, flow, frequency, feed_time, cust_wave_freq]`. `schedule.py` hardcoded 8 everywhere, so the Pro's Schedule sensor would have raised on every poll. Rewritten to take the length from the product's own schema (`schedule_slot_len()`) and the field list from `FIELDS_BY_LEN`, derived from each schema's own Byte0..ByteN `desc` text. `ScheduleSlot.as_dict()` reports only the fields a given product actually has, so a Pro slot never advertises a `pulse_tide` it has no concept of. An unrecognised length is now *refused*, not guessed.
+- **Mode numbering is completely different** - base: 0 stop / 1 classic / 2 sine / 3 random / 4 constant flow / 5 feeding; Pro: 0 pulse / 1 sine / 2 constant flow / 3 random / 4 tidal / 5 nutrient delivery / 6 circulation / 7 feeding / 8 custom. The card's label table is now keyed by slot length, and the Schedule sensor publishes `slot_len` so the card picks the right layout even for a pump with no periods programmed yet (inference from an existing slot is only the fallback).
+- **`Mode`/`AutoMode` are `uint8` here, not bit-packed enums**, and the Pro has **no `FeedSwitch` at all** (feeding is Mode value 7), so it correctly gets no Feed buttons - the button gate's count assertion was previously commented as "same 13 products that get a fan", an assumption this product breaks; the comment now records the real reason.
+- Two new `Linkage` values (`同步从机`/`异步从机` - synchronised vs alternating slave, a Pro-only distinction) needed translations.
+
+Five existing tests failed on the new schema and all five were *correct* to fail (counts, and the discovery-label test whose "unknown product" example had just become supported). Card verified in-browser against both layouts: the Pro shows Tidal/Circulation names, offers all 9 modes and `feed_time`/`cust_wave_freq` inputs, and sends exactly those fields; the base wavemaker still shows 6 modes and `pulse_tide`, unchanged.
+
+**Not verified against the Pro hardware itself** - the schema is authoritative (it's what the vendor app itself uses) but no read or write has been exercised against a real Pro. Same standing as the schedule feature generally.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

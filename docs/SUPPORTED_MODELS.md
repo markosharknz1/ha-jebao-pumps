@@ -2,10 +2,27 @@
 
 The Jebao Aqua app (v3.3.55) bundles 42 product datapoint schemas locally
 (`reference/jebao-apk/decompiled/resources/assets/productConfig/`, one JSON
-per `product_key`) - this covers every product line the app supports, not
+per `product_key`) - this covers most product lines the app supports, not
 just the wavemaker this project started with. Full machine-readable catalog:
 [`product_catalog.json`](product_catalog.json). Individual schemas are
 copied to `fixtures/product_schemas/`.
+
+**That bundled set is not exhaustive.** The Local Wavemaker Pro
+(`50dbc922...`) showed up on a real user's network with no local
+productConfig entry at all - the app fetches that one's schema from Gizwits
+at runtime. Any such product can be added with
+[`tools/fetch_product_schema.py`](../tools/fetch_product_schema.py), which
+replays the app's own request:
+
+```bash
+python tools/fetch_product_schema.py <product_key> --name-en "Some Pump"
+```
+
+It needs only the app's application-id over plain HTTP (no user token, no
+TLS interception, no emulator). The method was validated by re-fetching
+products we already had known-good bundled schemas for and diffing -
+byte-for-byte identical, which is what makes it trustworthy for products we
+don't have. `--check` does that diff for any bundled key.
 
 ## How connectivity type was determined
 
@@ -74,6 +91,7 @@ encoder, not covered here.
 | Local Timer LED Light (no AP time-sync) | 本地定时LED灯_无AP校时 | `cf4aaef856b84f6ea9cea29030eff19b` | standard | WiFi only (by name) | 43 |
 | Local Timer LED Light (with AP time-sync) | 本地定时LED灯_有AP校时 | `83139ec4bc7a406495a8a52aa6d3e75d` | standard | WiFi only (by name) | 45 |
 | Local Wavemaker (WiFi+BLE) [THIS PROJECT'S PUMP] | 本地造浪泵_WIFI_BLE | `54114ccdac1e41c0bb17e222887c07ba` | standard | WiFi + Bluetooth (dual mode, by name) | 71 |
+| Local Wavemaker Pro (WiFi+BLE) ⭐ *not in the app's bundled productConfig - fetched from the cloud, see below* | 本地造浪泵Pro_WIFI_BL | `50dbc92221fd4d33ae69a1fedd43b555` | standard | WiFi + Bluetooth (dual mode, by name) | 70 |
 | Local Wavemaker (no AP time-sync) | 本地造浪泵_无AP校时 | `f0d844ab0d4947ac9527a286160bc705` | standard | WiFi only (by name) | 69 |
 | Local Wavemaker (with AP time-sync) | 本地造浪泵_有AP校时 | `1d8c63eaccac4205b92c84d77d5a08fb` | standard | WiFi only (by name) | 71 |
 | Multi-Head WiFi Dosing Pump | 多头WIFI滴定泵 | `3b181431429e46029f850348869cc66f` | var_len | WiFi only (by name) ⚠️ NAME says WiFi-capable but protocolType=var_len (usually a BLE signal) - exception to the general pattern, verify before assuming LAN support | 42 |

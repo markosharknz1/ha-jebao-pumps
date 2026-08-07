@@ -54,4 +54,4 @@ def test_speed_sensor_only_for_fan_products():
     # Matches the count already locked in by test_fan_dispatch.py - the
     # Speed sensor's gate (`if fan_attr_names(...)`) reuses that exact
     # function, so this is really asserting the gate hasn't drifted.
-    assert fan_count == 13
+    assert fan_count == 14

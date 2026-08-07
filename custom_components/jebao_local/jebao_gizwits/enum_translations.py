@@ -42,10 +42,15 @@ ENUM_TRANSLATIONS: dict[str, str] = {
     "日落": "Sunset",
     "早晨": "Morning",
     "白天": "Day",
-    # Linkage (multi-device master/slave grouping)
+    # Linkage (multi-device master/slave grouping). The Pro wavemaker
+    # splits plain "slave" into synchronous/asynchronous - two pumps
+    # running in step, versus deliberately out of step to avoid a
+    # standing wave.
     "主机": "Master",
     "从机": "Slave",
     "独立": "Independent",
+    "同步从机": "Slave (synchronised)",
+    "异步从机": "Slave (alternating)",
     # CALSet (calibration step selector)
     "校准1": "Calibration 1",
     "校准2": "Calibration 2",

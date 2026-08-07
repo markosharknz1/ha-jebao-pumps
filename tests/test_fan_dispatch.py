@@ -49,12 +49,13 @@ def test_light_does_not_get_a_fan():
     assert fan_attr_names(schema) is None
 
 
-def test_exactly_thirteen_of_the_bundled_products_get_a_fan():
-    # Locks in the count found by scanning all 29 bundled schemas (SPEC.md
+def test_expected_number_of_bundled_products_get_a_fan():
+    # Locks in the count found by scanning every bundled schema (SPEC.md
     # Phase 9) - a change here means either a bundled schema changed or the
-    # matching rule did, either of which is worth a second look.
+    # matching rule did, either of which is worth a second look. Was 13 of
+    # 29 until the Local Wavemaker Pro was added in Phase 19.
     count = sum(1 for pk in known_product_keys() if fan_attr_names(load_by_product_key(pk)) is not None)
-    assert count == 13
+    assert count == 14
 
 
 def test_percentage_round_trips_for_a_plain_0_100_range():

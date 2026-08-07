@@ -31,7 +31,13 @@ from .entity import JebaoLocalEntity
 from .fan import FEED_NAMES, MODE_NAMES, SWITCH_NAMES as POWER_NAMES, fan_attr_names, find_attr_name as _find_attr_name
 from .jebao_gizwits.clock import HMS_ATTR, YMD_ATTR, decode_clock
 from .jebao_gizwits.enum_translations import translate as _translate_enum
-from .jebao_gizwits.schedule import SLOT_COUNT, ScheduleSlot, decode_slot, slot_attr_name
+from .jebao_gizwits.schedule import (
+    SLOT_COUNT,
+    ScheduleSlot,
+    decode_slot,
+    schedule_slot_len,
+    slot_attr_name,
+)
 
 _SCHEDULE_PROBE_ATTR = slot_attr_name(0)  # AutoTime00 - presence implies all 48 slots exist
 
@@ -140,7 +146,12 @@ class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
             raw = self.coordinator.data.get(slot_attr_name(index))
             if not isinstance(raw, (bytes, bytearray)):
                 continue
-            slot = decode_slot(index, raw)
+            try:
+                slot = decode_slot(index, raw)
+            except ValueError:
+                # A product whose slot layout isn't decoded yet - report no
+                # periods rather than breaking the whole sensor.
+                return []
             if slot is not None:
                 slots.append(slot)
         return slots
@@ -153,7 +164,14 @@ class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return {"slots": [vars(slot) for slot in self._decoded_slots()]}
+        # slot_len tells the card which per-product slot layout this pump
+        # uses (8-byte base wavemaker vs 9-byte Pro - different fields and
+        # different mode numbering), without it having to guess from a
+        # slot that may not exist yet on a freshly-configured pump.
+        return {
+            "slot_len": schedule_slot_len(self.coordinator.schema),
+            "slots": [slot.as_dict() for slot in self._decoded_slots()],
+        }
 
 
 class JebaoDeviceClockSensor(JebaoLocalEntity, SensorEntity):

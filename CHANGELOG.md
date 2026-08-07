@@ -4,6 +4,46 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **Local Wavemaker Pro is now supported** (30th bundled product). It had
+  no schema anywhere in the vendor app's local assets - the app fetches
+  that one from Gizwits at runtime. Turns out that endpoint is plain HTTP
+  and needs only the app's application-id, so no emulator or TLS
+  interception was needed; `tools/fetch_product_schema.py` replays the
+  request and can add any other missing product the same way. Validated by
+  re-fetching products we already had known-good schemas for and diffing
+  (byte-for-byte identical) before trusting it for one we didn't.
+  - **Schedule slots are per-product now, because the Pro's are 9 bytes
+    with different fields** (`feed_time` + `cust_wave_freq` where the base
+    wavemaker has `pulse_tide`), and its wave modes are numbered
+    differently (pulse/tidal/nutrient/circulation/custom). Slot length and
+    field layout are read from each product's own schema rather than
+    assumed - previously an 8-byte slot was hardcoded, which would have
+    made the Pro's Schedule sensor fail on every poll. An unrecognised
+    slot layout is refused rather than guessed at.
+  - The card picks the right mode names and input fields per product, and
+    the Schedule sensor publishes its `slot_len` so this works even before
+    any periods are programmed.
+- **Discovery now finds devices it used to miss, and says what they are.**
+  Two real problems, both found from a user's actual 5-pump network:
+  - `discover()` sent exactly *one* UDP broadcast, so a single dropped
+    packet (in either direction - these are cheap WiFi modules, often on
+    congested 2.4GHz) meant a pump simply never appeared. Only 4 of 5
+    showed up consistently. The probe is now re-sent several times across
+    the listen window, deduplicated by device id. `discover_one()` (the
+    manual-IP path) retries the same way and now returns as soon as the
+    device answers instead of always waiting out the full timeout.
+  - The picker listed raw Gizwits cloud IDs
+    (`DBaDWkpGq20NUtEw8ysPRw (10.42.1.88, product_key=50dbc922...)`),
+    which tell a person nothing - and are actively useless with several
+    identical pumps. It now shows the product's English name, its IP, and
+    the last 4 of its MAC (to cross-reference against a router's client
+    list): `Local Wavemaker (WiFi+BLE) - 10.42.1.82 (MAC ...9e01)`.
+    Models this integration has no schema for are labelled as unsupported
+    up front, instead of only failing after you pick one.
+  - Devices that are already configured are no longer silently absent:
+    the form says how many were found and how many aren't listed because
+    they're already set up, so a missing pump doesn't look like a
+    discovery failure.
 - **Clock sync + a visual schedule editor in the card.** The 48 timer
   slots fire off the pump's own internal clock, which nothing but the
   vendor app had ever set - so a new `jebao_local.sync_clock` service

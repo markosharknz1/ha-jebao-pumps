@@ -39,11 +39,12 @@ def test_light_does_not_get_feed_buttons():
     assert not _has_feed_buttons(load_by_product_key(NON_FEED_PRODUCT_KEY))
 
 
-def test_exactly_thirteen_products_get_feed_buttons():
-    # Same 13 products that get a fan entity, confirmed by direct
-    # inspection (SPEC.md Phase 14) - FeedSwitch/FeedTime always co-occur
-    # with the fan-qualifying speed attribute in the bundled catalog, but
-    # this test checks the button's own gate, not fan.py's, so a future
-    # schema breaking that correlation would still be caught here.
+def test_expected_number_of_products_get_feed_buttons():
+    # Deliberately NOT assumed equal to the fan count: this checks the
+    # button's own gate (FeedSwitch + FeedTime), and the Local Wavemaker
+    # Pro added in Phase 19 is exactly the case that breaks the old
+    # assumption - it gets a fan entity and has FeedTime, but has no
+    # FeedSwitch at all: feeding is Mode value 7 there, not a separate
+    # boolean, so there is nothing for these buttons to toggle.
     count = sum(1 for pk in known_product_keys() if _has_feed_buttons(load_by_product_key(pk)))
     assert count == 13

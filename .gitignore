@@ -14,8 +14,13 @@ captured_token.txt
 # Large reference/tooling material - reproducible via docs, not meant to be
 # committed (multi-GB: Ghidra, Android SDK, JDK, frida-server, cloned repos,
 # decompiled APK output). See README.md / SPEC.md for how to regenerate.
-tools/
+# (tools/* rather than tools/ - git can't re-include a file whose parent
+# directory is excluded, and we do want the one helper script below.)
+tools/*
 reference/
+# ...except our own small helper scripts, which are part of the project
+# (documented in docs/SUPPORTED_MODELS.md) rather than downloaded material.
+!tools/fetch_product_schema.py
 
 # Python
 __pycache__/

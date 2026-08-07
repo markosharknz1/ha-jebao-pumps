@@ -44,16 +44,33 @@ const MODE_LABELS = {
 };
 const modeLabel = (v) => MODE_LABELS[v] || v;
 
-// Numeric mode values inside a schedule slot (AutoTimeNN Byte4) - from the
-// schema's own desc text: 0停机 1.经典造浪 2.正弦造浪 3.随机造浪 4.恒流造浪 5.喂食.
-const SLOT_MODE_LABELS = {
-  0: "Stop",
-  1: "Classic wave",
-  2: "Sine wave",
-  3: "Random wave",
-  4: "Constant flow",
-  5: "Feeding",
+// Numeric mode values inside a schedule slot (AutoTimeNN Byte4). These are
+// PER PRODUCT - both the numbering and the set of modes differ - so they're
+// keyed by the slot's byte length, which is what distinguishes the layouts
+// (see jebao_gizwits/schedule.py). Taken from each schema's own desc text.
+const SLOT_MODE_LABELS_BY_LEN = {
+  // Base wavemaker: 0停机 1.经典造浪 2.正弦造浪 3.随机造浪 4.恒流造浪 5.喂食
+  8: {
+    0: "Stop", 1: "Classic wave", 2: "Sine wave", 3: "Random wave",
+    4: "Constant flow", 5: "Feeding",
+  },
+  // Wavemaker Pro: 0.脉冲造浪 1.正弦造浪 2.恒流造浪 3.随机造浪 4.潮汐涨落
+  // 5.营养输送 6.环流造浪 7.喂食模式 8.自定义造浪
+  9: {
+    0: "Pulse wave", 1: "Sine wave", 2: "Constant flow", 3: "Random wave",
+    4: "Tidal", 5: "Nutrient delivery", 6: "Circulation", 7: "Feeding",
+    8: "Custom wave",
+  },
 };
+
+// A slot's field set is inferred from which keys the backend actually sent
+// (the Schedule sensor only reports fields the product has), so the card
+// doesn't need its own copy of the per-product layout table.
+const slotLenOf = (slot) =>
+  slot && ("cust_wave_freq" in slot || "feed_time" in slot) ? 9 : 8;
+const slotModeLabel = (slot) =>
+  (SLOT_MODE_LABELS_BY_LEN[slotLenOf(slot)] || {})[slot.mode] ?? `Mode ${slot.mode}`;
+const modeLabelsForLen = (len) => SLOT_MODE_LABELS_BY_LEN[len] || SLOT_MODE_LABELS_BY_LEN[8];
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -243,6 +260,18 @@ class JebaoPumpCard extends HTMLElement {
     return (s && Array.isArray(s.attributes.slots)) ? s.attributes.slots : [];
   }
 
+  // Which per-product slot layout this pump uses. The backend publishes it
+  // (see sensor.py) so a pump with no periods programmed yet still gets the
+  // right form; fall back to inferring from an existing slot for older
+  // integration versions that didn't send it.
+  _slotLen(pump) {
+    const s = this._state(pump.entities.schedule);
+    const declared = s?.attributes?.slot_len;
+    if (declared === 8 || declared === 9) return declared;
+    const existing = this._scheduleSlots(pump)[0];
+    return existing ? slotLenOf(existing) : 8;
+  }
+
   _saveSlot(pump) {
     const form = this._editSlot.get(pump.did);
     if (!form) return;
@@ -252,16 +281,26 @@ class JebaoPumpCard extends HTMLElement {
     // vendor app's own default slot) uses end 24:00 for "until end of
     // day" - treat a midnight end as that.
     if (eh === 0 && em === 0) eh = 24;
-    this._call("jebao_local", "set_schedule_slot", {
+    const byte = (v) => clamp(Number(v) || 0, 0, 255);
+    const data = {
       device_id: pump.deviceId,
       slot: form.slot ?? this._nextFreeSlot(pump),
       start_hour: sh, start_minute: sm,
       end_hour: eh, end_minute: em,
       mode: Number(form.mode),
-      flow: clamp(Number(form.flow) || 0, 0, 255),
-      frequency: clamp(Number(form.frequency) || 0, 0, 255),
-      pulse_tide: clamp(Number(form.pulse_tide) || 0, 0, 255),
-    });
+      flow: byte(form.flow),
+      frequency: byte(form.frequency),
+    };
+    // Trailing fields differ per product - send only the ones this pump's
+    // slot layout actually has (the service ignores the rest, but sending
+    // a field the product has no concept of would be misleading).
+    if (this._slotLen(pump) === 9) {
+      data.feed_time = byte(form.feed_time);
+      data.cust_wave_freq = byte(form.cust_wave_freq);
+    } else {
+      data.pulse_tide = byte(form.pulse_tide);
+    }
+    this._call("jebao_local", "set_schedule_slot", data);
     this._editSlot.delete(pump.did);
     this._render();
   }
@@ -288,11 +327,19 @@ class JebaoPumpCard extends HTMLElement {
           start: `${pad2(existing.start_hour)}:${pad2(existing.start_minute)}`,
           end: `${pad2(existing.end_hour === 24 ? 0 : existing.end_hour)}:${pad2(existing.end_minute)}`,
           mode: existing.mode, flow: existing.flow,
-          frequency: existing.frequency, pulse_tide: existing.pulse_tide,
+          frequency: existing.frequency,
+          // Whichever trailing fields this product's slots carry.
+          pulse_tide: existing.pulse_tide ?? 0,
+          feed_time: existing.feed_time ?? 0,
+          cust_wave_freq: existing.cust_wave_freq ?? 0,
         }
       // Same defaults as the vendor app's own "new slot" object (see
       // jebao_gizwits/schedule.py's module docstring).
-      : { slot: null, start: "00:00", end: "00:00", mode: 1, flow: 100, frequency: 100, pulse_tide: 0 });
+      : {
+          slot: null, start: "00:00", end: "00:00", mode: 1,
+          flow: 100, frequency: 100,
+          pulse_tide: 0, feed_time: 0, cust_wave_freq: 0,
+        });
     this._render(true);
   }
 
@@ -415,16 +462,27 @@ class JebaoPumpCard extends HTMLElement {
           ${slots.map((s) => `
             <div class="slotrow" data-slot="${s.index}">
               <span class="slottime">${pad2(s.start_hour)}:${pad2(s.start_minute)}&ndash;${pad2(s.end_hour)}:${pad2(s.end_minute)}</span>
-              <span class="slotmode">${SLOT_MODE_LABELS[s.mode] ?? `Mode ${s.mode}`}${s.mode !== 0 ? ` &middot; ${s.flow}%` : ""}</span>
+              <span class="slotmode">${slotModeLabel(s)}${s.mode !== 0 ? ` &middot; ${s.flow}%` : ""}</span>
               <button class="small2" data-act="schededit" data-slot="${s.index}">Edit</button>
               <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}">✕</button>
             </div>`).join("")}
-          ${form ? this._slotForm(form) : `<button class="addslot" data-act="schedadd">+ Add period</button>`}
+          ${form ? this._slotForm(form, this._slotLen(pump)) : `<button class="addslot" data-act="schedadd">+ Add period</button>`}
         `}
       </div>`;
   }
 
-  _slotForm(form) {
+  _slotForm(form, slotLen) {
+    // Trailing fields are per product (see the mode-label table above):
+    // the base wavemaker's slot ends in a pulse/tide value, the Pro's in a
+    // feed duration and a custom-wave frequency.
+    const extras = slotLen === 9
+      ? `<label class="inline">Feed min</label>
+         <input type="number" min="0" max="255" data-form="feed_time" value="${form.feed_time ?? 0}">
+         <label class="inline">Custom Hz</label>
+         <input type="number" min="0" max="100" data-form="cust_wave_freq" value="${form.cust_wave_freq ?? 0}">`
+      : `<label class="inline">Pulse</label>
+         <input type="number" min="0" max="255" data-form="pulse_tide" value="${form.pulse_tide ?? 0}">`;
+
     return `
       <div class="slotform">
         <div class="row">
@@ -438,7 +496,7 @@ class JebaoPumpCard extends HTMLElement {
         <div class="row">
           <label>Mode</label>
           <select data-form="mode">
-            ${Object.entries(SLOT_MODE_LABELS).map(([v, l]) =>
+            ${Object.entries(modeLabelsForLen(slotLen)).map(([v, l]) =>
               `<option value="${v}" ${Number(v) === Number(form.mode) ? "selected" : ""}>${l}</option>`).join("")}
           </select>
         </div>
@@ -447,8 +505,10 @@ class JebaoPumpCard extends HTMLElement {
           <input type="number" min="0" max="100" data-form="flow" value="${form.flow}">
           <label class="inline">Freq %</label>
           <input type="number" min="0" max="100" data-form="frequency" value="${form.frequency}">
-          <label class="inline">Pulse</label>
-          <input type="number" min="0" max="255" data-form="pulse_tide" value="${form.pulse_tide}">
+        </div>
+        <div class="row">
+          <label>&nbsp;</label>
+          ${extras}
         </div>
         <div class="row">
           <button class="feednow half" data-act="schedsave">Save</button>

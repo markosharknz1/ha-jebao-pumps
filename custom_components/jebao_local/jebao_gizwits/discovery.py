@@ -20,6 +20,15 @@ from .protocol import CMD_DISCOVER_REQUEST, CMD_DISCOVER_RESPONSE, decode_frame,
 DISCOVERY_PORT = 12414
 DEFAULT_TIMEOUT = 5.0
 
+# A single broadcast is not enough in practice: UDP is lossy, these are
+# cheap WiFi modules, and a busy/congested 2.4GHz network drops frames -
+# a real user with 5 pumps saw only 4 of them consistently. Probes are
+# re-sent across the listen window so one lost packet (in either
+# direction) no longer means a missing device. Offsets are front-loaded
+# so a normal scan still resolves quickly, with later retries to catch
+# slow or contended responders.
+PROBE_OFFSETS = (0.0, 0.4, 1.2, 2.5)
+
 
 @dataclass(frozen=True)
 class DiscoveredDevice:
@@ -89,7 +98,13 @@ class _DiscoveryProtocol(asyncio.DatagramProtocol):
 
 
 async def discover(timeout: float = DEFAULT_TIMEOUT) -> list[DiscoveredDevice]:
-    """Broadcast a discovery frame and collect replies for `timeout` seconds."""
+    """Broadcast a discovery frame and collect replies for `timeout` seconds.
+
+    The probe is re-sent several times across the window (PROBE_OFFSETS) -
+    devices are deduplicated by did, so extra replies are free, but a
+    dropped packet no longer hides a pump. Replies keep arriving for the
+    full timeout regardless of when the last probe went out.
+    """
     found: dict[str, DiscoveredDevice] = {}
 
     def on_reply(ip: str, data: bytes) -> None:
@@ -106,8 +121,17 @@ async def discover(timeout: float = DEFAULT_TIMEOUT) -> list[DiscoveredDevice]:
         allow_broadcast=True,
     )
     try:
-        transport.sendto(encode_frame(CMD_DISCOVER_REQUEST), ("255.255.255.255", DISCOVERY_PORT))
-        await asyncio.sleep(timeout)
+        frame = encode_frame(CMD_DISCOVER_REQUEST)
+        elapsed = 0.0
+        for offset in PROBE_OFFSETS:
+            if offset >= timeout:
+                break
+            if offset > elapsed:
+                await asyncio.sleep(offset - elapsed)
+                elapsed = offset
+            transport.sendto(frame, ("255.255.255.255", DISCOVERY_PORT))
+        if timeout > elapsed:
+            await asyncio.sleep(timeout - elapsed)
     finally:
         transport.close()
 
@@ -133,8 +157,20 @@ async def discover_one(ip: str, timeout: float = DEFAULT_TIMEOUT) -> DiscoveredD
         local_addr=("0.0.0.0", 0),
     )
     try:
-        transport.sendto(encode_frame(CMD_DISCOVER_REQUEST), (ip, DISCOVERY_PORT))
-        await asyncio.sleep(timeout)
+        frame = encode_frame(CMD_DISCOVER_REQUEST)
+        elapsed = 0.0
+        for offset in PROBE_OFFSETS:
+            if offset >= timeout or result is not None:
+                break
+            if offset > elapsed:
+                await asyncio.sleep(offset - elapsed)
+                elapsed = offset
+            transport.sendto(frame, (ip, DISCOVERY_PORT))
+        # Unlike the broadcast scan there's only one device to hear from,
+        # so stop as soon as it answers instead of burning the full timeout.
+        while result is None and elapsed < timeout:
+            await asyncio.sleep(0.1)
+            elapsed += 0.1
     finally:
         transport.close()
 

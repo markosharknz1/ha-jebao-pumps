@@ -9,6 +9,7 @@
       },
       "discover": {
         "title": "Discovered devices",
+        "description": "Found {found} device(s) on the network.{already} If a device you expect is missing, it may have missed the discovery broadcast - go back and scan again, or add it manually by IP.",
         "data": {
           "device": "Select a device"
         }
@@ -83,7 +84,9 @@
         "state": {
           "主机": "Master",
           "从机": "Slave",
-          "独立": "Independent"
+          "独立": "Independent",
+          "同步从机": "Slave (synchronised)",
+          "异步从机": "Slave (alternating)"
         }
       },
       "calset": {
