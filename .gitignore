@@ -21,6 +21,7 @@ reference/
 # ...except our own small helper scripts, which are part of the project
 # (documented in docs/SUPPORTED_MODELS.md) rather than downloaded material.
 !tools/fetch_product_schema.py
+!tools/make_brand_icons.py
 
 # Python
 __pycache__/

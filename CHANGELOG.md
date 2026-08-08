@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ## Unreleased
 
+- **The integration icon now fills its frame in HACS and Home Assistant**,
+  matching how the AIPAI light integration's does. It was a circular badge,
+  which leaves empty corners inside HA/HACS's own square container and so
+  rendered noticeably smaller than neighbouring integrations; it's now a
+  filled rounded square. Also dropped the separate `logo.png`/`logo@2x.png`
+  from `brand/`: they were portrait, where home-assistant/brands prefers
+  landscape, and the brands docs say to ship only the icon when there's no
+  distinct landscape logo - the icon is then used as the logo everywhere,
+  which is what AIPAI does. The README banner moved to `docs/logo/` and was
+  regenerated to match. Icons are now produced by a committed, repeatable
+  script (`tools/make_brand_icons.py`) instead of the previous ad-hoc
+  browser-canvas rasterisation.
+
 - **The product catalog went from 30 to 48**, and four classes of device
   data that were being silently thrown away now reach Home Assistant.
   The original catalog was built by listing the app's bundled

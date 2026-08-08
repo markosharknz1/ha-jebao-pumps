@@ -1,4 +1,4 @@
-<img src="custom_components/jebao_local/brand/logo.png" alt="Jebao Local - unofficial" width="220">
+<img src="docs/logo/logo.png" alt="Jebao Local - unofficial" width="220">
 
 # Jebao Local Control
 
@@ -112,7 +112,7 @@ custom_components/jebao_local/   Home Assistant integration (vendors jebao_gizwi
   lovelace/jebao-pump-card.js    Native Lovelace card - auto-registered, zero YAML required
   panel/designer.html            Control panel: tank groups, cloneable settings profiles, feed timer
   panel.py                       Serves both of the above and registers the card/sidebar panel
-  brand/                         Integration icon/logo, served automatically via HA's brands proxy (2026.3+) - no manifest changes needed
+  brand/                         Integration icon (icon.png/icon@2x.png), served automatically via HA's brands proxy (2026.3+) - no manifest changes needed. Regenerate with tools/make_brand_icons.py
 dashboards/                 Example Lovelace dashboard + tank scripts for grouping pumps by tank
 fixtures/                   Real captured bytes used as ground truth (discovery replies, status reads, write frames)
   captured_writes/          Real write frames captured from the vendor app's own debug log - the ground truth for the write protocol

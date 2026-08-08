@@ -1,8 +1,12 @@
 <svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img">
 <title>Jebao Local pump icon</title>
-<desc>A stylized pump icon: a circular housing with inlet and outlet pipes and flow chevrons, on a teal circular badge.</desc>
+<desc>A stylized pump icon: a circular housing with inlet and outlet pipes and flow chevrons, on a teal rounded-square badge.</desc>
 
-<circle cx="150" cy="150" r="145" fill="#0b6e91"/>
+<!-- Rounded square, not a circle: HA/HACS render the icon inside their
+     own square container, so a circular badge leaves dead corners and
+     reads smaller than neighbouring integrations. Keep in sync with
+     tools/make_brand_icons.py, which renders the shipped PNGs. -->
+<rect x="0" y="0" width="300" height="300" rx="66" fill="#0b6e91"/>
 
 <rect x="63" y="132" width="52" height="36" rx="9" fill="#ffffff"/>
 <rect x="185" y="132" width="52" height="36" rx="9" fill="#ffffff"/>
