@@ -66,3 +66,17 @@ ENUM_TRANSLATIONS: dict[str, str] = {
 
 def translate(value: str) -> str:
     return ENUM_TRANSLATIONS.get(value, value)
+
+
+# Reverse lookup, for turning a translated option a user picked in the UI
+# back into the raw value the protocol actually writes. Safe because the
+# mapping is injective - asserted in tests/test_enum_translations.py, since
+# a duplicate English label added later would silently make one of the two
+# Chinese values unreachable.
+_REVERSE = {en: zh for zh, en in ENUM_TRANSLATIONS.items()}
+
+
+def untranslate(value: str) -> str:
+    """Inverse of translate(). Passes through anything unknown, so a raw
+    (untranslated) value still works if something hands one back."""
+    return _REVERSE.get(value, value)

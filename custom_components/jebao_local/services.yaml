@@ -61,7 +61,23 @@ set_schedule_slot:
           min: 0
           max: 255
           mode: box
+    # Which of these three a product actually uses depends on its slot
+    # layout (see jebao_gizwits/schedule.py) - the others are ignored.
     pulse_tide:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    feed_time:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    cust_wave_freq:
       required: false
       selector:
         number:

@@ -1,4 +1,12 @@
-"""Enum status_writable attributes -> selects."""
+"""Enum status_writable attributes -> selects.
+
+Options are shown in English. This is done here rather than through HA's
+own per-entity `state` translations because those require translation
+*keys* to be `[a-z0-9-_]+` slugs, and this vendor's enum values are
+Chinese - hassfest rejects them outright (SPEC.md Phase 21). So the entity
+reports translated options and maps the user's choice back to the raw
+value on write; the wire format is unchanged.
+"""
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
@@ -9,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
+from .jebao_gizwits.enum_translations import translate, untranslate
 
 
 async def async_setup_entry(
@@ -30,14 +39,16 @@ class JebaoSelect(JebaoLocalEntity, SelectEntity):
         self._attr_translation_key = attr_name.lower()
         self.attr_name = attr_name
         attr = coordinator.schema.by_name(attr_name)
-        self._attr_options = list(attr.enum_values)
+        self._attr_options = [translate(v) for v in attr.enum_values]
 
     @property
     def current_option(self) -> str | None:
         if self.coordinator.data is None:
             return None
         value = self.coordinator.data.get(self.attr_name)
-        return value if isinstance(value, str) else None
+        return translate(value) if isinstance(value, str) else None
 
     async def async_select_option(self, option: str) -> None:
-        await self.coordinator.async_write({self.attr_name: option})
+        # Back to the vendor's own value - control.py encodes an enum write
+        # via enum_values.index(), so it must be the raw string.
+        await self.coordinator.async_write({self.attr_name: untranslate(option)})

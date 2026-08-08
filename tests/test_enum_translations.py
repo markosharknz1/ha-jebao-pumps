@@ -47,3 +47,29 @@ def test_translate_is_a_safe_noop_for_unknown_values():
 def test_translate_returns_known_mappings():
     assert translate("经典造浪") == "Classic wave"
     assert translate("主机") == "Master"
+
+
+def test_translation_map_is_injective_so_reverse_lookup_is_safe():
+    """select.py maps a user's chosen English option back to the vendor's
+    raw value with untranslate(). Two Chinese values sharing one English
+    label would make one of them unreachable - silently writing the wrong
+    mode."""
+    from collections import Counter
+
+    dupes = {en: n for en, n in Counter(ENUM_TRANSLATIONS.values()).items() if n > 1}
+    assert not dupes, f"duplicate English labels break reverse lookup: {dupes}"
+
+
+def test_untranslate_round_trips_every_mapping():
+    from custom_components.jebao_local.jebao_gizwits.enum_translations import untranslate
+
+    for zh in ENUM_TRANSLATIONS:
+        assert untranslate(translate(zh)) == zh
+
+
+def test_untranslate_passes_through_unknown_values():
+    from custom_components.jebao_local.jebao_gizwits.enum_translations import untranslate
+
+    assert untranslate("not a known label") == "not a known label"
+    # A raw Chinese value handed back (e.g. from an old automation) still works.
+    assert untranslate("经典造浪") == "经典造浪"
