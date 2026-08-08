@@ -2,7 +2,15 @@
 
 All notable changes to this project are documented here.
 
-## Unreleased
+## 0.2.0
+
+**If you installed via HACS before this, you were running 0.1.0** - HACS
+installs the latest GitHub *release*, not the default branch, and 0.1.0
+was the only release for a long time. Everything below (including the two
+bug fixes from the first live install) had been merged but never
+released, so it never reached anyone's Home Assistant. Upgrading fixes,
+among other things, the blocking-I/O warning and the "Error adding
+entity" that stopped every fault binary_sensor from registering.
 
 - **The integration icon now fills its frame in HACS and Home Assistant**,
   matching how the AIPAI light integration's does. It was a circular badge,
