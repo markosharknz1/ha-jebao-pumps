@@ -107,6 +107,8 @@ def build_entities(schema):
         for a in schema.attrs
         if a.is_readonly_status and a.data_type == "uint8"
     ]
+    entities.append(sensor.JebaoIpAddressSensor(coordinator))
+    entities.append(sensor.JebaoMacAddressSensor(coordinator))
 
     feed = find_attr_name(schema, FEED_NAMES, "bool")
     if feed and find_attr_name(schema, FEEDTIME_NAMES, "uint8"):
@@ -149,3 +151,37 @@ def test_the_whole_catalog_builds_a_sane_number_of_entities():
     total = sum(len(build_entities(load_by_product_key(pk))) for pk in ALL_KEYS)
     # Guards against a filter regression quietly dropping whole platforms.
     assert total > 900, f"only {total} entities across {len(ALL_KEYS)} products"
+
+
+def test_every_product_reports_ip_and_mac():
+    """The device page has no native field for an IP, and the MAC only
+    appears there when the config entry has one stored - which older
+    entries didn't, so some devices showed a MAC and others showed
+    nothing (SPEC.md Phase 23). Both are now always present as entities.
+    """
+    for product_key in ALL_KEYS:
+        entities = build_entities(load_by_product_key(product_key))
+        kinds = {type(e).__name__ for e in entities}
+        assert "JebaoIpAddressSensor" in kinds
+        assert "JebaoMacAddressSensor" in kinds
+
+
+def test_ip_and_mac_stay_available_when_the_pump_is_unreachable():
+    """These are exactly the values you want visible when a pump has
+    dropped off, so unlike every other entity they must not go
+    unavailable with the coordinator."""
+    schema = load_by_product_key(ALL_KEYS[0])
+    coordinator = FakeCoordinator(schema)
+    coordinator.data = None  # what an unreachable pump looks like
+    assert sensor.JebaoIpAddressSensor(coordinator).available
+    assert sensor.JebaoMacAddressSensor(coordinator).available
+
+
+def test_mac_sensor_formats_and_handles_a_missing_mac():
+    schema = load_by_product_key(ALL_KEYS[0])
+    coordinator = FakeCoordinator(schema)
+    coordinator.mac = "24ec4aeea4d4"
+    assert sensor.JebaoMacAddressSensor(coordinator).native_value == "24:ec:4a:ee:a4:d4"
+    # Entries predating MAC capture, before the backfill has run.
+    coordinator.mac = None
+    assert sensor.JebaoMacAddressSensor(coordinator).native_value is None

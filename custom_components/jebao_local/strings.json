@@ -105,6 +105,12 @@
       },
       "deviceclock": {
         "name": "Device clock"
+      },
+      "ipaddress": {
+        "name": "IP address"
+      },
+      "macaddress": {
+        "name": "MAC address"
       }
     },
     "button": {

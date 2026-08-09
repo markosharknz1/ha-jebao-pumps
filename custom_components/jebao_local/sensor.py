@@ -22,6 +22,7 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import ranged_value_to_percentage
 
@@ -61,6 +62,8 @@ async def async_setup_entry(
         for attr in coordinator.schema.attrs
         if attr.is_readonly_status and attr.data_type == "uint8"
     )
+    entities.append(JebaoIpAddressSensor(coordinator))
+    entities.append(JebaoMacAddressSensor(coordinator))
     async_add_entities(entities)
 
 
@@ -241,3 +244,62 @@ class JebaoReadonlySensor(JebaoLocalEntity, SensorEntity):
             return None
         value = self.coordinator.data.get(self.attr_name)
         return value if isinstance(value, (int, float)) else None
+
+
+class JebaoIpAddressSensor(JebaoLocalEntity, SensorEntity):
+    """The pump's current LAN address, as readable text.
+
+    HA's DeviceInfo has no field for an IP - the only place it appears
+    natively is behind the device page's "Visit" link (configuration_url),
+    which isn't readable at a glance. This tracks `coordinator.host`, so
+    it also stays correct after DHCP recovery moves the pump (config_flow
+    async_step_dhcp / coordinator rediscovery), unlike a value captured
+    once at setup.
+    """
+
+    _attr_icon = "mdi:ip-network"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "ipaddress")
+        self._attr_translation_key = "ipaddress"
+
+    @property
+    def native_value(self) -> str | None:
+        return self.coordinator.host or None
+
+    @property
+    def available(self) -> bool:
+        # Deliberately not gated on coordinator.data: the address is still
+        # worth showing (and is exactly what you want to see) when the pump
+        # is unreachable and every other entity has gone unavailable.
+        return True
+
+
+class JebaoMacAddressSensor(JebaoLocalEntity, SensorEntity):
+    """The pump's MAC, as readable text.
+
+    It's also on the device page as a `connections` entry, but only for
+    config entries that have one stored - entries created before the MAC
+    was captured during discovery showed nothing at all, which is why
+    some devices displayed a MAC and others didn't. __init__.py backfills
+    those; this sensor makes the value visible either way.
+    """
+
+    _attr_icon = "mdi:network-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "macaddress")
+        self._attr_translation_key = "macaddress"
+
+    @property
+    def native_value(self) -> str | None:
+        mac = self.coordinator.mac
+        if not mac:
+            return None
+        return format_mac(mac)
+
+    @property
+    def available(self) -> bool:
+        return True

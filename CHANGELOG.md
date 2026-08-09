@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## 0.2.1
+
+- **Every device now shows its IP and MAC address.** Some devices showed a
+  MAC and others showed nothing: the MAC is only on the device page when
+  the config entry has one stored, and entries added before discovery
+  started capturing it had none. Those are now backfilled automatically
+  from the pump on startup (in the background, so it can't delay startup
+  or fail setup if a pump is briefly unreachable). Home Assistant's device
+  page has no field for an IP at all - it was only ever behind the "Visit"
+  link - so both values are now also plain diagnostic sensors. The IP one
+  tracks the live address, so it stays right after DHCP moves a pump, and
+  both deliberately stay available when a pump goes offline, since that's
+  exactly when you want to look them up.
+
 ## 0.2.0
 
 **If you installed via HACS before this, you were running 0.1.0** - HACS
