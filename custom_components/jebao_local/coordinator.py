@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,61 +57,61 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # it can't run directly here in a synchronous __init__ called from
         # an async context; HA's event-loop guard flags it if it does.
         self.schema: DatapointSchema = None  # type: ignore[assignment]
-        self._session: GizwitsSession | None = None
 
     async def async_load_schema(self) -> None:
         self.schema = await self.hass.async_add_executor_job(load_by_product_key, self.product_key)
 
-    async def _ensure_session(self) -> GizwitsSession:
-        if self._session is None:
-            session = GizwitsSession(self.host)
-            try:
-                await session.connect()
-                await session.authenticate()
-            except BaseException:
-                # connect() may well have succeeded before authenticate()
-                # failed. Without this the socket is never closed and never
-                # reachable again (self._session was never assigned), so
-                # every failed poll leaked one connection to a device that
-                # only tolerates a couple - which is itself a good way to
-                # produce the ECONNRESET that got us here.
-                await session.close()
-                raise
-            self._session = session
-        return self._session
+    @asynccontextmanager
+    async def _session_scope(self) -> AsyncIterator[GizwitsSession]:
+        """Open a session, hand it over, and always close it.
 
-    async def _drop_session(self) -> None:
-        """Discard the current session, closing it first.
+        Connections are deliberately NOT kept between polls. The GAgent
+        protocol expects a heartbeat ping/pong (0x0015/0x0016) roughly
+        every 4 seconds on an open TCP session (PROTOCOL.md), which this
+        client never sends - so a session held across a 10s poll interval
+        sat idle past what the device tolerates and was dropped, making
+        every poll rediscover a dead socket. Rather than run a heartbeat
+        task per pump, each operation gets its own short-lived
+        connection: on a LAN the extra handshake costs milliseconds, and
+        it leaves the pump - which has very few connection slots - with
+        no long-lived connection from Home Assistant at all.
 
-        Setting self._session = None on its own leaks the socket exactly
-        like the case above.
+        The `finally` is the important part: it is what guarantees the
+        socket is released even when authenticate() or the read raises.
         """
-        session, self._session = self._session, None
-        if session is not None:
+        session = GizwitsSession(self.host)
+        try:
+            await session.connect()
+            await session.authenticate()
+            yield session
+        finally:
             await session.close()
 
     async def _read_once(self) -> bytes:
-        """One connect(+authenticate as needed)+read, bounded by a timeout.
+        """One connect+authenticate+read+close, bounded by a timeout.
 
         Home Assistant does not time out a coordinator update, so an
         unbounded read on a half-open socket would stall this pump's
         polling until a restart.
         """
         async with asyncio.timeout(SESSION_TIMEOUT):
-            session = await self._ensure_session()
-            return await session.read_status()
+            async with self._session_scope() as session:
+                return await session.read_status()
 
     async def _async_update_data(self) -> dict[str, object]:
-        # Three attempts: as-is, with a fresh session (the usual fix for a
-        # socket the pump has since dropped), and finally after rediscovery
-        # in case it moved. Every attempt is inside the try, including the
-        # last - previously the post-rediscovery read sat outside any
-        # handler, so a failure there escaped as an "Unexpected error
-        # fetching ... data" traceback instead of a plain UpdateFailed.
+        # Two attempts: as-is, then again after rediscovery in case the
+        # pump moved. There is deliberately no immediate second try on the
+        # same address - with a fresh connection per read there is no
+        # stale socket for a retry to clear, and this device has few
+        # connection slots, so a failed poll should cost it as little as
+        # possible. Both attempts are guarded; previously the
+        # post-rediscovery read sat outside any handler, so a failure
+        # there escaped as an "Unexpected error fetching ... data"
+        # traceback instead of a plain UpdateFailed.
         last_err: Exception | None = None
-        for attempt in range(3):
-            if attempt == 2:
-                _LOGGER.debug("Reconnect failed for %s, trying rediscovery", self.did)
+        for attempt in range(2):
+            if attempt == 1:
+                _LOGGER.debug("Read failed for %s, trying rediscovery", self.did)
                 try:
                     recovered = await self._try_recover_via_discovery()
                 except (OSError, ProtocolError) as err:
@@ -124,7 +126,6 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                 _LOGGER.debug(
                     "Read attempt %d failed for %s (%s): %s", attempt + 1, self.did, self.host, err
                 )
-                await self._drop_session()
                 continue
             return self.schema.decode_status(raw)
 
@@ -162,21 +163,21 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         from .jebao_gizwits.control import build_control_payload
 
         payload = build_control_payload(self.schema, changes)
-        # Same retry-with-a-fresh-session shape as reads: a write is very
-        # often the first thing to touch a socket the pump quietly dropped
-        # since the last poll, and without dropping the dead session on
-        # failure every later write would reuse it.
+        # One retry: unlike a read, a failed write is worth attempting
+        # again rather than waiting for the next poll, since the user is
+        # sitting there expecting the pump to do something.
         for attempt in range(2):
             try:
                 async with asyncio.timeout(SESSION_TIMEOUT):
-                    session = await self._ensure_session()
-                    await session.send_control(payload)
+                    async with self._session_scope() as session:
+                        await session.send_control(payload)
                 break
             except (OSError, ProtocolError, TimeoutError):
-                await self._drop_session()
                 if attempt == 1:
                     raise
         await self.async_request_refresh()
 
     async def async_close(self) -> None:
-        await self._drop_session()
+        """Nothing to tear down: connections are per-operation and closed
+        by _session_scope. Kept because __init__.py calls it on unload."""
+        return None

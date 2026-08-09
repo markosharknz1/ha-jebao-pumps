@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented here.
 
+## 0.3.0
+
+- **Connections are no longer held open between polls**, which should be
+  the real end of the `Connection reset by peer` errors. The protocol
+  expects a heartbeat ping/pong roughly every 4 seconds on an open
+  session, and this integration never sent one - so a connection kept
+  alive across a 10-second poll interval sat idle longer than the pump
+  tolerates and was dropped, leaving every poll to trip over a dead
+  socket. Rather than run a heartbeat task per pump, each read and write
+  now opens its own short-lived connection and closes it. On a LAN the
+  extra handshake costs milliseconds, and it leaves the pump - which has
+  very few connection slots - with no long-lived connection from Home
+  Assistant at all.
+- A failed poll now costs the pump one connection attempt rather than
+  three: with a fresh connection every time there is no stale socket for
+  an immediate retry to clear, so it goes straight to rediscovery.
+
 ## 0.2.3
 
 - **Fixed a connection leak that could make a pump start refusing

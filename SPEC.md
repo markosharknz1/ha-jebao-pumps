@@ -475,6 +475,24 @@ Four existing tests failed on the new schemas and all four were correct to fail 
 
 ---
 
+## Phase 25 — Why the connections kept resetting: the missing heartbeat
+
+**Goal:** the user asked whether the vendor app holds a LAN connection open or polls the pumps. Answering it explained the `ConnectionResetError` storm that Phase 24 had only partly addressed.
+
+**The app does neither.** This project's own Phase 1 packet captures already settled it and it had simply never been connected to the problem: across ~6 minutes spanning multiple pump actions there is *zero* TCP traffic to the pump or port 12416. The app is cloud-only - MQTT-over-TLS on 8883 to `usm2m.gizwits.com` - and the only local thing it does is the UDP discovery broadcast. So the app was never competing with Home Assistant for the pump's LAN connection slots.
+
+**But checking how sessions are meant to be kept alive found the actual cause.** `PROTOCOL.md` (and the node-ph803w reference it came from) documents `0x0015`/`0x0016` as a heartbeat ping/pong **executed every 4 seconds** on the TCP session. The constants exist in `protocol.py` and are **never sent by anything**. The coordinator held one session per pump open across a 10s default poll interval, so between polls it sat idle at more than twice the interval the device expects, and the pump dropped it. Every poll then found a dead socket - and until Phase 24, never closed it, so they accumulated against a device with very few connection slots until even a brand-new connection got reset mid-handshake. That is exactly the traceback the user reported (reset inside `authenticate()` on a *fresh* connect), and it explains why the two bugs compounded: the missing heartbeat was the trigger, the leak was the amplifier.
+
+**Fix: stop holding connections at all** (the user chose this over adding a heartbeat task). `_session_scope()` is an async context manager - connect, authenticate, hand over, and always close in a `finally`. Reads and writes each get their own short-lived connection. On a LAN the extra handshake is milliseconds, there is no idle session for the device to drop, no heartbeat needed, and Home Assistant holds no long-lived connection against the pump's small slot budget. `_ensure_session`/`_drop_session` and the cached `self._session` are gone entirely, which removes the whole stale-socket class of bug rather than managing it.
+
+The retry ladder shrank from three attempts to two: with a fresh connection every time there is no stale socket for an immediate same-address retry to clear, so a failed read goes straight to rediscovery. A failed poll now costs the pump one connection attempt instead of three.
+
+Tests assert the property that matters and would have caught the original bug: no socket may survive an operation, successful or not, and each poll must use a new connection. Verified the leak tests are real by reintroducing the leak and confirming they fail.
+
+**Not verified against hardware** - the heartbeat requirement is documented in the protocol reference, and the reset-during-handshake symptom fits slot exhaustion, but neither has been confirmed against the user's pumps.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.
