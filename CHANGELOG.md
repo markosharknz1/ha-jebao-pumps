@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here.
 
+## 0.2.2
+
+- **Device names no longer just repeat the model.** The device name and the
+  model were both set to the same product string, so Home Assistant's
+  device list showed e.g. "Local Wavemaker (WiFi+BLE)" with
+  "Local Wavemaker (WiFi+BLE)" as its own subtitle - and two identical
+  pumps were told apart only by HA appending "2". Devices now default to
+  the product name plus the last 4 of their MAC ("Local Wavemaker a4d4"),
+  which matches the identifier shown on the device page and in the
+  discovery picker, while the model line keeps the full product name.
+  Any name you have set yourself is untouched - Home Assistant stores
+  those separately.
+
 ## 0.2.1
 
 - **Every device now shows its IP and MAC address.** Some devices showed a

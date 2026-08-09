@@ -4,11 +4,38 @@ typed DeviceInfo instead of a raw dict, and centralizes it in one base class
 instead of repeating device_info/name properties in every platform file."""
 from __future__ import annotations
 
+import re
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo, format_mac
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, TCP_PORT
 from .coordinator import JebaoLocalCoordinator
+
+# "Local Wavemaker (WiFi+BLE)" -> "Local Wavemaker". The parenthetical is
+# connectivity, not identity, and the device row already prints the full
+# product name as the model directly underneath the name.
+_CONNECTIVITY_SUFFIX = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def default_device_name(name_en: str, mac: str | None, did: str) -> str:
+    """A device name that isn't just a repeat of the model.
+
+    Both used to be `schema.name_en`, so HA's device list read
+    "Local Wavemaker (WiFi+BLE)" with "Local Wavemaker (WiFi+BLE)" as its
+    own subtitle, and two identical pumps differed only by HA appending
+    "2". Naming them "Local Wavemaker a4d4" keeps the model line
+    informative and makes identical units tellable apart by the same MAC
+    tail shown on the device page and in the discovery picker.
+
+    Only a default: a name the user sets is stored separately by HA
+    (`name_by_user`) and is not affected by this.
+    """
+    base = _CONNECTIVITY_SUFFIX.sub("", name_en).strip() or name_en
+    # MAC first - it's what a router's client list shows. did is a stable
+    # fallback for entries whose MAC hasn't been backfilled yet.
+    suffix = (mac or did or "").strip().lower()[-4:]
+    return f"{base} {suffix}" if suffix else base
 
 
 class JebaoLocalEntity(CoordinatorEntity[JebaoLocalCoordinator]):
@@ -37,7 +64,7 @@ class JebaoLocalEntity(CoordinatorEntity[JebaoLocalCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.did)},
             connections=connections,
-            name=coordinator.schema.name_en,
+            name=default_device_name(coordinator.schema.name_en, coordinator.mac, coordinator.did),
             manufacturer="Jebao",
             model=coordinator.schema.name_en,
             configuration_url=f"http://{coordinator.host}:{TCP_PORT}",

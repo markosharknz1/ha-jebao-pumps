@@ -185,3 +185,55 @@ def test_mac_sensor_formats_and_handles_a_missing_mac():
     # Entries predating MAC capture, before the backfill has run.
     coordinator.mac = None
     assert sensor.JebaoMacAddressSensor(coordinator).native_value is None
+
+
+# --- device naming (SPEC.md Phase 23) ------------------------------------
+# Device name and model were both schema.name_en, so HA's device list read
+# "Local Wavemaker (WiFi+BLE)" with the identical string as its subtitle,
+# and two identical pumps differed only by HA appending "2".
+
+
+def test_device_name_is_not_just_the_model_repeated():
+    from custom_components.jebao_local.entity import default_device_name
+
+    model = "Local Wavemaker (WiFi+BLE)"
+    name = default_device_name(model, "24ec4aeea4d4", "somedid")
+    assert name != model
+    assert name == "Local Wavemaker a4d4"
+
+
+def test_identical_products_get_distinguishable_names():
+    from custom_components.jebao_local.entity import default_device_name
+
+    model = "Local Wavemaker (WiFi+BLE)"
+    a = default_device_name(model, "24ec4aeea4d4", "did-a")
+    b = default_device_name(model, "24ec4aee2b7c", "did-b")
+    assert a != b, "two identical pumps would rely on HA appending '2'"
+
+
+def test_name_falls_back_to_did_when_mac_not_yet_backfilled():
+    from custom_components.jebao_local.entity import default_device_name
+
+    # Entries predating MAC capture, before __init__.py's backfill runs.
+    name = default_device_name("Local Wavemaker (WiFi+BLE)", None, "qp50gpt5i8h4mfkio0enik")
+    assert name == "Local Wavemaker enik"
+
+
+def test_only_a_trailing_parenthetical_is_stripped():
+    from custom_components.jebao_local.entity import default_device_name
+
+    # "Pro" and similar must survive - it's part of the product identity.
+    assert default_device_name("Local Wavemaker Pro (WiFi+BLE)", "aabbccdd33f5", "d") == (
+        "Local Wavemaker Pro 33f5"
+    )
+    # A product with no parenthetical at all is left alone.
+    assert default_device_name("Feeder", "aabbccdd1111", "d") == "Feeder 1111"
+
+
+def test_every_bundled_product_gets_a_name_distinct_from_its_model():
+    from custom_components.jebao_local.entity import default_device_name
+
+    for product_key in ALL_KEYS:
+        schema = load_by_product_key(product_key)
+        name = default_device_name(schema.name_en, "24ec4aeea4d4", "somedid")
+        assert name and name != schema.name_en, schema.name_en
