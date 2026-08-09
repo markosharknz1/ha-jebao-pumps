@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented here.
 
+## 0.2.3
+
+- **Fixed a connection leak that could make a pump start refusing
+  connections.** If a connection opened but the login that follows it
+  failed, the socket was never closed - and a read failure discarded the
+  session without closing it either. Every failed poll leaked one
+  connection to a device that tolerates very few, which is a plausible
+  cause of the `Connection reset by peer` errors that led here in the
+  first place. Both paths now close properly.
+- **A pump that can't be reached now reports a clean "cannot reach"
+  message** instead of an "Unexpected error fetching ... data" traceback.
+  The final retry after rediscovery sat outside the error handling, so a
+  failure there escaped raw.
+- **A stalled read can no longer stop a pump updating until a restart.**
+  Home Assistant puts no time limit on an integration's update, so a read
+  on a half-open socket (peer gone without saying so) waited forever.
+  There's now a 10-second ceiling on a connect+read cycle.
+- Writes get the same treatment: they retry once on a fresh connection
+  rather than reusing one the pump has already dropped.
+
 ## 0.2.2
 
 - **Device names no longer just repeat the model.** The device name and the

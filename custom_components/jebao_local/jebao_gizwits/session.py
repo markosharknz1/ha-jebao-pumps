@@ -50,9 +50,24 @@ class GizwitsSession:
         self._reader, self._writer = await asyncio.open_connection(self.ip, self.port)
 
     async def close(self) -> None:
-        if self._writer is not None:
-            self._writer.close()
-            await self._writer.wait_closed()
+        """Idempotent, and never raises.
+
+        Clears the reader/writer first so a second close (or a close
+        racing a failed connect) is a no-op, and swallows errors from
+        wait_closed: the connection is already being torn down because
+        something went wrong, and a failure to flush must not mask the
+        original error or leave the caller unable to reconnect.
+        """
+        writer, self._writer, self._reader = self._writer, None, None
+        if writer is None:
+            return
+        writer.close()  # this is what actually releases the socket
+        try:
+            await writer.wait_closed()
+        except OSError:
+            pass  # peer already gone; nothing left to flush
+        # CancelledError is deliberately NOT caught - swallowing it would
+        # break cancellation, and close() above has already done the work.
 
     async def _send(self, command: int, payload: bytes = b"") -> None:
         assert self._writer is not None
