@@ -72,3 +72,30 @@ def test_label_survives_a_device_with_no_mac():
     device = _device("10.42.1.90", "did-d", "", WAVEMAKER_PRODUCT_KEY)
     label = discovery_label(device, _product_names({WAVEMAKER_PRODUCT_KEY})[WAVEMAKER_PRODUCT_KEY])
     assert "10.42.1.90" in label  # no crash, still identifiable by IP
+
+
+def test_config_entry_title_matches_the_device_name():
+    """HA's integration page nests device-under-config-entry. The entry
+    title used to be the bare product name, so that page showed the
+    product name on the entry row and again as the device's model line
+    directly beneath (SPEC.md Phase 26). Both now use the same
+    distinguishing name, so the two rows don't read as a repeat.
+    """
+    from custom_components.jebao_local.naming import default_device_name
+    from custom_components.jebao_local.jebao_gizwits.schema import load_by_product_key
+
+    schema = load_by_product_key(WAVEMAKER_PRODUCT_KEY)
+    device = _device("10.42.1.82", "somedid", "24ec4aee9e01", WAVEMAKER_PRODUCT_KEY)
+    title = default_device_name(schema.name_en, device.mac_hex, device.did)
+    assert title != schema.name_en, "entry title must not just repeat the model"
+    assert title == "Local Wavemaker 9e01"
+
+
+def test_entry_title_falls_back_when_the_device_reports_no_mac():
+    from custom_components.jebao_local.naming import default_device_name
+    from custom_components.jebao_local.jebao_gizwits.schema import load_by_product_key
+
+    schema = load_by_product_key(WAVEMAKER_PRODUCT_KEY)
+    device = _device("10.42.1.82", "qp50gpt5i8h4mfkio0enik", "", WAVEMAKER_PRODUCT_KEY)
+    title = default_device_name(schema.name_en, device.mac_hex, device.did)
+    assert title == "Local Wavemaker enik"

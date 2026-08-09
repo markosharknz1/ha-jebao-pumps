@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here.
 
+## 0.3.1
+
+- **Newly added pumps get a config entry title that doesn't repeat the
+  model.** Home Assistant's integration page nests device-under-config-
+  entry, and the entry title was the bare product name - so that page
+  showed e.g. "Aquarium Pump (WiFi+BLE)" on the entry row and again as
+  the device's model line directly beneath it. New entries now use the
+  same distinguishing name the device gets ("Aquarium Pump 9e01"). The
+  two-row nesting itself is Home Assistant's own layout and can't be
+  collapsed, but it no longer reads as the same text twice.
+  **Existing entries are untouched** - Home Assistant never retitles one,
+  and renaming is yours to do via the gear icon on that row.
+
 ## 0.3.0
 
 - **Connections are no longer held open between polls**, which should be

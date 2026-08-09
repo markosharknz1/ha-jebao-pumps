@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from .const import CONF_DID, CONF_MAC, CONF_PRODUCT_KEY, DEFAULT_SCAN_INTERVAL, DISCOVERY_TIMEOUT, DOMAIN
 from .jebao_gizwits.discovery import DiscoveredDevice, discover, discover_one
 from .jebao_gizwits.schema import known_product_keys, load_by_product_key
+from .naming import default_device_name
 
 if TYPE_CHECKING:
     # Only for type checkers - the actual import path has moved across HA
@@ -163,7 +164,14 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = await self.hass.async_add_executor_job(load_by_product_key, device.product_key)
         return self.async_create_entry(
-            title=schema.name_en,
+            # Same name the device gets, rather than the bare product name.
+            # HA's integration page nests device-under-config-entry, so a
+            # title equal to the product name meant that page showed the
+            # product name on the entry row and again as the device's model
+            # line right beneath it. Only affects newly added pumps - HA
+            # never retitles an existing entry, and renaming one is the
+            # user's to do.
+            title=default_device_name(schema.name_en, device.mac_hex, device.did),
             data={
                 CONF_HOST: device.ip,
                 CONF_DID: device.did,
