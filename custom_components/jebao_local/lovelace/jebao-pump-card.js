@@ -388,21 +388,7 @@ class JebaoPumpCard extends HTMLElement {
             : ""
         }
 
-        ${
-          mode
-            ? `<div class="row">
-                 <label>Wave mode</label>
-                 <select data-act="mode">
-                   ${(mode.attributes.options || [])
-                     .map(
-                       (o) =>
-                         `<option value="${o}" ${o === mode.state ? "selected" : ""}>${modeLabel(o)}</option>`
-                     )
-                     .join("")}
-                 </select>
-               </div>`
-            : ""
-        }
+        ${this._modeRow(pump)}
 
         ${fan ? this._fanSpeedRow(fan) : ""}
         ${flow ? this._sliderRow("Flow", "flow", flow) : ""}
@@ -517,6 +503,48 @@ class JebaoPumpCard extends HTMLElement {
       </div>`;
   }
 
+  // "Mode" is not one entity kind across the catalogue: it is a declared
+  // enum on 13 products (-> select), a labelled uint8 on 3 (-> select,
+  // built from the schema desc, see mode_options.py) and a plain bool on
+  // 13 more (-> switch). The card used to grab whatever entity was named
+  // "mode" and always draw a <select> from `attributes.options`, so on
+  // the 16 non-enum products - including the Wavemaker Pro - it rendered
+  // an empty, unusable dropdown. Render by the entity's actual domain.
+  _modeRow(pump) {
+    const id = pump.entities.mode;
+    if (!id) return "";
+    const domain = id.split(".")[0];
+    const state = this._state(id);
+    if (!state) return "";
+
+    if (domain === "select") {
+      const options = state.attributes.options || [];
+      if (!options.length) return "";  // never draw an empty dropdown
+      return `
+        <div class="row">
+          <label>Wave mode</label>
+          <select data-act="mode">
+            ${options.map((o) =>
+              `<option value="${o}" ${o === state.state ? "selected" : ""}>${modeLabel(o)}</option>`
+            ).join("")}
+          </select>
+        </div>`;
+    }
+    if (domain === "switch") {
+      const on = state.state === "on";
+      return `
+        <div class="row">
+          <label>Mode</label>
+          <button class="pw small ${on ? "on" : ""}" data-act="modetoggle">${on ? "On" : "Off"}</button>
+        </div>`;
+    }
+    if (domain === "number") {
+      // Fallback only: a uint8 whose choices we could not recover.
+      return this._sliderRow("Mode", "mode", state);
+    }
+    return "";
+  }
+
   _fanSpeedRow(fanState) {
     const value = Number(fanState.attributes.percentage) || 0;
     const step = fanState.attributes.percentage_step || 1;
@@ -578,6 +606,10 @@ class JebaoPumpCard extends HTMLElement {
     if (!pump) return;
     const act = el.dataset.act;
     if (act === "power") this._togglePower(pump);
+    else if (act === "modetoggle") {
+      const id = pump.entities.mode;
+      this._call("switch", this._state(id)?.state === "on" ? "turn_off" : "turn_on", { entity_id: id });
+    }
     else if (act === "feedtoggle") this._toggleFeedSwitch(pump, !(this._state(pump.entities.feedswitch)?.state === "on"));
     else if (act === "feednow") this._feedNow(pump);
     else if (act === "stopfeed") this._stopFeed(pump);

@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .entity import JebaoLocalEntity
+from .jebao_gizwits.mode_options import mode_options_for
 from .fan import fan_attr_names
 
 
@@ -28,6 +29,10 @@ async def async_setup_entry(
         # than a byte, and were previously dropped entirely.
         if attr.writable and attr.data_type in ("uint8", "uint16") and attr.uint_spec is not None
         and attr.name != fan_speed_name
+        # ...except a uint8 that is really a labelled enumeration - it
+        # gets a select instead (see select.py / mode_options.py), and a
+        # 0-255 number box for a 9-choice Mode helps nobody.
+        and not mode_options_for(attr)
     ]
     async_add_entities(entities)
 

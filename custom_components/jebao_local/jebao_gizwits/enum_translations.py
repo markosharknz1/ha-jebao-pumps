@@ -30,6 +30,16 @@ ENUM_TRANSLATIONS: dict[str, str] = {
     "正弦造浪": "Sine wave",
     "随机造浪": "Random wave",
     "恒流造浪": "Constant flow",
+    # Extra modes on the "Pro" pumps, whose Mode is a labelled uint8
+    # rather than a declared enum (see mode_options.py). "喂食模式"
+    # (feed *mode*) is deliberately not "Feeding" - that is already
+    # taken by "喂食" below, and the reverse lookup must stay unique.
+    "脉冲造浪": "Pulse wave",
+    "潮汐涨落": "Tidal",
+    "营养输送": "Nutrient delivery",
+    "环流造浪": "Circulation",
+    "自定义造浪": "Custom wave",
+    "喂食模式": "Feed mode",
     # AutoMode extras (scheduled-mode state)
     "停机": "Stop",
     "喂食": "Feeding",

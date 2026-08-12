@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here.
 
+## 0.3.2
+
+- **The wave-mode dropdown was empty on 16 of the 48 products** - including
+  the Local Wavemaker Pro. `Mode` is only a declared enum on 13 products;
+  on 3 others it's a plain number and on 13 more it's a simple on/off, but
+  the card always drew a dropdown and read options that weren't there.
+  It now renders whichever control the attribute actually is, so an empty
+  dropdown is no longer possible.
+- **The Pro pumps' wave modes now have names.** Those products list their
+  9 modes (Pulse wave, Sine wave, Constant flow, Random wave, Tidal,
+  Nutrient delivery, Circulation, Feed mode, Custom wave) only in the
+  schema's description text, so Home Assistant showed a 0-255 number box
+  instead of a mode picker. Those are now read out of the schema and
+  offered as a proper dropdown. The numbering genuinely differs between
+  products - the Wavemaker Pro and DC Pump Pro disagree on what 0, 1 and
+  2 mean - so it's parsed per product rather than assumed.
+  **Note:** on those 3 products the Mode/AutoMode entity changes from a
+  `number` to a `select`; any automation referencing it needs updating.
+
 ## 0.3.1
 
 - **Newly added pumps get a config entry title that doesn't repeat the
