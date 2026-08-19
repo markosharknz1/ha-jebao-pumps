@@ -15,16 +15,16 @@ Confirmed against real captured frames (SwitchON true/false via logcat):
   `flagsSize - (N>>3) - 1`.
 - attrVals_t byte-type (uint8) fields: placed directly at their schema
   byte_offset, no reversal.
-- attrVals_t bit-type (bool/enum) fields: NOT simple absolute-bit addressing.
-  Traced from transDatasToP0Data (FUN_0022165c) and parseIndexInfo
-  (FUN_002205f8) in libGizWifiDaemon.so, and confirmed byte-for-byte against
-  a real captured SwitchON write: for bit `i` (0-indexed from LSB) of a
-  bit-type attribute's value,
-      dest_byte = schema.byte_offset - ((schema.bit_offset + i) >> 3) + ((total_writable_bits - 1) >> 3)
-      dest_bit  = (schema.bit_offset + i) & 7
-  where total_writable_bits is the sum of `len` across every writable
-  bit-type attribute (12 for this schema). byte_offset/bit_offset are the
-  raw schema values, not normalized.
+- attrVals_t bit-type (bool/enum) fields: NOT simple absolute-bit
+  addressing. The bit group at byte_offset 0 is one big-endian integer, so
+  bit 0 sits in the group's LAST byte - see jebao_gizwits/bitgroup.py,
+  which both this and decode_status() now share so they cannot drift
+  apart again. Traced from transDatasToP0Data (FUN_0022165c) and
+  parseIndexInfo (FUN_002205f8) in libGizWifiDaemon.so, and confirmed
+  byte-for-byte against a real captured SwitchON write (tests/
+  test_control.py). An earlier version derived the group's width from the
+  *count* of writable bit attributes rather than their extent; that
+  happens to be right for the wavemaker but not in general.
 - Unflagged attrVals_t bytes: the real app sends these as zero, not carried
   forward from current status - the device only applies flagged attributes
   (confirmed by the flags mechanism itself), so this is safe and is what we
@@ -43,6 +43,7 @@ fresh read_status() + decode_status().
 """
 from __future__ import annotations
 
+from .bitgroup import bit_group
 from .schema import DatapointSchema
 
 P0_ACTION_CONTROL_DEVICE = 0x01
@@ -59,7 +60,9 @@ def attr_flags_size(schema: DatapointSchema, max_id: int | None = None) -> int:
 
 
 def attr_vals_size(schema: DatapointSchema, max_id: int | None = None) -> int:
-    size = 0
+    # The bit group at byte 0 must be reserved in full even when nothing
+    # else reaches that far, or its high bytes would be truncated away.
+    size = bit_group(schema.attrs).width
     for a in _writable_attrs(schema):
         if max_id is not None and a.id > max_id:
             continue
@@ -90,8 +93,8 @@ def build_control_payload(
     """
     flags_size = attr_flags_size(schema, max_id)
     vals_size = attr_vals_size(schema, max_id)
-    total_bits = _total_writable_bits(schema, max_id)
 
+    group = bit_group(schema.attrs)
     flags = bytearray(flags_size)
     vals = bytearray(vals_size)
 
@@ -118,14 +121,23 @@ def build_control_payload(
             if not (0 <= raw_v <= max_v):
                 raise ValueError(f"{name}: value {raw_v} out of range 0..{max_v}")
 
-            for i in range(p.len):
-                local_bit = p.bit_offset + i
-                dest_byte = p.byte_offset - (local_bit >> 3) + ((total_bits - 1) >> 3)
-                dest_bit = local_bit & 7
-                if (raw_v >> i) & 1:
-                    vals[dest_byte] |= 1 << dest_bit
-                else:
-                    vals[dest_byte] &= ~(1 << dest_bit) & 0xFF
+            if p.byte_offset == 0 and group.swapped:
+                # One big-endian integer across the group - see bitgroup.py.
+                # This replaces a hand-rolled per-bit formula that derived
+                # the group's width from the *count* of bit attributes
+                # rather than their extent; the two agree on the wavemaker
+                # (whose write is confirmed against a captured frame) but
+                # not on every product.
+                group.place(vals, p.bit_offset, p.len, raw_v)
+            else:
+                for i in range(p.len):
+                    local_bit = p.bit_offset + i
+                    dest_byte = p.byte_offset + (local_bit >> 3)
+                    dest_bit = local_bit & 7
+                    if (raw_v >> i) & 1:
+                        vals[dest_byte] |= 1 << dest_bit
+                    else:
+                        vals[dest_byte] &= ~(1 << dest_bit) & 0xFF
         elif attr.data_type == "binary":
             raw_bytes = bytes(new_value)
             if len(raw_bytes) != p.len:

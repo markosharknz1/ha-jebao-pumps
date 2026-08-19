@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 
 
@@ -73,6 +74,13 @@ class DatapointSchema:
     protocol_type: str
     attrs: tuple[Attr, ...]
 
+    @cached_property
+    def bit_group(self):
+        """Layout of the byte_offset-0 bit group (see bitgroup.py)."""
+        from .bitgroup import bit_group
+
+        return bit_group(self.attrs)
+
     def by_name(self, name: str) -> Attr:
         for a in self.attrs:
             if a.name == name:
@@ -97,15 +105,23 @@ class DatapointSchema:
         future device has non-trivial ratio/addition.
         """
         values: dict[str, object] = {}
+        group = self.bit_group
         for attr in self.attrs:
             p = attr.position
             if p.unit == "bit":
-                start = p.byte_offset * 8 + p.bit_offset
-                v = 0
-                for i in range(p.len):
-                    abs_bit = start + i
-                    bit = (raw[abs_bit // 8] >> (abs_bit % 8)) & 1
-                    v |= bit << i
+                if p.byte_offset == 0 and group.swapped:
+                    # The group is one big-endian integer - see bitgroup.py.
+                    # Addressing it linearly (as this used to) reads the
+                    # wrong bits on every product whose group spans more
+                    # than one byte, which is all the wavemakers and dosers.
+                    v = group.value_of(raw, p.bit_offset, p.len)
+                else:
+                    start = p.byte_offset * 8 + p.bit_offset
+                    v = 0
+                    for i in range(p.len):
+                        abs_bit = start + i
+                        bit = (raw[abs_bit // 8] >> (abs_bit % 8)) & 1
+                        v |= bit << i
                 if attr.data_type == "bool":
                     values[attr.name] = bool(v)
                 elif attr.data_type == "enum" and attr.enum_values is not None:

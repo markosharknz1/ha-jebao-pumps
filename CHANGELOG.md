@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented here.
 
+## 0.4.0
+
+- **Fixed wrong on/off and mode readings on 21 of the 48 products** -
+  every wavemaker and every doser. Devices pack their switches and modes
+  into a group of bits that they send as a single big-endian number, so
+  the first switch lives in the *last* byte of that group. Writing
+  already accounted for this (it was confirmed against a real captured
+  command from the official app), but reading did not, so anything whose
+  bit group spans more than one byte was decoded from the wrong bits.
+  Verified against three live wavemakers: all three reported themselves
+  **powered off, Linkage "Slave", AutoMode "Stop"** while actually
+  running, Independent, on Classic wave. Reading and writing now share
+  one implementation so they cannot drift apart again, and a test asserts
+  that what is written to any bit is what is read back, on every product.
+  This is almost certainly the cause of the long-standing note that
+  "reading back live power state is unreliable for manually-toggled
+  pumps" - that was this bug, not the hardware.
+  Credit to **chrisc123/jebao_aqua-homeassistant**, whose independent
+  `gizwits_lan` implementation made the difference visible.
+- Bit-group width is now taken from how far the group actually extends
+  rather than how many bits are in use. The two agree on the wavemaker
+  but not in general, which also made writes wrong on the D-D Marine
+  Light.
+
 ## 0.3.2
 
 - **The wave-mode dropdown was empty on 16 of the 48 products** - including
