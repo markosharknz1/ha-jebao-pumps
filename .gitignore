@@ -22,6 +22,7 @@ reference/
 # (documented in docs/SUPPORTED_MODELS.md) rather than downloaded material.
 !tools/fetch_product_schema.py
 !tools/make_brand_icons.py
+!tools/diagnose_device.py
 
 # Python
 __pycache__/
