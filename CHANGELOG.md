@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented here.
 
+## 0.4.1
+
+- **Roughly 7x faster.** Home Assistant was reconnecting and logging in to
+  each pump on every single poll. Measured against real hardware, the
+  handshake costs ~718ms against a ~110ms read - so **87% of every poll
+  was overhead**, and pressing a control cost two of those round trips
+  (the command, then the read-back) before the UI moved. The connection
+  is kept open again: steady-state polls now take ~110ms instead of
+  ~830ms, and controls respond in a fraction of the time.
+- This undoes an incorrect assumption from 0.3.0. That release started
+  opening a fresh connection per operation because the protocol
+  documents a heartbeat "every 4 seconds" and idle sessions were assumed
+  to be dropped without it. Testing that directly against a pump: a
+  session sits idle for **90 seconds** with no heartbeat and still reads
+  fine. The connection resets that prompted the change were the socket
+  leak fixed in 0.2.3, not idle timeouts.
+- All the protections added since are kept: a failed operation still
+  closes and drops its connection so the next one reconnects, reads are
+  still bounded by a timeout, and an unreachable pump still reports a
+  clean message rather than a traceback.
+- Now that a poll is cheap, the poll interval can usefully be lowered
+  (Settings > Devices & Services > Jebao Local > Configure). The default
+  stays at 10s so nothing changes for existing setups.
+
 ## 0.4.0
 
 - **Fixed wrong on/off and mode readings on 21 of the 48 products** -

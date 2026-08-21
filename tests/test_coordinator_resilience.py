@@ -13,11 +13,13 @@ that, both covered here:
 2. The post-rediscovery read sat outside any exception handler, so a
    failure there escaped raw instead of becoming UpdateFailed.
 
-Sessions are no longer held between polls at all (SPEC.md Phase 25):
-the protocol wants a ~4s heartbeat that this client never sends, so an
-idle session was being dropped by the device anyway. Every operation
-now opens and closes its own connection, which is what these tests
-assert - no socket may survive an operation, successful or not.
+Connections ARE held between operations (SPEC.md Phase 29). A previous
+version opened one per operation on the theory that the protocol's ~4s
+heartbeat was mandatory; measured against real hardware that was wrong -
+an idle session survives 90s untouched - and re-handshaking cost 87% of
+every poll. What these tests assert is the property that actually keeps
+sockets from leaking: a *failure* always closes and drops the session,
+so the next attempt reconnects instead of reusing a dead socket.
 
 Needs the real `homeassistant` package; skips cleanly without it.
 """
@@ -89,6 +91,7 @@ def make_coordinator(monkeypatch, **behaviour):
 
     coordinator = JebaoLocalCoordinator.__new__(JebaoLocalCoordinator)
     coordinator.host = "10.0.0.5"
+    coordinator._session = None
     coordinator.did = "testdid"
     coordinator.schema = _FakeSchema()
     coordinator.logger = mod._LOGGER
@@ -121,22 +124,33 @@ def test_failed_authenticate_closes_the_socket(monkeypatch):
     assert FakeSession.instances[0].closed, "socket leaked - this is what exhausts the pump"
 
 
-def test_a_successful_operation_also_closes_its_socket(monkeypatch):
-    """Connections are per-operation now; none may be left open."""
+def test_successful_polls_reuse_one_connection(monkeypatch):
+    """The whole point of the speed fix: the handshake is ~718ms against a
+    ~110ms read, so polls must not re-do it."""
     c = make_coordinator(monkeypatch)
-    assert run(c._async_update_data()) == {"ok": True}
-    assert FakeSession.instances
-    assert all(s.closed for s in FakeSession.instances)
+    for _ in range(4):
+        assert run(c._async_update_data()) == {"ok": True}
+    assert len(FakeSession.instances) == 1, "re-handshaking on every poll"
+    assert not FakeSession.instances[0].closed, "session should still be open"
 
 
-def test_each_poll_uses_a_fresh_connection(monkeypatch):
-    """No session is reused across polls - an idle one gets dropped by the
-    device, since we never send the protocol's ~4s heartbeat."""
+def test_closing_the_coordinator_releases_the_session(monkeypatch):
     c = make_coordinator(monkeypatch)
     run(c._async_update_data())
-    run(c._async_update_data())
-    assert len(FakeSession.instances) == 2
-    assert all(s.closed for s in FakeSession.instances)
+    run(c.async_close())
+    assert FakeSession.instances[0].closed
+    assert c._session is None
+
+
+def test_a_failed_read_drops_the_session_so_the_next_try_reconnects(monkeypatch):
+    """A socket the pump dropped under us must not be reused - this is
+    what keeps a persistent connection safe."""
+    c = make_coordinator(monkeypatch, read_fails=True)
+    monkeypatch.setattr(c, "_try_recover_via_discovery", _async_return(False))
+    with pytest.raises(UpdateFailed):
+        run(c._async_update_data())
+    assert len(FakeSession.instances) >= 2, "should have reconnected between attempts"
+    assert all(s.closed for s in FakeSession.instances), "a failed session was left open"
 
 
 def test_repeated_failures_do_not_accumulate_open_sockets(monkeypatch):

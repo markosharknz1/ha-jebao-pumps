@@ -57,34 +57,60 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # it can't run directly here in a synchronous __init__ called from
         # an async context; HA's event-loop guard flags it if it does.
         self.schema: DatapointSchema = None  # type: ignore[assignment]
+        self._session: GizwitsSession | None = None
 
     async def async_load_schema(self) -> None:
         self.schema = await self.hass.async_add_executor_job(load_by_product_key, self.product_key)
 
     @asynccontextmanager
     async def _session_scope(self) -> AsyncIterator[GizwitsSession]:
-        """Open a session, hand it over, and always close it.
+        """Hand out the live session, opening one if we don't have it.
 
-        Connections are deliberately NOT kept between polls. The GAgent
-        protocol expects a heartbeat ping/pong (0x0015/0x0016) roughly
-        every 4 seconds on an open TCP session (PROTOCOL.md), which this
-        client never sends - so a session held across a 10s poll interval
-        sat idle past what the device tolerates and was dropped, making
-        every poll rediscover a dead socket. Rather than run a heartbeat
-        task per pump, each operation gets its own short-lived
-        connection: on a LAN the extra handshake costs milliseconds, and
-        it leaves the pump - which has very few connection slots - with
-        no long-lived connection from Home Assistant at all.
+        The connection is kept between operations. An earlier version
+        opened and closed one per operation, on the theory that the
+        protocol's heartbeat (0x0015/0x0016, "every 4s" per PROTOCOL.md)
+        was mandatory and an idle session would be dropped. Measured
+        against real hardware, that was wrong: a session sits idle for at
+        least 90 seconds with no heartbeat and still reads fine. The
+        connection resets that prompted the change were the socket leak
+        fixed separately, not idle timeouts.
 
-        The `finally` is the important part: it is what guarantees the
-        socket is released even when authenticate() or the read raises.
+        It matters because the handshake is expensive on these devices -
+        connect ~114ms and authenticate ~599ms against a read of ~110ms,
+        so re-handshaking made 87% of every poll pure overhead.
+
+        On any failure the session is closed and dropped, so the next
+        attempt reconnects rather than reusing a dead socket - that, not
+        short-lived connections, is what stops sockets leaking.
         """
-        session = GizwitsSession(self.host)
+        session = await self._ensure_session()
         try:
-            await session.connect()
-            await session.authenticate()
             yield session
-        finally:
+        except BaseException:
+            await self._drop_session()
+            raise
+
+    async def _ensure_session(self) -> GizwitsSession:
+        if self._session is None:
+            session = GizwitsSession(self.host)
+            try:
+                await session.connect()
+                await session.authenticate()
+            except BaseException:
+                # connect() may have succeeded before authenticate() failed;
+                # without this the socket is never closed and never
+                # reachable again, which is what leaked a connection per
+                # failed poll to a device that tolerates very few.
+                await session.close()
+                raise
+            self._session = session
+        return self._session
+
+    async def _drop_session(self) -> None:
+        """Close and forget the session. Clearing the reference without
+        closing leaks the socket just as surely."""
+        session, self._session = self._session, None
+        if session is not None:
             await session.close()
 
     async def _read_once(self) -> bytes:
@@ -99,18 +125,16 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                 return await session.read_status()
 
     async def _async_update_data(self) -> dict[str, object]:
-        # Two attempts: as-is, then again after rediscovery in case the
-        # pump moved. There is deliberately no immediate second try on the
-        # same address - with a fresh connection per read there is no
-        # stale socket for a retry to clear, and this device has few
-        # connection slots, so a failed poll should cost it as little as
-        # possible. Both attempts are guarded; previously the
-        # post-rediscovery read sat outside any handler, so a failure
-        # there escaped as an "Unexpected error fetching ... data"
-        # traceback instead of a plain UpdateFailed.
+        # Three attempts: on the live session, again on a fresh one (the
+        # usual fix for a socket the pump dropped while we held it), and
+        # finally after rediscovery in case it moved. _session_scope drops
+        # the session on any failure, so each retry reconnects. Every
+        # attempt is guarded; the post-rediscovery read once sat outside
+        # any handler, so a failure there escaped as an "Unexpected error
+        # fetching ... data" traceback instead of a plain UpdateFailed.
         last_err: Exception | None = None
-        for attempt in range(2):
-            if attempt == 1:
+        for attempt in range(3):
+            if attempt == 2:
                 _LOGGER.debug("Read failed for %s, trying rediscovery", self.did)
                 try:
                     recovered = await self._try_recover_via_discovery()
@@ -178,6 +202,4 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         await self.async_request_refresh()
 
     async def async_close(self) -> None:
-        """Nothing to tear down: connections are per-operation and closed
-        by _session_scope. Kept because __init__.py calls it on unload."""
-        return None
+        await self._drop_session()

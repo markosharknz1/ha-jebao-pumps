@@ -493,6 +493,36 @@ Tests assert the property that matters and would have caught the original bug: n
 
 ---
 
+## Phase 29 — Undoing Phase 25: the heartbeat assumption was wrong
+
+**Goal:** a user reported the integration felt slow.
+
+**Status: FIXED (2026-08-19), ~7x measured against real hardware.**
+
+Measured rather than guessed, against a live wavemaker:
+
+| step | median |
+|---|---|
+| TCP connect | 114 ms |
+| authenticate (2 round trips) | 599 ms |
+| read status | 111 ms |
+| **fresh connection per poll (Phase 25 model)** | **828 ms** |
+| **read on an already-open session** | **110 ms** |
+
+So 87% of every poll was handshake, and a control press paid it twice - once for the write and once for the refresh read - about 1.7s before the UI moved.
+
+**The cause was Phase 25's own reasoning.** That phase switched to per-operation connections because `PROTOCOL.md` documents a heartbeat ping/pong "executed every 4s" and this client never sends one, so an idle session was assumed to be dropped. That was never tested. Testing it now: **a session sits idle for 90 seconds with no heartbeat and still reads 401 bytes fine.** The reset storm that prompted the change was the socket leak fixed in Phase 24, not idle timeouts. An architectural change was made on an untested hypothesis and cost 7x throughput.
+
+Also checked while there: the device sends only two unsolicited frames (0x0009, 0x0062) immediately after login and none thereafter, so there is no push channel to exploit - polling remains the model. `read_status()` already skips unrelated frames, so those strays cannot desync a long-lived session.
+
+**Fix:** the session is cached again, but this is not a revert to the pre-0.2.3 code. Everything learned since is kept - `_ensure_session` closes the socket if `authenticate()` fails after `connect()` succeeded, `_session_scope` drops *and closes* the session on any failure so the next attempt reconnects, reads stay bounded by `SESSION_TIMEOUT`, and failures still surface as `UpdateFailed`. Short-lived connections were never what stopped the leak; closing on failure is.
+
+Verified end to end by driving the real coordinator against a real pump: first poll 989 ms (handshake paid once), subsequent polls 28-131 ms, median 117 ms - **7.1x**.
+
+The resilience tests were repointed from "every operation opens and closes its own connection" to the property that actually matters: successful polls reuse one connection, and any failure closes and drops it.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.
