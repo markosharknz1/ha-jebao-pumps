@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented here.
 
+## 0.4.2
+
+- **New: timed off.** `jebao_local.timed_off` turns pumps off now and
+  switches them back on by itself - either `minutes: 20` or `until:
+  "07:00"` - for feeding and maintenance. `jebao_local.cancel_timed_off`
+  ends it early. Both take a list of devices, or none at all to mean
+  every Jebao device, since "everything off while I feed" is the common
+  case.
+- **The deadline survives a restart.** It's written to `.storage`, so if
+  Home Assistant restarts (or is updated, or crashes) while a pump is
+  off, the pump is still switched back on - immediately if the deadline
+  passed in the meantime. Until now the only timed-off in this
+  integration was the card's feed countdown, which was a `setInterval` in
+  the browser: closing the tab left the pump stopped indefinitely. A reef
+  tank with no flow is a bad enough outcome that a restore failure also
+  retries for 3 minutes before it gives up and logs an error telling you
+  to switch it on manually.
+- A pump that was **already off** when the timer was set is left off at
+  the deadline rather than switched on. Only the power attribute is
+  touched - mode, speed and schedule are the device's own and come back
+  with it, so a timer can never overwrite a change made while it ran.
+
 ## 0.4.1
 
 - **Roughly 7x faster.** Home Assistant was reconnecting and logging in to

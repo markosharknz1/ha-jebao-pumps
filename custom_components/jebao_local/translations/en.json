@@ -200,6 +200,34 @@
           "description": "The Jebao pump."
         }
       }
+    },
+    "timed_off": {
+      "name": "Turn off for a while",
+      "description": "Turns pumps off now and switches them back on automatically after a set time - for feeding or maintenance. Survives a Home Assistant restart, so the tank can't be left without flow. A pump that was already off is left off.",
+      "fields": {
+        "device_id": {
+          "name": "Devices",
+          "description": "Leave empty for every Jebao device."
+        },
+        "minutes": {
+          "name": "For (minutes)",
+          "description": "How long to stay off. Use this or \"Until\", not both."
+        },
+        "until": {
+          "name": "Until (time)",
+          "description": "Clock time to come back on, e.g. 07:00. Rolls to tomorrow if already past. Use this or \"For\", not both."
+        }
+      }
+    },
+    "cancel_timed_off": {
+      "name": "Cancel timed off",
+      "description": "Cancels a pending timer and switches the pumps back on now.",
+      "fields": {
+        "device_id": {
+          "name": "Devices",
+          "description": "Leave empty for every Jebao device."
+        }
+      }
     }
   }
 }

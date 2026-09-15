@@ -29,6 +29,7 @@ from .jebao_gizwits.schedule import (
     schedule_slot_len,
     slot_attr_name,
 )
+from .off_timer import DATA_OFF_TIMERS, power_attr_of, resolve_deadline
 
 ATTR_DEVICE_ID = "device_id"
 ATTR_SLOT = "slot"
@@ -42,10 +43,14 @@ ATTR_FREQUENCY = "frequency"
 ATTR_PULSE_TIDE = "pulse_tide"
 ATTR_FEED_TIME = "feed_time"
 ATTR_CUST_WAVE_FREQ = "cust_wave_freq"
+ATTR_MINUTES = "minutes"
+ATTR_UNTIL = "until"
 
 SERVICE_SET_SCHEDULE_SLOT = "set_schedule_slot"
 SERVICE_CLEAR_SCHEDULE_SLOT = "clear_schedule_slot"
 SERVICE_SYNC_CLOCK = "sync_clock"
+SERVICE_TIMED_OFF = "timed_off"
+SERVICE_CANCEL_TIMED_OFF = "cancel_timed_off"
 
 _SLOT_SCHEMA = vol.All(int, vol.Range(min=0, max=SLOT_COUNT - 1))
 _BYTE_SCHEMA = vol.All(int, vol.Range(min=0, max=255))
@@ -82,6 +87,23 @@ SYNC_CLOCK_SCHEMA = vol.Schema(
     }
 )
 
+# device_id is optional here, unlike the schedule services: "everything
+# off while I feed" is the common case and naming each pump for it would
+# be tedious and easy to get wrong.
+TIMED_OFF_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Exclusive(ATTR_MINUTES, "duration"): vol.All(int, vol.Range(min=1, max=1440)),
+        vol.Exclusive(ATTR_UNTIL, "duration"): cv.string,
+    }
+)
+
+CANCEL_TIMED_OFF_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
 _SERVICES_REGISTERED_KEY = "jebao_local_services_registered"
 
 
@@ -94,6 +116,15 @@ def _resolve_coordinator(hass: HomeAssistant, device_id: str) -> JebaoLocalCoord
         if coordinator is not None:
             return coordinator
     raise ServiceValidationError(f"Device {device_id!r} is not a Jebao Local pump")
+
+
+def _targets(hass: HomeAssistant, call: ServiceCall) -> list[JebaoLocalCoordinator]:
+    """Coordinators this call applies to - the named devices, or all of
+    them when device_id is omitted."""
+    device_ids = call.data.get(ATTR_DEVICE_ID)
+    if not device_ids:
+        return [c for c in hass.data.get(DOMAIN, {}).values() if hasattr(c, "did")]
+    return [_resolve_coordinator(hass, d) for d in device_ids]
 
 
 def _require_schedule_support(coordinator: JebaoLocalCoordinator, slot: int) -> str:
@@ -162,6 +193,35 @@ def async_register_services(hass: HomeAssistant) -> None:
         now = dt_util.now()
         await coordinator.async_write(encode_clock(now))
 
+    async def _handle_timed_off(call: ServiceCall) -> None:
+        manager = hass.data[DATA_OFF_TIMERS]
+        try:
+            deadline = resolve_deadline(call.data.get(ATTR_MINUTES), call.data.get(ATTR_UNTIL))
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+
+        targets = _targets(hass, call)
+        skipped = [c.schema.name_en for c in targets if power_attr_of(c) is None]
+        usable = [c for c in targets if power_attr_of(c) is not None]
+        if not usable:
+            raise ServiceValidationError(
+                "None of the selected devices have a power control that can be timed"
+                + (f" (skipped: {', '.join(skipped)})" if skipped else "")
+            )
+        for coordinator in usable:
+            await manager.async_start(coordinator, deadline)
+
+    async def _handle_cancel_timed_off(call: ServiceCall) -> None:
+        manager = hass.data[DATA_OFF_TIMERS]
+        for coordinator in _targets(hass, call):
+            await manager.async_cancel(coordinator)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_TIMED_OFF, _handle_timed_off, schema=TIMED_OFF_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CANCEL_TIMED_OFF, _handle_cancel_timed_off, schema=CANCEL_TIMED_OFF_SCHEMA
+    )
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SCHEDULE_SLOT, _handle_set_schedule_slot, schema=SET_SCHEDULE_SLOT_SCHEMA
     )

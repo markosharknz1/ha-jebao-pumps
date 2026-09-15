@@ -9,6 +9,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.start import async_at_started
 
 import logging
 
@@ -17,6 +18,7 @@ from homeassistant.const import CONF_HOST
 from .const import CONF_MAC, DEFAULT_SCAN_INTERVAL, DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import JebaoLocalCoordinator
 from .jebao_gizwits.discovery import discover_one
+from .off_timer import DATA_OFF_TIMERS, OffTimerManager
 from .panel import async_register_card, async_register_panel
 from .services import async_register_services
 
@@ -43,7 +45,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # including the second/third pump added to the same HA instance.
     await async_register_card(hass)
     await async_register_panel(hass)
+
+    # Timed-off state is per-Home-Assistant, not per-entry, so the manager
+    # is created once and loaded from .storage before any service can run.
+    manager = hass.data.get(DATA_OFF_TIMERS)
+    if manager is None:
+        manager = OffTimerManager(hass)
+        hass.data[DATA_OFF_TIMERS] = manager
+        await manager.async_load()
+
     async_register_services(hass)
+
+    # Re-arm (or immediately honour) any timer that was pending across a
+    # restart. Deferred to "started" so every config entry has had a
+    # chance to register its coordinator first - otherwise a timer whose
+    # device loads later would be dropped as unknown.
+    async def _resume(_event=None) -> None:
+        await manager.async_resume_all(
+            {c.did: c for c in hass.data.get(DOMAIN, {}).values() if hasattr(c, "did")}
+        )
+
+    async_at_started(hass, _resume)
 
     # Entries added before the MAC was captured during discovery have none
     # stored, so their device page shows no MAC while newer ones do. Fill

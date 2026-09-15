@@ -31,6 +31,7 @@ down with it.
 | Bluetooth-only products | ❌ Out of scope - different (`var_len`) payload encoding, not implemented |
 | Schedule programming (the 48 daily timer slots) | ✅ Visual editor in the Jebao Pump card (list/add/edit/delete periods), plus `jebao_local.set_schedule_slot`/`clear_schedule_slot` services and a Schedule sensor for automations - byte format confirmed from three independent static sources (see SPEC.md), not yet tested against live hardware |
 | Clock sync (schedules fire off the pump's own clock) | ✅ `jebao_local.sync_clock` service + a Sync button in the card, with a diagnostic Device clock sensor to spot drift - encoding confirmed from the vendor app's own `sendLocalTime` |
+| Timed off (feeding/maintenance) | ✅ `jebao_local.timed_off` / `cancel_timed_off` services - turns pumps off now and back on automatically after `minutes` or `until` a clock time. The deadline is persisted, so a Home Assistant restart can't leave a tank without flow; a pump that was already off stays off |
 
 See [SPEC.md](SPEC.md) for the full phase-by-phase build log (what was tried,
 what worked, what didn't, in the order it happened) and

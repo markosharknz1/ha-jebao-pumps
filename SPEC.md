@@ -523,6 +523,25 @@ The resilience tests were repointed from "every operation opens and closes its o
 
 ---
 
+## Phase 30 — Timed off: a pump that can't be left off forever
+
+Asked for "timers like the lights". The AIPAI light integration has `lights_off` - turn the tank off now, have it come back by itself - and this integration had no equivalent service.
+
+It did have something that *looked* like one, and that turned out to be the real finding. The card's "Feed now" countdown (`this._feedTimers`, a `setInterval` in `jebao-pump-card.js`) lives entirely in the browser tab. Close the tab, reload the dashboard, or restart Home Assistant while it is counting down and **nothing ever turns the pump back on.** A reef tank sitting with no flow indefinitely is a far worse failure than the feature is worth, so the new service is built around outliving the thing that armed it.
+
+`off_timer.py` keeps every pending deadline in `.storage`. On startup `async_resume_all` fires anything already due and re-arms the rest; the resume is deferred to Home Assistant's "started" event rather than run at entry setup, because a timer whose config entry happens to load second would otherwise be dropped as an unknown device. A restore that fails (pump briefly unreachable at exactly the wrong moment) retries six times at 30 s rather than logging once and giving up.
+
+Two deliberate restrictions, both about not doing damage:
+
+- **Only the power attribute is written.** The device keeps its own mode, speed and schedule while it is off, so power alone brings everything back. Nothing is snapshotted, which means a timer can never replay stale settings over a change made while it was running.
+- **A pump that was already off stays off.** Switching on something the user had deliberately off is worse than doing nothing, so `restore_on` is captured at arming time and honoured at the deadline.
+
+`device_id` is optional on both services, unlike the schedule ones - "everything off while I feed" is the common case and naming five pumps for it is tedious and easy to get wrong. The power attribute is resolved through the same `SWITCH_NAMES`/`find_attr_name` lookup the fan and switch platforms use, so a timer can never act on a different attribute than the UI's own power control; products with no such attribute are reported as skipped rather than silently ignored.
+
+21 tests cover the cases that matter - restart across the deadline, already-off, failed restore, unreadable stored state, `until` rolling to tomorrow.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

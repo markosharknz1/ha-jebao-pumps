@@ -107,3 +107,34 @@ sync_clock:
       selector:
         device:
           integration: jebao_local
+
+timed_off:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: jebao_local
+          multiple: true
+    minutes:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: min
+          mode: box
+    until:
+      required: false
+      example: "07:00"
+      selector:
+        text:
+
+cancel_timed_off:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: jebao_local
+          multiple: true
