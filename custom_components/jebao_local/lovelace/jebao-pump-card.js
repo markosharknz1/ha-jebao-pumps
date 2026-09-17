@@ -364,14 +364,36 @@ class JebaoPumpCard extends HTMLElement {
 
   // -- program editing ---------------------------------------------------
 
+  // The mode a new step starts in: whatever the pump is running right now,
+  // matched by name (a slot's mode numbers differ from the live Mode
+  // attribute's - see schedule.slot_mode_options). Every step shows a real
+  // mode; there is deliberately no "current mode" placeholder, since that
+  // would leave the step's actual behaviour invisible in the editor.
+  _defaultStepMode(pump) {
+    const modes = Object.entries(this._slotModes(pump));
+    if (!modes.length) return "";
+    const liveId = pump.entities.mode;
+    const live = liveId && liveId.startsWith("select.") ? this._state(liveId)?.state : null;
+    if (live) {
+      const wanted = modeLabel(live).toLowerCase();
+      const hit = modes.find(([, label]) => label.toLowerCase() === wanted);
+      if (hit) return hit[0];
+    }
+    // No readable live mode (filters and return pumps don't expose one):
+    // the first mode that actually runs the pump - never stop or feed.
+    const running = modes.find(([, label]) => !/^(stop|feed)/i.test(label));
+    return (running || modes[0])[0];
+  }
+
   _openProgram(pump) {
     const existing = stepsFromSlots(this._scheduleSlots(pump));
+    const mode = this._defaultStepMode(pump);
     this._program.set(pump.did, existing
       ? { start: hhmm(existing.start), repeat: false, steps: existing.steps, error: null, busy: false, fromPump: true }
       : {
           start: "08:00", repeat: false, error: null, busy: false, fromPump: false,
           // The example from the feature request, as a starting point.
-          steps: [{ minutes: 240, speed: 100, mode: "" }, { minutes: 360, speed: 40, mode: "" }],
+          steps: [{ minutes: 240, speed: 100, mode }, { minutes: 360, speed: 40, mode }],
         });
     this._render(true);
   }
@@ -420,7 +442,7 @@ class JebaoPumpCard extends HTMLElement {
     const steps = prog.steps;
     if (act === "progadd") {
       const last = steps[steps.length - 1];
-      steps.push({ minutes: 60, speed: last ? last.speed : 50, mode: last ? last.mode : "" });
+      steps.push({ minutes: 60, speed: last ? last.speed : 50, mode: last ? last.mode : this._defaultStepMode(pump) });
     } else if (act === "progdel" && steps.length > 1) steps.splice(i, 1);
     else if (act === "progup" && i > 0) [steps[i - 1], steps[i]] = [steps[i], steps[i - 1]];
     else if (act === "progdown" && i < steps.length - 1) [steps[i + 1], steps[i]] = [steps[i], steps[i + 1]];
@@ -707,7 +729,6 @@ class JebaoPumpCard extends HTMLElement {
     const modes = this._slotModes(pump);
     const preview = this._programPreview(prog);
     const modeOptions = (selected) => `
-      <option value="" ${selected === "" || selected == null ? "selected" : ""}>Current mode</option>
       ${Object.entries(modes).map(([v, l]) =>
         `<option value="${v}" ${String(selected) === v ? "selected" : ""}>${esc(l)}</option>`).join("")}`;
 
