@@ -64,16 +64,81 @@ const SLOT_MODE_LABELS_BY_LEN = {
 };
 
 // A slot's field set is inferred from which keys the backend actually sent
-// (the Schedule sensor only reports fields the product has), so the card
-// doesn't need its own copy of the per-product layout table.
+// (the Schedule sensor only reports fields the product has). Only used as
+// a fallback now - integrations from 0.4.2 publish slot_len and the
+// product's own slot_modes table directly.
 const slotLenOf = (slot) =>
-  slot && ("cust_wave_freq" in slot || "feed_time" in slot) ? 9 : 8;
-const slotModeLabel = (slot) =>
-  (SLOT_MODE_LABELS_BY_LEN[slotLenOf(slot)] || {})[slot.mode] ?? `Mode ${slot.mode}`;
+  !slot ? 8 : ("cust_wave_freq" in slot || "feed_time" in slot) ? 9 : ("frequency" in slot ? 8 : 6);
 const modeLabelsForLen = (len) => SLOT_MODE_LABELS_BY_LEN[len] || SLOT_MODE_LABELS_BY_LEN[8];
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const pad2 = (n) => String(n).padStart(2, "0");
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hhmm = (mins) => mins >= 1440 ? "24:00" : `${pad2(Math.floor(mins / 60))}:${pad2(mins % 60)}`;
+const MINUTES_PER_DAY = 1440;
+const SLOT_COUNT = 48;
+
+// Mirror of jebao_gizwits/program.py's compile_program, so the editor can
+// draw exactly what will be written before anything is sent. The backend
+// re-validates everything - this is only the preview - but keeping the two
+// in step means the preview never promises something the pump won't do.
+function compileProgram(steps, startMins, repeat) {
+  if (!steps.length) return { error: "Add at least one step." };
+  for (const [i, s] of steps.entries()) {
+    if (!(s.minutes >= 1)) return { error: `Step ${i + 1} needs a length.` };
+  }
+  const total = steps.reduce((a, s) => a + s.minutes, 0);
+  if (!repeat && total > MINUTES_PER_DAY) {
+    return { error: `The steps add up to ${(total / 60).toFixed(1)} h - more than a day.` };
+  }
+  const limit = repeat ? MINUTES_PER_DAY : total;
+  const slots = [];
+  let cursor = startMins, placed = 0, i = 0;
+  while (placed < limit) {
+    const step = steps[i++ % steps.length];
+    const len = Math.min(step.minutes, limit - placed);
+    const begin = cursor % MINUTES_PER_DAY;
+    const end = begin + len;
+    const pieces = end <= MINUTES_PER_DAY ? [[begin, end]] : [[begin, MINUTES_PER_DAY], [0, end - MINUTES_PER_DAY]];
+    for (const [s, e] of pieces) slots.push({ start: s, end: e, speed: step.speed, mode: step.mode });
+    cursor += len;
+    placed += len;
+  }
+  if (slots.length > SLOT_COUNT) {
+    return { error: `Needs ${slots.length} timer slots; the pump has ${SLOT_COUNT}. Use fewer or longer steps${repeat ? ", or turn repeat off" : ""}.` };
+  }
+  return { slots, total };
+}
+
+// Turn what's already on the pump back into editable steps, so opening the
+// editor starts from the current program rather than a blank page. Only
+// possible when the periods run back to back; a schedule with gaps can't
+// be expressed as a sequence and the editor starts from a template instead.
+function stepsFromSlots(slots) {
+  if (!slots.length) return null;
+  const spans = slots
+    .map((s) => ({ start: s.start_hour * 60 + s.start_minute, end: s.end_hour * 60 + s.end_minute, s }))
+    .sort((a, b) => a.start - b.start);
+  // Rotate so a program that wraps midnight starts where it really starts.
+  let first = 0;
+  for (let k = 0; k < spans.length; k++) {
+    const prevEnd = spans[(k - 1 + spans.length) % spans.length].end % MINUTES_PER_DAY;
+    if (prevEnd !== spans[k].start) { first = k; break; }
+  }
+  const ordered = spans.slice(first).concat(spans.slice(0, first));
+  const steps = [];
+  for (let k = 0; k < ordered.length; k++) {
+    const cur = ordered[k];
+    if (k > 0 && ordered[k - 1].end % MINUTES_PER_DAY !== cur.start) return null; // a gap
+    const len = cur.end - cur.start;
+    if (len <= 0) return null;
+    const prev = steps[steps.length - 1];
+    // Re-join a period that was split at midnight.
+    if (prev && cur.start === 0 && prev.speed === cur.s.flow && prev.mode === String(cur.s.mode)) prev.minutes += len;
+    else steps.push({ minutes: len, speed: cur.s.flow, mode: String(cur.s.mode) });
+  }
+  return { start: ordered[0].start, steps };
+}
 
 // Shared between the card and its config editor, so "which pumps exist and
 // what are they called" is answered identically in both places.
@@ -129,6 +194,7 @@ class JebaoPumpCard extends HTMLElement {
     this._feedTimers = new Map(); // did -> {deadline, intervalId}
     this._schedOpen = new Set(); // dids with the schedule section expanded
     this._editSlot = new Map(); // did -> {slot|null (null = new), ...form values}
+    this._program = new Map(); // did -> {start, repeat, steps[], error, busy}
     this._built = false;
   }
 
@@ -267,9 +333,148 @@ class JebaoPumpCard extends HTMLElement {
   _slotLen(pump) {
     const s = this._state(pump.entities.schedule);
     const declared = s?.attributes?.slot_len;
-    if (declared === 8 || declared === 9) return declared;
+    if (declared === 6 || declared === 8 || declared === 9) return declared;
     const existing = this._scheduleSlots(pump)[0];
     return existing ? slotLenOf(existing) : 8;
+  }
+
+  // This pump's own slot-mode table ({"0": "Stop", ...}), published by the
+  // Schedule sensor. The hardcoded table is only for older integrations.
+  _slotModes(pump) {
+    const published = this._state(pump.entities.schedule)?.attributes?.slot_modes;
+    if (published && Object.keys(published).length) return published;
+    return modeLabelsForLen(this._slotLen(pump));
+  }
+
+  _slotModeLabel(pump, mode) {
+    return this._slotModes(pump)[String(mode)] ?? `Mode ${mode}`;
+  }
+
+  // 6-byte pumps (filters, return pumps) call their speed a 档位 "level"
+  // rather than a flow percentage. Every one of them still defines it as
+  // 0-100 (AutoGears uint_spec), so the control is the same slider - only
+  // the wording differs.
+  _speedUnit(pump) {
+    return this._slotLen(pump) === 6 ? "level" : "%";
+  }
+
+  _fmtSpeed(pump, v) {
+    return this._speedUnit(pump) === "%" ? `${v}%` : `level ${v}`;
+  }
+
+  // -- program editing ---------------------------------------------------
+
+  _openProgram(pump) {
+    const existing = stepsFromSlots(this._scheduleSlots(pump));
+    this._program.set(pump.did, existing
+      ? { start: hhmm(existing.start), repeat: false, steps: existing.steps, error: null, busy: false, fromPump: true }
+      : {
+          start: "08:00", repeat: false, error: null, busy: false, fromPump: false,
+          // The example from the feature request, as a starting point.
+          steps: [{ minutes: 240, speed: 100, mode: "" }, { minutes: 360, speed: 40, mode: "" }],
+        });
+    this._render(true);
+  }
+
+  _programPreview(prog) {
+    const [h, m] = String(prog.start || "00:00").split(":").map(Number);
+    const steps = prog.steps.map((s) => ({ ...s, minutes: Number(s.minutes) || 0, speed: Number(s.speed) || 0 }));
+    return compileProgram(steps, ((h || 0) * 60 + (m || 0)) % MINUTES_PER_DAY, !!prog.repeat);
+  }
+
+  async _writeProgram(pump) {
+    const prog = this._program.get(pump.did);
+    if (!prog || prog.busy) return;
+    const preview = this._programPreview(prog);
+    if (preview.error) { prog.error = preview.error; this._render(true); return; }
+    const existingCount = this._scheduleSlots(pump).length;
+    if (existingCount && !prog.fromPump &&
+        !confirm(`Replace the ${existingCount} period${existingCount === 1 ? "" : "s"} already on ${pump.name}?`)) return;
+
+    prog.busy = true; prog.error = null;
+    this._render(true);
+    try {
+      await this._call("jebao_local", "set_program", {
+        device_id: pump.deviceId,
+        start: prog.start,
+        repeat: !!prog.repeat,
+        steps: prog.steps.map((s) => {
+          const step = { speed: clamp(Number(s.speed) || 0, 0, 255), minutes: Number(s.minutes) };
+          if (s.mode !== "" && s.mode != null) step.mode = Number(s.mode);
+          return step;
+        }),
+      });
+      this._program.delete(pump.did);
+    } catch (err) {
+      // Service validation errors (e.g. "can't tell which mode...") are
+      // written for people - show them where the user is looking.
+      prog.busy = false;
+      prog.error = err?.message || String(err);
+    }
+    this._render(true);
+  }
+
+  _editSteps(pump, act, i) {
+    const prog = this._program.get(pump.did);
+    if (!prog) return;
+    const steps = prog.steps;
+    if (act === "progadd") {
+      const last = steps[steps.length - 1];
+      steps.push({ minutes: 60, speed: last ? last.speed : 50, mode: last ? last.mode : "" });
+    } else if (act === "progdel" && steps.length > 1) steps.splice(i, 1);
+    else if (act === "progup" && i > 0) [steps[i - 1], steps[i]] = [steps[i], steps[i - 1]];
+    else if (act === "progdown" && i < steps.length - 1) [steps[i + 1], steps[i]] = [steps[i], steps[i + 1]];
+    else return;
+    prog.error = null;
+    this._render(true);
+  }
+
+  // Field edits. Structural changes re-render straight away; typing into a
+  // number box only refreshes the preview, so focus and caret aren't lost.
+  _onProgramInput(pump, el, commit) {
+    const prog = this._program.get(pump.did);
+    if (!prog) return;
+    const field = el.dataset.prog;
+    const step = prog.steps[Number(el.dataset.step)];
+    if (field === "start") prog.start = el.value;
+    else if (field === "repeat") prog.repeat = el.checked;
+    else if (field === "mode") step.mode = el.value;
+    else if (field === "speed") {
+      step.speed = Number(el.value) || 0;
+      const val = el.parentElement.querySelector(".val");
+      if (val) val.textContent = this._fmtSpeed(pump, step.speed);
+    } else if (field === "hours" || field === "mins") {
+      const row = el.closest(".row");
+      const h = clamp(Number(row.querySelector('[data-prog="hours"]').value) || 0, 0, 24);
+      const m = clamp(Number(row.querySelector('[data-prog="mins"]').value) || 0, 0, 59);
+      step.minutes = h * 60 + m;
+    }
+    prog.error = null;
+    if (commit) this._render(true);
+    else this._refreshProgramPreview(pump);
+  }
+
+  _refreshProgramPreview(pump) {
+    const prog = this._program.get(pump.did);
+    const root = this.shadowRoot.querySelector(`.pump[data-did="${pump.did}"] .program`);
+    if (!prog || !root) return;
+    const fresh = document.createElement("div");
+    fresh.innerHTML = this._programEditor(pump, prog);
+    for (const sel of [".timeline", ".progsum, .progerr", '[data-act="progwrite"]']) {
+      const oldEl = root.querySelector(sel);
+      const newEl = fresh.querySelector(sel);
+      if (oldEl && newEl) oldEl.replaceWith(newEl);
+    }
+  }
+
+  async _clearProgram(pump) {
+    const n = this._scheduleSlots(pump).length;
+    if (!n || !confirm(`Erase all ${n} period${n === 1 ? "" : "s"} from ${pump.name}? It goes back to manual control.`)) return;
+    try {
+      await this._call("jebao_local", "clear_program", { device_id: pump.deviceId });
+    } catch (err) {
+      alert(err?.message || String(err));
+    }
   }
 
   _saveSlot(pump) {
@@ -431,6 +636,30 @@ class JebaoPumpCard extends HTMLElement {
     const open = this._schedOpen.has(pump.did);
     const clockState = pump.entities.deviceclock ? this._state(pump.entities.deviceclock) : null;
     const form = this._editSlot.get(pump.did);
+    const prog = this._program.get(pump.did);
+
+    // The program editor replaces the slot list while it's open - showing
+    // both would mean two conflicting views of the same 48 slots.
+    const body = prog ? this._programEditor(pump, prog) : `
+      ${this._timeline(pump, slots.map((s) => ({
+          start: s.start_hour * 60 + s.start_minute,
+          end: s.end_hour * 60 + s.end_minute,
+          speed: s.flow, mode: s.mode,
+        })))}
+      ${[...slots].sort((a, b) => (a.start_hour * 60 + a.start_minute) - (b.start_hour * 60 + b.start_minute)).map((s) => `
+        <div class="slotrow" data-slot="${s.index}">
+          <span class="slottime">${pad2(s.start_hour)}:${pad2(s.start_minute)}&ndash;${pad2(s.end_hour)}:${pad2(s.end_minute)}</span>
+          <span class="slotmode">${esc(this._slotModeLabel(pump, s.mode))} &middot; ${this._fmtSpeed(pump, s.flow)}</span>
+          <button class="small2" data-act="schededit" data-slot="${s.index}">Edit</button>
+          <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}">✕</button>
+        </div>`).join("")}
+      ${form ? this._slotForm(form, this._slotLen(pump), this._slotModes(pump)) : `
+        <div class="row schedbtns">
+          <button class="feednow half" data-act="progopen">${slots.length ? "Edit as program" : "Build program"}</button>
+          <button class="half" data-act="schedadd">+ Single period</button>
+        </div>
+        ${slots.length ? `<button class="linkbtn danger" data-act="progclear">Clear all periods</button>` : ""}`}
+    `;
 
     return `
       <div class="sched">
@@ -442,26 +671,103 @@ class JebaoPumpCard extends HTMLElement {
           ${clockState ? `
             <div class="row">
               <label>Device clock</label>
-              <span class="clockval">${clockState.state}</span>
+              <span class="clockval">${esc(clockState.state)}</span>
               <button class="small2" data-act="syncclock" title="Set the pump's clock to Home Assistant's current time - schedules fire off this clock">Sync</button>
             </div>` : ""}
-          ${slots.map((s) => `
-            <div class="slotrow" data-slot="${s.index}">
-              <span class="slottime">${pad2(s.start_hour)}:${pad2(s.start_minute)}&ndash;${pad2(s.end_hour)}:${pad2(s.end_minute)}</span>
-              <span class="slotmode">${slotModeLabel(s)}${s.mode !== 0 ? ` &middot; ${s.flow}%` : ""}</span>
-              <button class="small2" data-act="schededit" data-slot="${s.index}">Edit</button>
-              <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}">✕</button>
-            </div>`).join("")}
-          ${form ? this._slotForm(form, this._slotLen(pump)) : `<button class="addslot" data-act="schedadd">+ Add period</button>`}
+          ${body}
         `}
       </div>`;
   }
 
-  _slotForm(form, slotLen) {
+  // A 24-hour bar chart: one bar per period, height = speed. The same
+  // picture the vendor apps use for light programs, and the quickest way
+  // to see gaps or a step that landed at the wrong time.
+  _timeline(pump, periods) {
+    const unitMax = 100;
+    const now = new Date();
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const bars = periods.map((p) => {
+      const h = Math.max(4, Math.round((clamp(p.speed, 0, unitMax) / unitMax) * 100));
+      const label = `${hhmm(p.start)}–${hhmm(p.end)} · ${this._slotModeLabel(pump, p.mode)} · ${this._fmtSpeed(pump, p.speed)}`;
+      return `<rect class="bar" x="${p.start}" y="${100 - h}" width="${Math.max(1, p.end - p.start)}" height="${h}"><title>${esc(label)}</title></rect>`;
+    }).join("");
+    return `
+      <div class="timeline">
+        <svg viewBox="0 0 1440 100" preserveAspectRatio="none" role="img" aria-label="24-hour schedule">
+          ${[360, 720, 1080].map((x) => `<line class="grid" x1="${x}" x2="${x}" y1="0" y2="100"/>`).join("")}
+          ${bars}
+          <line class="now" x1="${nowMins}" x2="${nowMins}" y1="0" y2="100"/>
+        </svg>
+        ${bars ? "" : `<div class="none">No periods</div>`}
+        <div class="ticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      </div>`;
+  }
+
+  _programEditor(pump, prog) {
+    const modes = this._slotModes(pump);
+    const preview = this._programPreview(prog);
+    const modeOptions = (selected) => `
+      <option value="" ${selected === "" || selected == null ? "selected" : ""}>Current mode</option>
+      ${Object.entries(modes).map(([v, l]) =>
+        `<option value="${v}" ${String(selected) === v ? "selected" : ""}>${esc(l)}</option>`).join("")}`;
+
+    const stepRows = prog.steps.map((s, i) => {
+      const mins = Number(s.minutes) || 0;
+      return `
+      <div class="step" data-step="${i}">
+        <div class="stephead">
+          <span class="stepno">${i + 1}</span>
+          <select data-prog="mode" data-step="${i}" aria-label="Step ${i + 1} mode">${modeOptions(s.mode)}</select>
+          <button class="icon" data-act="progup" data-step="${i}" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
+          <button class="icon" data-act="progdown" data-step="${i}" ${i === prog.steps.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
+          <button class="icon danger" data-act="progdel" data-step="${i}" ${prog.steps.length === 1 ? "disabled" : ""} aria-label="Remove step">✕</button>
+        </div>
+        <div class="row">
+          <label>Speed</label>
+          <input type="range" min="0" max="100" value="${clamp(Number(s.speed) || 0, 0, 100)}" data-prog="speed" data-step="${i}" aria-label="Step ${i + 1} speed">
+          <span class="val">${this._fmtSpeed(pump, Number(s.speed) || 0)}</span>
+        </div>
+        <div class="row">
+          <label>For</label>
+          <input type="number" class="num" min="0" max="24" value="${Math.floor(mins / 60)}" data-prog="hours" data-step="${i}" aria-label="Hours">
+          <span class="unit">h</span>
+          <input type="number" class="num" min="0" max="59" step="5" value="${mins % 60}" data-prog="mins" data-step="${i}" aria-label="Minutes">
+          <span class="unit">min</span>
+        </div>
+      </div>`;
+    }).join("");
+
+    const summary = preview.error
+      ? `<div class="progerr">${esc(preview.error)}</div>`
+      : `<div class="progsum">${preview.slots.length} of ${SLOT_COUNT} slots &middot; ${
+          prog.repeat ? "repeats all day" : `${hhmm(preview.slots[0].start)} → ${hhmm((preview.slots[0].start + preview.total) % MINUTES_PER_DAY || MINUTES_PER_DAY)}, then manual`}</div>`;
+
+    return `
+      <div class="program">
+        <div class="row">
+          <label>Start at</label>
+          <input type="time" data-prog="start" value="${esc(prog.start)}">
+          <label class="check"><input type="checkbox" data-prog="repeat" ${prog.repeat ? "checked" : ""}> Repeat all day</label>
+        </div>
+        ${this._timeline(pump, preview.error ? [] : preview.slots)}
+        ${summary}
+        ${stepRows}
+        <button class="addslot" data-act="progadd">+ Add step</button>
+        ${prog.error ? `<div class="progerr">${esc(prog.error)}</div>` : ""}
+        <div class="row">
+          <button class="feednow half" data-act="progwrite" ${prog.busy || preview.error ? "disabled" : ""}>${prog.busy ? "Writing…" : "Write to pump"}</button>
+          <button class="half" data-act="progcancel" ${prog.busy ? "disabled" : ""}>Cancel</button>
+        </div>
+        <div class="hint">Saved on the pump itself - keeps running if Home Assistant is off.</div>
+      </div>`;
+  }
+
+  _slotForm(form, slotLen, modes) {
     // Trailing fields are per product (see the mode-label table above):
     // the base wavemaker's slot ends in a pulse/tide value, the Pro's in a
-    // feed duration and a custom-wave frequency.
-    const extras = slotLen === 9
+    // feed duration and a custom-wave frequency, and 6-byte pumps have
+    // neither - nor a frequency.
+    const extras = slotLen === 6 ? "" : slotLen === 9
       ? `<label class="inline">Feed min</label>
          <input type="number" min="0" max="255" data-form="feed_time" value="${form.feed_time ?? 0}">
          <label class="inline">Custom Hz</label>
@@ -482,20 +788,20 @@ class JebaoPumpCard extends HTMLElement {
         <div class="row">
           <label>Mode</label>
           <select data-form="mode">
-            ${Object.entries(modeLabelsForLen(slotLen)).map(([v, l]) =>
-              `<option value="${v}" ${Number(v) === Number(form.mode) ? "selected" : ""}>${l}</option>`).join("")}
+            ${Object.entries(modes).map(([v, l]) =>
+              `<option value="${v}" ${Number(v) === Number(form.mode) ? "selected" : ""}>${esc(l)}</option>`).join("")}
           </select>
         </div>
         <div class="row">
-          <label>Flow %</label>
+          <label>${slotLen === 6 ? "Level" : "Flow %"}</label>
           <input type="number" min="0" max="100" data-form="flow" value="${form.flow}">
-          <label class="inline">Freq %</label>
-          <input type="number" min="0" max="100" data-form="frequency" value="${form.frequency}">
+          ${slotLen === 6 ? "" : `<label class="inline">Freq %</label>
+          <input type="number" min="0" max="100" data-form="frequency" value="${form.frequency}">`}
         </div>
-        <div class="row">
+        ${extras ? `<div class="row">
           <label>&nbsp;</label>
           ${extras}
-        </div>
+        </div>` : ""}
         <div class="row">
           <button class="feednow half" data-act="schedsave">Save</button>
           <button class="half" data-act="schedcancel">Cancel</button>
@@ -575,7 +881,7 @@ class JebaoPumpCard extends HTMLElement {
     // replacement would wipe what the user is typing. Explicit UI actions
     // pass force=true; the form's own inputs sync into _editSlot on
     // "input" so nothing is lost either way.
-    if (!force && this._built && this._editSlot.size) return;
+    if (!force && this._built && (this._editSlot.size || this._program.size)) return;
     const pumps = this._pumps();
 
     if (!this._built) {
@@ -621,6 +927,11 @@ class JebaoPumpCard extends HTMLElement {
     else if (act === "schededit") this._openEditor(pump, Number(el.dataset.slot));
     else if (act === "scheddelete") this._deleteSlot(pump, Number(el.dataset.slot));
     else if (act === "schedsave") this._saveSlot(pump);
+    else if (act === "progopen") this._openProgram(pump);
+    else if (act === "progclear") this._clearProgram(pump);
+    else if (act === "progwrite") this._writeProgram(pump);
+    else if (act === "progcancel") { this._program.delete(pump.did); this._render(true); }
+    else if (act.startsWith("prog")) this._editSteps(pump, act, Number(el.dataset.step));
     else if (act === "schedcancel") {
       this._editSlot.delete(pump.did);
       this._render(true);
@@ -630,6 +941,14 @@ class JebaoPumpCard extends HTMLElement {
   _onChange(e) {
     // Belt-and-braces for the slot form's select/time inputs - some
     // browsers only fire "change" (not "input") for these.
+    const progEl = e.target.closest("[data-prog]");
+    if (progEl) {
+      const progPump = this._pumpFor(progEl);
+      // Selects, checkbox and time commit on change; sliders and number
+      // boxes already updated the preview while being edited.
+      if (progPump) this._onProgramInput(progPump, progEl, ["mode", "repeat", "start"].includes(progEl.dataset.prog));
+      return;
+    }
     const formEl = e.target.closest("[data-form]");
     if (formEl) {
       const formPump = this._pumpFor(formEl);
@@ -649,6 +968,12 @@ class JebaoPumpCard extends HTMLElement {
   _onInput(e) {
     // Slot-form fields sync straight into _editSlot so the form survives
     // any re-render (see _render's skip-while-editing note).
+    const progEl = e.target.closest("[data-prog]");
+    if (progEl) {
+      const progPump = this._pumpFor(progEl);
+      if (progPump && !["mode", "repeat"].includes(progEl.dataset.prog)) this._onProgramInput(progPump, progEl, false);
+      return;
+    }
     const formEl = e.target.closest("[data-form]");
     if (formEl) {
       const pump = this._pumpFor(formEl);
@@ -706,6 +1031,36 @@ class JebaoPumpCard extends HTMLElement {
       .slotform input[type=number] { width: 60px; }
       .slotform label.inline { min-width: unset; }
       .half { flex: 1; }
+      button:disabled { opacity: 0.45; cursor: default; }
+      .schedbtns { margin-top: 10px; }
+      .linkbtn { border: none; background: none; padding: 2px 0; font-size: 0.8rem; }
+      .timeline { margin: 8px 0 4px; position: relative; }
+      .timeline svg { display: block; width: 100%; height: 64px; border-radius: 6px;
+        background: var(--secondary-background-color, rgba(127,127,127,0.08)); }
+      .timeline .bar { fill: var(--primary); opacity: 0.85; stroke: var(--card-background-color, #fff); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+      .timeline .bar:hover { opacity: 1; }
+      .timeline .grid { stroke: var(--divider-color, rgba(127,127,127,0.25)); stroke-width: 2; vector-effect: non-scaling-stroke; }
+      .timeline .now { stroke: var(--error-color, #db4437); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-dasharray: 3 3; }
+      .timeline .none { position: absolute; top: 0; left: 0; right: 0; height: 64px; display: grid; place-items: center;
+        font-size: 0.8rem; color: var(--secondary-text-color); pointer-events: none; }
+      .ticks { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--secondary-text-color);
+        font-variant-numeric: tabular-nums; margin-top: 2px; }
+      .program { margin-top: 6px; }
+      .program input[type=time], .program input.num { font: inherit; padding: 3px 6px; border-radius: 6px;
+        border: 1px solid var(--divider-color, #ccc); background: var(--card-background-color, #fff); color: var(--primary-text-color); }
+      .program input.num { width: 58px; }
+      .program .unit { font-size: 0.82rem; color: var(--secondary-text-color); }
+      .program .check { min-width: unset; margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--primary-text-color); }
+      .progsum { font-size: 0.8rem; color: var(--secondary-text-color); margin-bottom: 6px; }
+      .progerr { font-size: 0.82rem; color: var(--error-color, #db4437); margin: 4px 0 8px; }
+      .step { border: 1px solid var(--divider-color, #ddd); border-radius: 8px; padding: 6px 10px 2px; margin: 8px 0; }
+      .stephead { display: flex; align-items: center; gap: 6px; }
+      .stepno { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem;
+        font-weight: 600; background: var(--primary); color: var(--text-primary-color, #fff); flex: none; }
+      .icon { padding: 1px 8px; font-size: 0.8rem; }
+      .hint { font-size: 0.75rem; color: var(--secondary-text-color); text-align: center; margin-top: 2px; }
+      .step .row label { min-width: 60px; }
+      @media (max-width: 420px) { .row label { min-width: 70px; } .program .check { margin-left: 0; } .row { flex-wrap: wrap; } }
     </style>`;
   }
 

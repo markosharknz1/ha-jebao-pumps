@@ -13,6 +13,20 @@ All notable changes to this project are documented here.
   day. Steps crossing midnight are split automatically. Any old program's
   leftover slots are cleared, and the pump's timer is switched on so the
   program actually runs. `jebao_local.clear_program` erases it.
+- **Program editor in the Jebao Pump card.** Open a pump's Schedule and
+  choose *Build program* (or *Edit as program* to load what's already on
+  the pump). Each step is a mode, a speed slider and a length in hours and
+  minutes; steps can be added, reordered and removed. A 24-hour bar chart
+  redraws as you edit, showing exactly what will be written, how many of
+  the pump's 48 slots it uses, and a red marker for the current time.
+  Programs that can't fit are caught before anything is sent, and errors
+  from the pump are shown in the editor with your steps kept.
+- The Schedule view now also shows the pump's current program as the same
+  24-hour chart, lists periods in time order, and has *Clear all periods*.
+- Schedule mode names now come from each pump's own data instead of a
+  table built into the card, which had no entry for filters and return
+  pumps and gave DC Pump Pro the wrong names. Those pumps show their speed
+  as a *level* rather than a percentage.
 - **Modes by name.** A step can say `mode: constant flow` instead of a
   number. A step with no mode keeps the pump's current one - carried over
   **by name, not number**, because the schedule numbers modes differently

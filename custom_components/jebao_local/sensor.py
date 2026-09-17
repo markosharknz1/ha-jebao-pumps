@@ -38,6 +38,7 @@ from .jebao_gizwits.schedule import (
     decode_slot,
     schedule_slot_len,
     slot_attr_name,
+    slot_mode_options,
 )
 
 _SCHEDULE_PROBE_ATTR = slot_attr_name(0)  # AutoTime00 - presence implies all 48 slots exist
@@ -181,8 +182,18 @@ class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
         # uses (8-byte base wavemaker vs 9-byte Pro - different fields and
         # different mode numbering), without it having to guess from a
         # slot that may not exist yet on a freshly-configured pump.
+        #
+        # slot_modes is this product's own Byte4 table, in English. The card
+        # used to carry a hardcoded copy keyed by slot length, which had no
+        # entry for 6-byte pumps and was wrong for DC Pump Pro (same length
+        # as the base wavemaker, different numbering) - see
+        # schedule.slot_mode_options.
         return {
             "slot_len": schedule_slot_len(self.coordinator.schema),
+            "slot_modes": {
+                str(number): _translate_enum(label)
+                for number, label in sorted(slot_mode_options(self.coordinator.schema).items())
+            },
             "slots": [slot.as_dict() for slot in self._decoded_slots()],
         }
 
