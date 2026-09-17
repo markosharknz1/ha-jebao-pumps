@@ -228,6 +228,38 @@
           "description": "Leave empty for every Jebao device."
         }
       }
+    },
+    "set_program": {
+      "name": "Set program",
+      "description": "Programs a sequence of speeds onto the pump itself - for example 100% for 4 hours, then 40% for 6 hours. Written into the pump's own 48 daily timer slots, so it keeps running even when Home Assistant is off. Replaces any program already on the pump, and switches its timer on.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Jebao pump."
+        },
+        "steps": {
+          "name": "Steps",
+          "description": "The sequence, in order. Each step needs a speed (percent, or gear number on pumps that use gears) and a length as hours or minutes. Optionally a mode, by name or number, which otherwise stays as the pump is set now."
+        },
+        "start": {
+          "name": "Start at",
+          "description": "Time of day the first step begins, e.g. 08:00. Defaults to midnight."
+        },
+        "repeat": {
+          "name": "Repeat all day",
+          "description": "Tile the sequence around the clock instead of running it once."
+        }
+      }
+    },
+    "clear_program": {
+      "name": "Clear program",
+      "description": "Erases every timer slot on the pump, leaving it under manual control.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Jebao pump."
+        }
+      }
     }
   }
 }

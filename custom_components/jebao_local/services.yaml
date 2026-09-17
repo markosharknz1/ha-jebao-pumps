@@ -138,3 +138,38 @@ cancel_timed_off:
         device:
           integration: jebao_local
           multiple: true
+
+set_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: jebao_local
+    steps:
+      required: true
+      example: |
+        - speed: 100
+          hours: 4
+        - speed: 40
+          hours: 6
+      selector:
+        object:
+    start:
+      required: false
+      example: "08:00"
+      selector:
+        text:
+    repeat:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+clear_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: jebao_local

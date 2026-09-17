@@ -542,6 +542,24 @@ Two deliberate restrictions, both about not doing damage:
 
 ---
 
+## Phase 31 — Speed programs, and a mode number that meant "stop"
+
+Asked for "run at 100% for x hours before changing down to x speed for y hours", like the AIPAI app's per-channel light programs. The pump already has the mechanism - 48 AutoTimeNN slots, each a start/end time, mode and speed - it just has to be addressed by absolute clock time, slot by slot. `jebao_gizwits/program.py` does the arithmetic: steps with durations in, wall-clock slots out, periods crossing midnight split in two, `repeat` tiling the pattern round the day. The program is written to the pump rather than driven from Home Assistant on a timer, so it survives HA being down.
+
+Surveying all 48 schemas first turned up three things:
+
+1. **Only 13 products have a schedule at all**, and every one has a `TimerON` master switch. A perfectly programmed schedule with the timer off does nothing, so `set_program` switches it on.
+2. **8 of the 13 use a 6-byte slot** (`start_h, start_m, end_h, end_m, mode, gear`) that `FIELDS_BY_LEN` didn't know, so the existing `set_schedule_slot` raised for every aquarium pump, filter, outdoor pump and speed controller. Added. Bytes 0-5 mean the same thing on all three layouts, so a compiled program is valid everywhere.
+3. **Mode numbering in a slot is not the live mode's numbering.** On the base wavemaker the live `Mode` enum is 0 classic / 1 sine / 2 random / 3 constant, but a slot's Byte4 is 0 **stop** / 1 classic / ... / 5 feed. My first draft inherited the live number as the default, which would have written "stop" for a pump in classic mode. On DC Pump Pro, `AutoMode` and the slot desc even disagree with each other (0 constant vs 0 pulse).
+
+The fix treats the AutoTimeNN desc's own Byte4 list as the single authority (`schedule.slot_mode_options`, parsed and checked against all 13 products), resolves named modes against it, and carries the live mode across **by translated label**. When the live mode can't be read and the table has more than one real choice, the service refuses and lists the modes rather than guess. Tests pin every live-to-slot mapping on the base wavemaker and assert slot mode 0 is never produced by inheritance.
+
+Also noted but not changed: DC Pump Pro's 8-byte slot has feed time in Byte7, where the base wavemaker has pulse/tide, so `set_schedule_slot`'s `pulse_tide` field lands in the wrong-named byte on that one product. Programs don't touch Byte7.
+
+Not yet verified against real hardware - in particular that a ~50-byte batch of six slots per control frame is accepted.
+
+---
+
 ## Open questions to resolve during the build (log answers as you go)
 
 1. Exact GAgent login/heartbeat frame details for this firmware version — confirm against captures, don't assume.

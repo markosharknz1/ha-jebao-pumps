@@ -34,6 +34,7 @@ code (its `At()` function filters out both before decoding).
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 SLOT_COUNT = 48
@@ -43,6 +44,13 @@ SLOT_COUNT = 48
 # from each product schema's own Byte0..ByteN desc text.
 _COMMON_FIELDS = ("start_hour", "start_minute", "end_hour", "end_minute", "mode", "flow", "frequency")
 FIELDS_BY_LEN: dict[int, tuple[str, ...]] = {
+    # 6-byte slots (aquarium pumps, external filters, outdoor pumps, speed
+    # controllers - 8 of the 13 schedule-capable products) have no
+    # frequency byte at all. Byte5 is 档位 "gear/level" rather than a flow
+    # percentage, but it plays the same role - the speed this period runs
+    # at - so it is named `flow` here to keep one slot shape for callers.
+    # Byte4 mode is 0 stop / 1 auto / 2 feed on these.
+    6: _COMMON_FIELDS[:6],
     8: _COMMON_FIELDS + ("pulse_tide",),
     9: _COMMON_FIELDS + ("feed_time", "cust_wave_freq"),
 }
@@ -71,7 +79,8 @@ class ScheduleSlot:
     end_minute: int
     mode: int
     flow: int
-    frequency: int
+    # None on 6-byte layouts, which have no frequency byte.
+    frequency: int | None = None
     # Product-specific trailing fields - only the ones this product's slot
     # layout actually defines are populated (see FIELDS_BY_LEN).
     pulse_tide: int | None = None
@@ -86,6 +95,43 @@ class ScheduleSlot:
         for name in slot_fields(self.slot_len):
             out[name] = getattr(self, name)
         return out
+
+
+_BYTE4_RE = re.compile(r"Byte4(.*?)(?=Byte5|$)", re.S)
+_MODE_ENTRY_RE = re.compile(r"(\d+)\s*[.．、:：]?\s*([^\s,，。（）()]+)")
+
+
+def slot_mode_options(schema) -> dict[int, str]:
+    """Mode number -> label for a slot's Byte4, from the product's own desc.
+
+    This has to come from the AutoTimeNN desc and not from the AutoMode or
+    Mode attribute, because on some products they disagree about the
+    numbering and only this one describes the byte actually being written:
+
+    * base wavemaker - Mode is 0 classic/1 sine/2 random/3 constant, while
+      a *slot's* mode is 0 stop/1 classic/2 sine/3 random/4 constant/5
+      feed. Copying the live Mode number into a slot would shift every
+      mode by one and turn "classic" into **stop**.
+    * DC Pump Pro - AutoMode says 0 constant/1 pulse/2 sine, its slot desc
+      says 0 pulse/1 sine/2 constant. Same trap, different order.
+
+    Returns {} if the product doesn't publish a list, in which case
+    callers should make the user name a mode number explicitly rather
+    than guess.
+    """
+    try:
+        desc = schema.by_name(slot_attr_name(0)).desc or ""
+    except KeyError:
+        return {}
+    segment = _BYTE4_RE.search(desc)
+    if segment is None:
+        return {}
+    options: dict[int, str] = {}
+    for number, label in _MODE_ENTRY_RE.findall(segment.group(1)):
+        label = label.strip("：:.,，、")
+        if label and not label.isdigit():
+            options.setdefault(int(number), label)
+    return options
 
 
 def slot_attr_name(index: int) -> str:

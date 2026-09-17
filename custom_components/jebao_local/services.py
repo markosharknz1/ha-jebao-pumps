@@ -13,6 +13,8 @@ config entry, since services are domain-wide.
 """
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
@@ -26,10 +28,16 @@ from .jebao_gizwits.schedule import (
     SLOT_COUNT,
     clear_slot,
     encode_slot,
+    is_slot_enabled,
     schedule_slot_len,
     slot_attr_name,
+    slot_mode_options,
 )
+from .jebao_gizwits.mode_options import mode_options_for
+from .jebao_gizwits.enum_translations import translate as translate_label
+from .jebao_gizwits.program import Step, compile_program, describe, parse_time_of_day
 from .off_timer import DATA_OFF_TIMERS, power_attr_of, resolve_deadline
+from .fan import MODE_NAMES, find_attr_name
 
 ATTR_DEVICE_ID = "device_id"
 ATTR_SLOT = "slot"
@@ -45,12 +53,19 @@ ATTR_FEED_TIME = "feed_time"
 ATTR_CUST_WAVE_FREQ = "cust_wave_freq"
 ATTR_MINUTES = "minutes"
 ATTR_UNTIL = "until"
+ATTR_STEPS = "steps"
+ATTR_START = "start"
+ATTR_REPEAT = "repeat"
+ATTR_SPEED = "speed"
+ATTR_HOURS = "hours"
 
 SERVICE_SET_SCHEDULE_SLOT = "set_schedule_slot"
 SERVICE_CLEAR_SCHEDULE_SLOT = "clear_schedule_slot"
 SERVICE_SYNC_CLOCK = "sync_clock"
 SERVICE_TIMED_OFF = "timed_off"
 SERVICE_CANCEL_TIMED_OFF = "cancel_timed_off"
+SERVICE_SET_PROGRAM = "set_program"
+SERVICE_CLEAR_PROGRAM = "clear_program"
 
 _SLOT_SCHEMA = vol.All(int, vol.Range(min=0, max=SLOT_COUNT - 1))
 _BYTE_SCHEMA = vol.All(int, vol.Range(min=0, max=255))
@@ -104,6 +119,44 @@ CANCEL_TIMED_OFF_SCHEMA = vol.Schema(
     }
 )
 
+# A step is a duration plus a speed. `hours` is a float so "1.5" works;
+# `minutes` is there for anyone who'd rather not write fractions.
+STEP_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_SPEED): _BYTE_SCHEMA,
+        vol.Exclusive(ATTR_HOURS, "length"): vol.All(
+            vol.Coerce(float), vol.Range(min=0.0166, max=24)
+        ),
+        vol.Exclusive(ATTR_MINUTES, "length"): vol.All(int, vol.Range(min=1, max=1440)),
+        # Either the product's own mode number or its name ("constant
+        # flow") - numbering differs between products, names don't.
+        vol.Optional(ATTR_MODE): vol.Any(int, cv.string),
+        vol.Optional(ATTR_FREQUENCY): _BYTE_SCHEMA,
+    }
+)
+
+SET_PROGRAM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_STEPS): vol.All(cv.ensure_list, [STEP_SCHEMA], vol.Length(min=1)),
+        vol.Optional(ATTR_START, default="00:00"): cv.string,
+        vol.Optional(ATTR_REPEAT, default=False): cv.boolean,
+    }
+)
+
+CLEAR_PROGRAM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
+)
+
+# Slots are written in batches rather than one command per slot (48 round
+# trips) or all at once (a ~400-byte control payload, which is the size of
+# the device's entire status frame and not something to assume it accepts).
+_SLOT_WRITE_BATCH = 6
+
+_LOGGER = logging.getLogger(__name__)
+
 _SERVICES_REGISTERED_KEY = "jebao_local_services_registered"
 
 
@@ -146,6 +199,105 @@ def _require_clock_support(coordinator: JebaoLocalCoordinator) -> None:
         raise ServiceValidationError(
             f"{coordinator.schema.name_en} does not have a settable clock"
         ) from None
+
+
+# Slot modes that are a poor automatic choice for "just keep doing what
+# you're doing" - a program shouldn't silently stop or feed.
+_NOT_A_DEFAULT = {"stop", "feeding", "feed mode"}
+
+
+def _live_mode_label(coordinator: JebaoLocalCoordinator) -> str | None:
+    """What the pump's current mode is *called*, or None.
+
+    Deliberately the label and not the number: the live Mode attribute and
+    a schedule slot's mode byte are numbered differently on several
+    products (see schedule.slot_mode_options), so the only safe way to
+    carry "whatever it's doing now" into a slot is by name.
+    """
+    attr = find_attr_name(coordinator.schema, MODE_NAMES, "enum") or find_attr_name(
+        coordinator.schema, MODE_NAMES, "uint8"
+    )
+    if attr is None:
+        return None
+    value = (coordinator.data or {}).get(attr)
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return None
+    try:
+        definition = coordinator.schema.by_name(attr)
+    except KeyError:
+        return None
+
+    # Two ways a product publishes its mode names: an `enum` list (labels
+    # positional, still in Chinese) or a uint8 whose desc enumerates them
+    # (mode_options_for already translates those). Normalise to English so
+    # the comparison against the slot table is like for like.
+    enum = getattr(definition, "enum_values", None)
+    if enum:
+        index = int(value)
+        return translate_label(enum[index]) if 0 <= index < len(enum) else None
+    return mode_options_for(definition).get(int(value))
+
+
+def _default_slot_mode(coordinator: JebaoLocalCoordinator) -> int:
+    """The mode to use for steps that don't name one."""
+    table = slot_mode_options(coordinator.schema)
+    if not table:
+        raise ServiceValidationError(
+            f"{coordinator.schema.name_en} doesn't publish a list of schedule modes - "
+            "give each step an explicit mode number"
+        )
+
+    live = _live_mode_label(coordinator)
+    if live is not None:
+        for number, label in table.items():
+            if translate_label(label).casefold() == live.casefold():
+                return number
+
+    # No live mode to copy (several products don't expose one). Fall back
+    # only when the choice is unambiguous - on the 6-byte pumps the table
+    # is just stop/auto/feed, so "auto" is the only sensible answer.
+    candidates = [n for n, l in table.items() if translate_label(l).casefold() not in _NOT_A_DEFAULT]
+    if len(candidates) == 1:
+        return candidates[0]
+    known = ", ".join(translate_label(table[n]) for n in sorted(table))
+    raise ServiceValidationError(
+        f"can't tell which mode {coordinator.schema.name_en} should run in - "
+        f"give each step a mode (it has: {known})"
+    )
+
+
+def _resolve_mode(coordinator: JebaoLocalCoordinator, value, step_no: int) -> int:
+    """A step's `mode`, given either as a number or as a name.
+
+    Resolved against the slot's own Byte4 table, which is not the same as
+    the live Mode attribute's numbering on every product.
+    """
+    if isinstance(value, bool):
+        raise ServiceValidationError(f"step {step_no}: mode must be a number or a name")
+    if isinstance(value, int):
+        return value
+
+    table = slot_mode_options(coordinator.schema)
+    wanted = str(value).strip().casefold()
+    for number, label in table.items():
+        if wanted in (label.casefold(), translate_label(label).casefold()):
+            return number
+    known = ", ".join(translate_label(table[n]) for n in sorted(table)) or "none published"
+    raise ServiceValidationError(
+        f"step {step_no}: {coordinator.schema.name_en} has no mode called {value!r} "
+        f"(it has: {known})"
+    )
+
+
+def _timer_switch_attr(coordinator: JebaoLocalCoordinator) -> str | None:
+    """The master switch that lets the schedule actually run."""
+    return find_attr_name(coordinator.schema, ("timeron", "timer_on", "timer"), "bool")
+
+
+async def _write_slots(coordinator: JebaoLocalCoordinator, slots: dict[str, bytes]) -> None:
+    items = list(slots.items())
+    for start in range(0, len(items), _SLOT_WRITE_BATCH):
+        await coordinator.async_write(dict(items[start : start + _SLOT_WRITE_BATCH]))
 
 
 def async_register_services(hass: HomeAssistant) -> None:
@@ -193,6 +345,93 @@ def async_register_services(hass: HomeAssistant) -> None:
         now = dt_util.now()
         await coordinator.async_write(encode_clock(now))
 
+    async def _handle_set_program(call: ServiceCall) -> None:
+        coordinator = _resolve_coordinator(hass, call.data[ATTR_DEVICE_ID])
+        _require_schedule_support(coordinator, 0)
+        slot_len = schedule_slot_len(coordinator.schema)
+
+        # Only worked out if some step actually needs it - a program that
+        # names a mode on every step must not fail because the device's
+        # own current mode is ambiguous.
+        live_mode = (
+            _default_slot_mode(coordinator)
+            if any(ATTR_MODE not in s for s in call.data[ATTR_STEPS])
+            else 0
+        )
+        steps = []
+        for step_no, raw_step in enumerate(call.data[ATTR_STEPS], start=1):
+            if ATTR_HOURS in raw_step:
+                minutes = max(1, round(raw_step[ATTR_HOURS] * 60))
+            elif ATTR_MINUTES in raw_step:
+                minutes = raw_step[ATTR_MINUTES]
+            else:
+                raise ServiceValidationError(
+                    f"step {step_no} needs a length - give it 'hours' or 'minutes'"
+                )
+            mode = raw_step.get(ATTR_MODE)
+            steps.append(
+                Step(
+                    minutes=minutes,
+                    speed=raw_step[ATTR_SPEED],
+                    mode=None if mode is None else _resolve_mode(coordinator, mode, step_no),
+                    frequency=raw_step.get(ATTR_FREQUENCY),
+                )
+            )
+
+        try:
+            compiled = compile_program(
+                steps,
+                start=parse_time_of_day(call.data[ATTR_START]),
+                repeat=call.data[ATTR_REPEAT],
+                default_mode=live_mode,
+            )
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+
+        writes: dict[str, bytes] = {}
+        for index, slot in enumerate(compiled):
+            try:
+                writes[slot_attr_name(index)] = encode_slot(**slot.as_kwargs(), slot_len=slot_len)
+            except ValueError as err:
+                raise ServiceValidationError(str(err)) from err
+
+        # Anything left over from a previous program has to go, or the old
+        # periods keep firing alongside the new ones. Only slots that
+        # currently hold something are cleared, to save round trips.
+        blank = clear_slot(slot_len)
+        data = coordinator.data or {}
+        for index in range(len(compiled), SLOT_COUNT):
+            name = slot_attr_name(index)
+            if is_slot_enabled(bytes(data.get(name) or b"")):
+                writes[name] = blank
+
+        await _write_slots(coordinator, writes)
+
+        # The schedule does nothing unless the pump's timer is switched
+        # on - programming one and leaving it disabled looks like a
+        # failure to anyone watching the tank.
+        timer_attr = _timer_switch_attr(coordinator)
+        if timer_attr is not None and not data.get(timer_attr, False):
+            await coordinator.async_write({timer_attr: True})
+
+        _LOGGER.info(
+            "Programmed %s with %s period(s): %s",
+            coordinator.schema.name_en, len(compiled), "; ".join(describe(compiled)),
+        )
+
+    async def _handle_clear_program(call: ServiceCall) -> None:
+        coordinator = _resolve_coordinator(hass, call.data[ATTR_DEVICE_ID])
+        _require_schedule_support(coordinator, 0)
+        blank = clear_slot(schedule_slot_len(coordinator.schema))
+        data = coordinator.data or {}
+        writes = {
+            slot_attr_name(i): blank
+            for i in range(SLOT_COUNT)
+            if is_slot_enabled(bytes(data.get(slot_attr_name(i)) or b""))
+        }
+        if writes:
+            await _write_slots(coordinator, writes)
+
     async def _handle_timed_off(call: ServiceCall) -> None:
         manager = hass.data[DATA_OFF_TIMERS]
         try:
@@ -216,6 +455,12 @@ def async_register_services(hass: HomeAssistant) -> None:
         for coordinator in _targets(hass, call):
             await manager.async_cancel(coordinator)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_PROGRAM, _handle_set_program, schema=SET_PROGRAM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_PROGRAM, _handle_clear_program, schema=CLEAR_PROGRAM_SCHEMA
+    )
     hass.services.async_register(
         DOMAIN, SERVICE_TIMED_OFF, _handle_timed_off, schema=TIMED_OFF_SCHEMA
     )

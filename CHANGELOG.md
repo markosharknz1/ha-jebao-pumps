@@ -4,6 +4,26 @@ All notable changes to this project are documented here.
 
 ## 0.4.2
 
+- **New: speed programs.** `jebao_local.set_program` takes a sequence
+  like "100% for 4 hours, then 40% for 6 hours" and writes it into the
+  pump's own 48 daily timer slots - the same idea as per-channel light
+  programs in the AIPAI app. Because it lives **on the pump**, it keeps
+  running when Home Assistant is off. Steps take `hours` or `minutes`,
+  a `start` time, and `repeat: true` tiles the pattern around the whole
+  day. Steps crossing midnight are split automatically. Any old program's
+  leftover slots are cleared, and the pump's timer is switched on so the
+  program actually runs. `jebao_local.clear_program` erases it.
+- **Modes by name.** A step can say `mode: constant flow` instead of a
+  number. A step with no mode keeps the pump's current one - carried over
+  **by name, not number**, because the schedule numbers modes differently
+  from the live setting: on a base wavemaker, live mode 0 is "classic
+  wave" but schedule mode 0 is **stop**. Copying the number would have
+  programmed the pump to halt. Where the current mode can't be worked
+  out safely, the service asks for an explicit mode instead of guessing.
+- **Schedules now work on 8 more products.** Aquarium pumps, external
+  filters, outdoor pumps and speed controllers use a 6-byte slot layout
+  that wasn't decoded, so `set_schedule_slot` rejected them outright.
+
 - **New: timed off.** `jebao_local.timed_off` turns pumps off now and
   switches them back on by itself - either `minutes: 20` or `until:
   "07:00"` - for feeding and maintenance. `jebao_local.cancel_timed_off`
