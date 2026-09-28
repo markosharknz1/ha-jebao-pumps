@@ -21,6 +21,14 @@ All notable changes to this project are documented here.
   the pump's 48 slots it uses, and a red marker for the current time.
   Programs that can't fit are caught before anything is sent, and errors
   from the pump are shown in the editor with your steps kept.
+- **Changes show as in progress until the pump confirms them.** After the
+  first write, Home Assistant holds its next re-read of the pump for up to
+  10 seconds, so a second delete used to look like it had done nothing -
+  easy to click again and again. A period being removed is now greyed out
+  and marked "Removing...", "Clear all periods" becomes "Clearing...", and
+  a program being written shows "Writing program - waiting for the pump to
+  confirm". Each clears as soon as the pump reports the change, or says so
+  if it never does.
 - The Schedule view now also shows the pump's current program as the same
   24-hour chart, lists periods in time order, and has *Clear all periods*.
 - Schedule mode names now come from each pump's own data instead of a

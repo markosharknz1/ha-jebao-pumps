@@ -77,6 +77,16 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const hhmm = (mins) => mins >= 1440 ? "24:00" : `${pad2(Math.floor(mins / 60))}:${pad2(mins % 60)}`;
 const MINUTES_PER_DAY = 1440;
 const SLOT_COUNT = 48;
+// Comfortably longer than HA's 10s refresh hold-off plus a slow pump.
+const PENDING_TIMEOUT_MS = 30000;
+
+// Does the pump's reported schedule now match a program we wrote?
+function sameProgram(slots, expected) {
+  const key = (start, end, speed, mode) => `${start}-${end}-${speed}-${Number(mode)}`;
+  const have = slots.map((s) => key(s.start_hour * 60 + s.start_minute, s.end_hour * 60 + s.end_minute, s.flow, s.mode)).sort();
+  const want = expected.map((s) => key(s.start, s.end, s.speed, s.mode)).sort();
+  return have.length === want.length && have.every((k, i) => k === want[i]);
+}
 
 // Mirror of jebao_gizwits/program.py's compile_program, so the editor can
 // draw exactly what will be written before anything is sent. The backend
@@ -195,6 +205,12 @@ class JebaoPumpCard extends HTMLElement {
     this._schedOpen = new Set(); // dids with the schedule section expanded
     this._editSlot = new Map(); // did -> {slot|null (null = new), ...form values}
     this._program = new Map(); // did -> {start, repeat, steps[], error, busy}
+    // Writes the pump has accepted but Home Assistant hasn't re-read yet.
+    // HA refreshes straight after the first write, then holds any further
+    // refresh for up to 10s - so without this, a second delete (or most of
+    // a multi-slot program) looks like it did nothing and people click again.
+    this._pending = new Map(); // did -> {slots: Map(index -> stamp), clearing, program}
+    this._schedNote = new Map(); // did -> a message to show, e.g. a timeout
     this._built = false;
   }
 
@@ -427,6 +443,16 @@ class JebaoPumpCard extends HTMLElement {
         }),
       });
       this._program.delete(pump.did);
+      // The editor closes immediately, so without this the old schedule
+      // would sit there looking like the write was ignored.
+      const pend = this._pendingFor(pump.did);
+      this._schedNote.delete(pump.did);
+      pend.program = {
+        expected: preview.slots,
+        stamp: this._expirePending(pump,
+          (p, s) => p.program?.stamp === s && ((p.program = null), true),
+          "The pump hasn't confirmed the new program yet - it may still be applying, or be offline. Check again shortly."),
+      };
     } catch (err) {
       // Service validation errors (e.g. "can't tell which mode...") are
       // written for people - show them where the user is looking.
@@ -492,10 +518,18 @@ class JebaoPumpCard extends HTMLElement {
   async _clearProgram(pump) {
     const n = this._scheduleSlots(pump).length;
     if (!n || !confirm(`Erase all ${n} period${n === 1 ? "" : "s"} from ${pump.name}? It goes back to manual control.`)) return;
+    const pend = this._pendingFor(pump.did);
+    this._schedNote.delete(pump.did);
+    pend.clearing = this._expirePending(pump,
+      (p, s) => p.clearing === s && ((p.clearing = null), true),
+      "The pump hasn't confirmed the schedule was cleared - it may be offline. Try again.");
+    this._render(true);
     try {
       await this._call("jebao_local", "clear_program", { device_id: pump.deviceId });
     } catch (err) {
-      alert(err?.message || String(err));
+      pend.clearing = null;
+      this._schedNote.set(pump.did, err?.message || String(err));
+      this._render(true);
     }
   }
 
@@ -532,8 +566,54 @@ class JebaoPumpCard extends HTMLElement {
     this._render();
   }
 
-  _deleteSlot(pump, slot) {
-    this._call("jebao_local", "clear_schedule_slot", { device_id: pump.deviceId, slot });
+  _pendingFor(did) {
+    if (!this._pending.has(did)) this._pending.set(did, { slots: new Map(), clearing: null, program: null });
+    return this._pending.get(did);
+  }
+
+  // Drop whatever the pump's latest reported schedule now confirms.
+  _prunePending(pump, slots) {
+    const pend = this._pending.get(pump.did);
+    if (!pend) return null;
+    const present = new Set(slots.map((s) => s.index));
+    for (const index of [...pend.slots.keys()]) if (!present.has(index)) pend.slots.delete(index);
+    if (pend.clearing && !slots.length) pend.clearing = null;
+    if (pend.program && sameProgram(slots, pend.program.expected)) pend.program = null;
+    if (!pend.slots.size && !pend.clearing && !pend.program) {
+      this._pending.delete(pump.did);
+      return null;
+    }
+    return pend;
+  }
+
+  // If the pump never reports the change, stop showing it as in progress
+  // and say so - leaving it greyed out forever would be worse than useless.
+  _expirePending(pump, expire, message) {
+    const stamp = Date.now();
+    setTimeout(() => {
+      const pend = this._pending.get(pump.did);
+      if (!pend || !expire(pend, stamp)) return;
+      this._schedNote.set(pump.did, message);
+      this._render(true);
+    }, PENDING_TIMEOUT_MS);
+    return stamp;
+  }
+
+  async _deleteSlot(pump, slot) {
+    const pend = this._pendingFor(pump.did);
+    if (pend.slots.has(slot)) return;  // already on its way
+    this._schedNote.delete(pump.did);
+    pend.slots.set(slot, this._expirePending(pump,
+      (p, s) => p.slots.get(slot) === s && (p.slots.delete(slot), true),
+      "The pump hasn't confirmed that period was removed - it may be offline. Try again."));
+    this._render(true);
+    try {
+      await this._call("jebao_local", "clear_schedule_slot", { device_id: pump.deviceId, slot });
+    } catch (err) {
+      pend.slots.delete(slot);
+      this._schedNote.set(pump.did, err?.message || String(err));
+      this._render(true);
+    }
   }
 
   _syncClock(pump) {
@@ -659,35 +739,49 @@ class JebaoPumpCard extends HTMLElement {
     const clockState = pump.entities.deviceclock ? this._state(pump.entities.deviceclock) : null;
     const form = this._editSlot.get(pump.did);
     const prog = this._program.get(pump.did);
+    const pend = this._prunePending(pump, slots);
+    const note = this._schedNote.get(pump.did);
+    const noteHtml = note ? `<div class="progerr">${esc(note)}</div>` : "";
 
     // The program editor replaces the slot list while it's open - showing
     // both would mean two conflicting views of the same 48 slots.
-    const body = prog ? this._programEditor(pump, prog) : `
+    const body = prog ? this._programEditor(pump, prog) : pend?.program ? `
+      ${this._timeline(pump, pend.program.expected, true)}
+      <div class="pendingnote"><span class="spinner"></span>Writing program &mdash; waiting for the pump to confirm&hellip;</div>
+    ` : `
+      ${noteHtml}
       ${this._timeline(pump, slots.map((s) => ({
           start: s.start_hour * 60 + s.start_minute,
           end: s.end_hour * 60 + s.end_minute,
           speed: s.flow, mode: s.mode,
         })))}
       ${[...slots].sort((a, b) => (a.start_hour * 60 + a.start_minute) - (b.start_hour * 60 + b.start_minute)).map((s) => `
-        <div class="slotrow" data-slot="${s.index}">
+        ${(() => {
+          const removing = !!pend && (!!pend.clearing || pend.slots.has(s.index));
+          return `
+        <div class="slotrow ${removing ? "pending" : ""}" data-slot="${s.index}">
           <span class="slottime">${pad2(s.start_hour)}:${pad2(s.start_minute)}&ndash;${pad2(s.end_hour)}:${pad2(s.end_minute)}</span>
-          <span class="slotmode">${esc(this._slotModeLabel(pump, s.mode))} &middot; ${this._fmtSpeed(pump, s.flow)}</span>
-          <button class="small2" data-act="schededit" data-slot="${s.index}">Edit</button>
-          <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}">✕</button>
-        </div>`).join("")}
+          <span class="slotmode">${removing
+            ? `<span class="spinner"></span>Removing&hellip;`
+            : `${esc(this._slotModeLabel(pump, s.mode))} &middot; ${this._fmtSpeed(pump, s.flow)}`}</span>
+          <button class="small2" data-act="schededit" data-slot="${s.index}" ${removing ? "disabled" : ""}>Edit</button>
+          <button class="small2 danger" data-act="scheddelete" data-slot="${s.index}" ${removing ? "disabled" : ""} aria-label="Remove period">✕</button>
+        </div>`;
+        })()}`).join("")}
       ${form ? this._slotForm(form, this._slotLen(pump), this._slotModes(pump)) : `
         <div class="row schedbtns">
           <button class="feednow half" data-act="progopen">${slots.length ? "Edit as program" : "Build program"}</button>
           <button class="half" data-act="schedadd">+ Single period</button>
         </div>
-        ${slots.length ? `<button class="linkbtn danger" data-act="progclear">Clear all periods</button>` : ""}`}
+        ${slots.length ? `<button class="linkbtn danger" data-act="progclear" ${pend?.clearing ? "disabled" : ""}>${
+          pend?.clearing ? `<span class="spinner"></span>Clearing&hellip;` : "Clear all periods"}</button>` : ""}`}
     `;
 
     return `
       <div class="sched">
         <button class="schedhead" data-act="schedtoggle">
           <span>${open ? "▾" : "▸"} Schedule</span>
-          <span class="schedcount">${slots.length ? `${slots.length} period${slots.length === 1 ? "" : "s"}` : "none set"}</span>
+          <span class="schedcount">${pend?.program ? "updating&hellip;" : slots.length ? `${slots.length} period${slots.length === 1 ? "" : "s"}` : "none set"}</span>
         </button>
         ${!open ? "" : `
           ${clockState ? `
@@ -704,7 +798,7 @@ class JebaoPumpCard extends HTMLElement {
   // A 24-hour bar chart: one bar per period, height = speed. The same
   // picture the vendor apps use for light programs, and the quickest way
   // to see gaps or a step that landed at the wrong time.
-  _timeline(pump, periods) {
+  _timeline(pump, periods, pending = false) {
     const unitMax = 100;
     const now = new Date();
     const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -714,7 +808,7 @@ class JebaoPumpCard extends HTMLElement {
       return `<rect class="bar" x="${p.start}" y="${100 - h}" width="${Math.max(1, p.end - p.start)}" height="${h}"><title>${esc(label)}</title></rect>`;
     }).join("");
     return `
-      <div class="timeline">
+      <div class="timeline ${pending ? "pending" : ""}">
         <svg viewBox="0 0 1440 100" preserveAspectRatio="none" role="img" aria-label="24-hour schedule">
           ${[360, 720, 1080].map((x) => `<line class="grid" x1="${x}" x2="${x}" y1="0" y2="100"/>`).join("")}
           ${bars}
@@ -1079,6 +1173,14 @@ class JebaoPumpCard extends HTMLElement {
       .stepno { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem;
         font-weight: 600; background: var(--primary); color: var(--text-primary-color, #fff); flex: none; }
       .icon { padding: 1px 8px; font-size: 0.8rem; }
+      .slotrow.pending .slottime, .slotrow.pending .slotmode { opacity: 0.55; }
+      .slotrow.pending .slottime { text-decoration: line-through; }
+      .timeline.pending .bar { opacity: 0.4; }
+      .pendingnote { font-size: 0.82rem; color: var(--secondary-text-color); margin: 4px 0 8px; display: flex; align-items: center; }
+      .spinner { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border-radius: 50%;
+        border: 2px solid var(--divider-color, #ccc); border-top-color: var(--primary); animation: spin 0.8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
       .hint { font-size: 0.75rem; color: var(--secondary-text-color); text-align: center; margin-top: 2px; }
       .step .row label { min-width: 60px; }
       @media (max-width: 420px) { .row label { min-width: 70px; } .program .check { margin-left: 0; } .row { flex-wrap: wrap; } }
