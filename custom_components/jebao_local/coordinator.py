@@ -31,6 +31,9 @@ from .const import (
 )
 from .jebao_gizwits.discovery import discover
 from .jebao_gizwits.schema import DatapointSchema, load_by_product_key
+from homeassistant.util.dt import utcnow
+
+from .dropouts import DropoutTracker
 from .jebao_gizwits.session import GizwitsSession, ProtocolError
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +61,7 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # an async context; HA's event-loop guard flags it if it does.
         self.schema: DatapointSchema = None  # type: ignore[assignment]
         self._session: GizwitsSession | None = None
+        self.dropouts = DropoutTracker()
 
     async def async_load_schema(self) -> None:
         self.schema = await self.hass.async_add_executor_job(load_by_product_key, self.product_key)
@@ -151,8 +155,10 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                     "Read attempt %d failed for %s (%s): %s", attempt + 1, self.did, self.host, err
                 )
                 continue
+            self.dropouts.record_success(utcnow())
             return self.schema.decode_status(raw)
 
+        self.dropouts.record_failure(utcnow())
         raise UpdateFailed(f"Cannot reach {self.did} at {self.host}: {last_err}") from last_err
 
     async def _try_recover_via_discovery(self) -> bool:

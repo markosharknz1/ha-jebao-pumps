@@ -111,6 +111,12 @@
       },
       "macaddress": {
         "name": "MAC address"
+      },
+      "last_contact": {
+        "name": "Last contact"
+      },
+      "dropouts": {
+        "name": "Dropouts"
       }
     },
     "button": {

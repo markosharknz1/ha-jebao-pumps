@@ -95,6 +95,7 @@ def make_coordinator(monkeypatch, **behaviour):
     coordinator.did = "testdid"
     coordinator.schema = _FakeSchema()
     coordinator.logger = mod._LOGGER
+    coordinator.dropouts = mod.DropoutTracker()
     return coordinator
 
 

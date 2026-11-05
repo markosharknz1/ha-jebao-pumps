@@ -18,7 +18,13 @@
 """
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -65,6 +71,8 @@ async def async_setup_entry(
     )
     entities.append(JebaoIpAddressSensor(coordinator))
     entities.append(JebaoMacAddressSensor(coordinator))
+    entities.append(JebaoLastContactSensor(coordinator))
+    entities.append(JebaoDropoutsSensor(coordinator))
     async_add_entities(entities)
 
 
@@ -314,3 +322,68 @@ class JebaoMacAddressSensor(JebaoLocalEntity, SensorEntity):
     @property
     def available(self) -> bool:
         return True
+
+
+class JebaoLastContactSensor(JebaoLocalEntity, SensorEntity):
+    """When this pump last answered a poll. Unlike every other entity,
+    this one stays available while the pump is offline — its whole job is
+    describing the outage."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "last_contact")
+        self._attr_translation_key = "last_contact"
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self):
+        return self.coordinator.dropouts.last_contact
+
+
+class JebaoDropoutsSensor(JebaoLocalEntity, RestoreEntity, SensorEntity):
+    """How many times this pump has dropped off the network, with the
+    recent outages (start/end/duration) in the attributes. Counts and the
+    log persist across Home Assistant restarts via the restored state.
+    Stays available while the pump is offline, for the same reason as the
+    last-contact sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = "dropouts"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "dropouts")
+        self._attr_translation_key = "dropouts"
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self) -> int:
+        return self.coordinator.dropouts.count
+
+    @property
+    def extra_state_attributes(self):
+        return self.coordinator.dropouts.as_attributes()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_state()
+        if last is None or last.state in ("unknown", "unavailable"):
+            return
+        try:
+            count = int(float(last.state))
+        except ValueError:
+            return
+        self.coordinator.dropouts.seed(
+            count,
+            last.attributes.get("recent") or [],
+            dt_util.parse_datetime(last.attributes.get("last_contact") or ""),
+            dt_util.parse_datetime(last.attributes.get("offline_since") or ""),
+        )
