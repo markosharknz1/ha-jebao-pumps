@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here.
 
+## 0.5.0
+
+- **New: per-pump dropout diagnostics.** Two diagnostic sensors on every
+  pump turn "they seem flaky" into something measurable:
+  - **Last contact** - when the pump last answered a poll.
+  - **Dropouts** - how many times it has fallen off the network, counted
+    once per offline episode however many failed polls it spans, with the
+    recent outages (start, end, duration) in the attributes.
+
+  Both stay available while the pump is offline, which is the whole point
+  of them - every other entity goes unavailable exactly when you want to
+  know what happened. Both are recorded in Home Assistant's history, so a
+  pump that drops every night at 2am for three hours shows up as a
+  pattern rather than a vague impression - and that pattern usually
+  points at the cause (an AP reboot, a DHCP lease expiring, interference).
+- The count and the outage log survive a Home Assistant restart, and an
+  outage running across a restart is counted once, with its duration
+  spanning the restart rather than being split in two.
+
 ## 0.4.2
 
 - **New: speed programs.** `jebao_local.set_program` takes a sequence
