@@ -155,11 +155,53 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                     "Read attempt %d failed for %s (%s): %s", attempt + 1, self.did, self.host, err
                 )
                 continue
+            was_offline = self.dropouts.offline_since is not None
             self.dropouts.record_success(utcnow())
+            if was_offline:
+                self._announce_dropout(offline=False)
             return self.schema.decode_status(raw)
 
+        # Only a transition from a working state counts as a dropout worth
+        # announcing: last_contact is None before the very first success (and
+        # before the restart-seed runs), so a pump that's simply offline at
+        # startup stays quiet.
+        seen_before = self.dropouts.last_contact is not None
+        was_online = self.dropouts.offline_since is None
         self.dropouts.record_failure(utcnow())
+        if was_online and seen_before:
+            self._announce_dropout(offline=True)
         raise UpdateFailed(f"Cannot reach {self.did} at {self.host}: {last_err}") from last_err
+
+    def _announce_dropout(self, *, offline: bool) -> None:
+        """Fire an event and raise/clear a persistent notification when this
+        pump drops off the network or returns, so a drop is actively surfaced -
+        not just logged on the diagnostic sensors. The pump keeps running its
+        stored program; only our control/telemetry is lost."""
+        from homeassistant.components import persistent_notification
+
+        from .naming import default_device_name
+
+        label = default_device_name(self.schema.name_en, self.mac, self.did)
+        notif_id = f"{DOMAIN}_dropout_{self.did}"
+        if offline:
+            _LOGGER.warning("Jebao %s (%s) dropped off the network", label, self.did)
+            self.hass.bus.async_fire(
+                f"{DOMAIN}_dropout", {"did": self.did, "name": label, "host": self.host}
+            )
+            persistent_notification.async_create(
+                self.hass,
+                f"{label} has dropped off the network - control and status are "
+                "lost (the pump keeps running its stored program). Check its "
+                "power and WiFi.",
+                title="Jebao pump offline",
+                notification_id=notif_id,
+            )
+        else:
+            _LOGGER.info("Jebao %s (%s) is back online", label, self.did)
+            self.hass.bus.async_fire(
+                f"{DOMAIN}_reconnected", {"did": self.did, "name": label, "host": self.host}
+            )
+            persistent_notification.async_dismiss(self.hass, notif_id)
 
     async def _try_recover_via_discovery(self) -> bool:
         """The pump's IP may have changed (DHCP lease renewal). Broadcast

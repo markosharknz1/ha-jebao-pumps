@@ -121,6 +121,9 @@ fixtures/                   Real captured bytes used as ground truth (discovery 
   captured_writes/          Real write frames captured from the vendor app's own debug log - the ground truth for the write protocol
   product_schemas/          All 42 product schemas extracted from the vendor app (WiFi + Bluetooth)
 tests/                      Offline regression tests against the captured fixtures - no hardware needed to run these
+                            Run: pytest tests/ -q -p no:socket -p no:homeassistant
+                            Needs: pytest pytest-asyncio homeassistant (part of the suite is async, and
+                            without pytest-asyncio those tests fail rather than skip)
 docs/
   SUPPORTED_MODELS.md        Every product this project's schema-driven approach could support, and how connectivity type is determined
   product_catalog.json       Same, machine-readable

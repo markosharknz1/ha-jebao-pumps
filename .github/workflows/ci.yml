@@ -20,7 +20,10 @@ jobs:
       # custom_components.jebao_local, whose __init__ imports HA, so those
       # tests were quietly erroring at collection (not skipping) and the
       # coverage they were supposed to provide never actually ran in CI.
-      - run: pip install pytest homeassistant
+      # pytest-asyncio for the same reason: the service, off-timer and
+      # card-service tests are async, and without the plugin pytest does
+      # not skip them - it fails them, so CI went red while passing locally.
+      - run: pip install pytest pytest-asyncio homeassistant
       # -p no:socket / no:homeassistant match how the suite is run locally;
       # harmless no-ops when those plugins aren't installed.
       - run: pytest tests/ -q -p no:socket -p no:homeassistant
