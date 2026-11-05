@@ -387,3 +387,8 @@ class JebaoDropoutsSensor(JebaoLocalEntity, RestoreEntity, SensorEntity):
             dt_util.parse_datetime(last.attributes.get("last_contact") or ""),
             dt_util.parse_datetime(last.attributes.get("offline_since") or ""),
         )
+        # The Last contact sensor reads the same tracker but restores
+        # nothing itself, so nudge every entity to re-read it - otherwise
+        # it shows "unknown" until the next poll, which is precisely the
+        # wrong answer while a pump is offline at startup.
+        self.coordinator.async_update_listeners()

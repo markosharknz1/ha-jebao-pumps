@@ -113,3 +113,58 @@ def test_attributes_shape() -> None:
     assert attrs["last_contact"] == at(0).isoformat()
     assert attrs["offline_since"] == at(10).isoformat()
     assert attrs["recent"] == []
+
+
+# --- restoring across a Home Assistant restart -----------------------------
+# The coordinator's first refresh runs in async_setup_entry, *before* the
+# platforms are forwarded - so by the time the Dropouts sensor restores its
+# state, the tracker has already recorded that first poll. These pin the
+# merge, because a seed that bails out here loses the whole history.
+
+
+def test_restore_survives_the_first_poll_that_lands_before_it() -> None:
+    t = DropoutTracker()
+    t.record_success(at(100))  # the config-entry first refresh
+    t.seed(count=7, events=[{"start": "x", "end": "y", "duration_s": 5}],
+           last_contact=at(0), offline_since=None)
+    assert t.count == 7, "restored dropout history was discarded"
+    assert len(t.events) == 1
+    assert t.last_contact == at(100), "the newer live contact should win"
+
+
+def test_an_outage_still_running_across_a_restart_is_not_counted_twice() -> None:
+    t = DropoutTracker()
+    t.record_failure(at(100))  # first poll after the restart: still down
+    t.seed(count=3, events=[], last_contact=at(0), offline_since=at(50))
+    assert t.count == 3, "the same episode was counted again after the restart"
+    assert t.offline_since == at(50), "the outage should keep its original start"
+    assert t.last_contact == at(0)
+
+    # ...and when it finally recovers, the duration spans the restart.
+    t.record_success(at(200))
+    assert t.events == [{"start": at(50).isoformat(), "end": at(200).isoformat(), "duration_s": 150}]
+
+
+def test_an_outage_that_ended_during_the_restart_is_logged() -> None:
+    t = DropoutTracker()
+    t.record_success(at(100))  # back already by the first poll
+    t.seed(count=2, events=[], last_contact=at(0), offline_since=at(50))
+    assert t.count == 2
+    assert t.offline_since is None
+    assert t.events == [{"start": at(50).isoformat(), "end": at(100).isoformat(), "duration_s": 50}]
+
+
+def test_a_pump_down_at_boot_adds_to_the_restored_count() -> None:
+    t = DropoutTracker()
+    t.record_failure(at(100))  # a genuinely new outage
+    t.seed(count=4, events=[], last_contact=at(0), offline_since=None)
+    assert t.count == 5
+    assert t.offline_since == at(100)
+
+
+def test_seeding_twice_keeps_the_first_restore() -> None:
+    t = DropoutTracker()
+    t.record_success(at(100))
+    t.seed(count=7, events=[], last_contact=at(0), offline_since=None)
+    t.seed(count=999, events=[], last_contact=at(0), offline_since=None)
+    assert t.count == 7

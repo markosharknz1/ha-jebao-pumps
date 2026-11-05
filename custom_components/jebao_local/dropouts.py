@@ -30,6 +30,7 @@ class DropoutTracker:
     count: int = 0
     # Completed outages, oldest first: {"start": iso, "end": iso, "duration_s": int}
     events: list[dict[str, Any]] = field(default_factory=list)
+    _seeded: bool = False
 
     def record_success(self, now: datetime) -> None:
         if self.offline_since is not None:
@@ -63,12 +64,56 @@ class DropoutTracker:
         last_contact: datetime | None,
         offline_since: datetime | None,
     ) -> None:
-        """Restore persisted state after a Home Assistant restart. Only
-        applied while the tracker is still blank, so a restore can never
-        clobber live observations."""
-        if self.count or self.events or self.last_contact or self.offline_since:
+        """Merge persisted state in after a Home Assistant restart.
+
+        This cannot assume a blank tracker. The coordinator's first
+        refresh runs in async_setup_entry, *before* the platforms are
+        forwarded, so the tracker has already recorded one poll outcome
+        by the time the Dropouts sensor restores its state. Refusing to
+        apply the restore in that case silently reset the count to zero
+        on every restart - which destroyed exactly the long-run history
+        the sensor exists to collect.
+
+        Runs once; later calls are ignored so a reload can't double-count.
+        """
+        if self._seeded:
             return
-        self.count = count
-        self.events = list(events)[-MAX_EVENTS:]
-        self.last_contact = last_contact
-        self.offline_since = offline_since
+        self._seeded = True
+
+        # Restored episodes are older than anything observed since boot.
+        self.events = (list(events) + self.events)[-MAX_EVENTS:]
+
+        if offline_since is not None and self.offline_since is not None:
+            # The same outage is still running across the restart: the
+            # restored count already includes it, and the real start is
+            # the one from before the restart, so the duration spans it.
+            self.count = count
+            self.offline_since = offline_since
+        elif offline_since is not None and self.last_contact is not None:
+            # It was down before the restart and answered on the first
+            # poll after it - so the outage ended somewhere in between.
+            # Close it off rather than losing the episode entirely.
+            self.count = count
+            self.events.append(
+                {
+                    "start": _iso(offline_since),
+                    "end": _iso(self.last_contact),
+                    "duration_s": int((self.last_contact - offline_since).total_seconds()),
+                }
+            )
+            del self.events[:-MAX_EVENTS]
+        elif offline_since is not None:
+            # It was down before the restart and no poll has resolved yet
+            # (restore beat the first refresh): adopt the open episode so
+            # the eventual recovery still spans the restart.
+            self.count = count
+            self.offline_since = offline_since
+        else:
+            # It was reachable before the restart. Anything counted since
+            # boot is a genuinely new episode on top of the old total.
+            self.count += count
+
+        # Keep whichever contact is more recent: the restored one when the
+        # pump hasn't answered since boot, the live one when it has.
+        if last_contact is not None and (self.last_contact is None or last_contact > self.last_contact):
+            self.last_contact = last_contact
