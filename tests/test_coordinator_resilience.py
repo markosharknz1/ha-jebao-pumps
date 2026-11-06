@@ -96,6 +96,10 @@ def make_coordinator(monkeypatch, **behaviour):
     coordinator.schema = _FakeSchema()
     coordinator.logger = mod._LOGGER
     coordinator.dropouts = mod.DropoutTracker()
+    # __new__ skips __init__, so anything the poll path reads has to be set
+    # here too - this one was added with the dropout alerts and broke every
+    # successful-poll test until it was mirrored.
+    coordinator._dropout_announced = False
     return coordinator
 
 
