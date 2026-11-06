@@ -62,6 +62,7 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         self.schema: DatapointSchema = None  # type: ignore[assignment]
         self._session: GizwitsSession | None = None
         self.dropouts = DropoutTracker()
+        self._dropout_announced = False  # a dropout notification is outstanding
 
     async def async_load_schema(self) -> None:
         self.schema = await self.hass.async_add_executor_job(load_by_product_key, self.product_key)
@@ -155,9 +156,12 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                     "Read attempt %d failed for %s (%s): %s", attempt + 1, self.did, self.host, err
                 )
                 continue
-            was_offline = self.dropouts.offline_since is not None
             self.dropouts.record_success(utcnow())
-            if was_offline:
+            # Only announce recovery if we actually reported a dropout - a pump
+            # that was merely offline at startup set offline_since without an
+            # announce, and must not emit a spurious "reconnected".
+            if self._dropout_announced:
+                self._dropout_announced = False
                 self._announce_dropout(offline=False)
             return self.schema.decode_status(raw)
 
@@ -169,6 +173,7 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         was_online = self.dropouts.offline_since is None
         self.dropouts.record_failure(utcnow())
         if was_online and seen_before:
+            self._dropout_announced = True
             self._announce_dropout(offline=True)
         raise UpdateFailed(f"Cannot reach {self.did} at {self.host}: {last_err}") from last_err
 
