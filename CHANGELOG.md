@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented here.
 
+## 0.7.0
+
+- **New: Response time sensor.** Round-trip time of each successful poll,
+  per pump. The shape over time is what matters: latency climbing over
+  minutes before a pump disappears means interference or range, while
+  latency sitting flat at its usual ~110ms and then stopping means the
+  pump lost its AP, its DHCP lease or its power. A dropout count alone
+  can't separate those, and they have completely different fixes. It
+  reports nothing while a pump is unreachable, so the outage shows as a
+  gap in history rather than a stale flat line implying all was well.
+- **Dropouts now record *how* a poll failed**, not just that it did:
+  - `off_network` - it didn't answer a discovery broadcast either, so it
+    isn't on the network at all (power, the AP, a DHCP lease).
+  - `no_response` - it answers discovery but won't hold a TCP session.
+    This is the firmware-hang signature.
+
+  The kind is on the Dropouts sensor as `last_failure`, and is stored
+  against each logged outage, so a week of them shows whether they were
+  all the same failure or a mix. This reuses the discovery broadcast the
+  integration already performs on its third retry, so it costs no extra
+  traffic.
+
 ## 0.5.0
 
 - **New: per-pump dropout diagnostics.** Two diagnostic sensors on every

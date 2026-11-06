@@ -28,32 +28,56 @@ class DropoutTracker:
     last_contact: datetime | None = None
     offline_since: datetime | None = None
     count: int = 0
+    # Round-trip time of the last successful poll. A pump whose latency
+    # climbs for minutes before it goes is being interfered with or is at
+    # the edge of range; one that sits flat and then vanishes lost its AP,
+    # its DHCP lease or its power. The count alone can't tell those apart.
+    last_latency_ms: int | None = None
+    # Why the current (or most recent) outage is failing, as worked out by
+    # the coordinator:
+    #   "off_network" - it didn't answer a discovery broadcast either, so
+    #                   it isn't on the LAN at all
+    #   "no_response" - it answers discovery but won't hold a TCP session
+    #                   (the firmware-hang signature)
+    #   "unknown"     - discovery itself failed, so we can't tell
+    failure_kind: str | None = None
     # Completed outages, oldest first: {"start": iso, "end": iso, "duration_s": int}
     events: list[dict[str, Any]] = field(default_factory=list)
     _seeded: bool = False
 
-    def record_success(self, now: datetime) -> None:
+    def record_success(self, now: datetime, latency_ms: int | None = None) -> None:
         if self.offline_since is not None:
             self.events.append(
                 {
                     "start": _iso(self.offline_since),
                     "end": _iso(now),
                     "duration_s": int((now - self.offline_since).total_seconds()),
+                    # Kept per episode, so a week of outages shows whether
+                    # they were all the same failure or a mix.
+                    "kind": self.failure_kind,
                 }
             )
             del self.events[:-MAX_EVENTS]
             self.offline_since = None
+        self.failure_kind = None
         self.last_contact = now
+        if latency_ms is not None:
+            self.last_latency_ms = latency_ms
 
-    def record_failure(self, now: datetime) -> None:
+    def record_failure(self, now: datetime, kind: str = "unknown") -> None:
         if self.offline_since is None:
             self.offline_since = now
             self.count += 1
+        # Always the latest reading: an outage can start as "won't answer
+        # TCP" and become "gone from the network" as the pump gives up.
+        self.failure_kind = kind
 
     def as_attributes(self) -> dict[str, Any]:
         return {
             "last_contact": _iso(self.last_contact),
             "offline_since": _iso(self.offline_since),
+            "last_failure": self.failure_kind,
+            "latency_ms": self.last_latency_ms,
             "recent": list(self.events),
         }
 

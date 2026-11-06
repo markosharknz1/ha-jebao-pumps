@@ -31,6 +31,8 @@ from .const import (
 )
 from .jebao_gizwits.discovery import discover
 from .jebao_gizwits.schema import DatapointSchema, load_by_product_key
+from time import monotonic
+
 from homeassistant.util.dt import utcnow
 
 from .dropouts import DropoutTracker
@@ -138,6 +140,13 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # any handler, so a failure there escaped as an "Unexpected error
         # fetching ... data" traceback instead of a plain UpdateFailed.
         last_err: Exception | None = None
+        # Why a failure failed. Reads failing only tells us the pump won't
+        # hold a TCP session; whether it is even on the network is not known
+        # until the rediscovery attempt below, which refines this. The
+        # distinction is the useful one: "not on the LAN" points at power,
+        # the AP or a DHCP lease, while "on the LAN but won't talk" is the
+        # firmware-hang signature (see the .81 pump, SPEC.md).
+        failure_kind = "no_response"
         for attempt in range(3):
             if attempt == 2:
                 _LOGGER.debug("Read failed for %s, trying rediscovery", self.did)
@@ -145,9 +154,12 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                     recovered = await self._try_recover_via_discovery()
                 except (OSError, ProtocolError) as err:
                     last_err = err
+                    failure_kind = "unknown"
                     break
                 if not recovered:
+                    failure_kind = "off_network"
                     break
+            started = monotonic()
             try:
                 raw = await self._read_once()
             except (OSError, ProtocolError, TimeoutError) as err:
@@ -156,7 +168,9 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
                     "Read attempt %d failed for %s (%s): %s", attempt + 1, self.did, self.host, err
                 )
                 continue
-            self.dropouts.record_success(utcnow())
+            self.dropouts.record_success(
+                utcnow(), latency_ms=int((monotonic() - started) * 1000)
+            )
             # Only announce recovery if we actually reported a dropout - a pump
             # that was merely offline at startup set offline_since without an
             # announce, and must not emit a spurious "reconnected".
@@ -171,7 +185,7 @@ class JebaoLocalCoordinator(DataUpdateCoordinator[dict[str, object]]):
         # startup stays quiet.
         seen_before = self.dropouts.last_contact is not None
         was_online = self.dropouts.offline_since is None
-        self.dropouts.record_failure(utcnow())
+        self.dropouts.record_failure(utcnow(), failure_kind)
         if was_online and seen_before:
             self._dropout_announced = True
             self._announce_dropout(offline=True)

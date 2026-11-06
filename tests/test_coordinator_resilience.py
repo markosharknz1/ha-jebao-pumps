@@ -264,3 +264,49 @@ def _async_return(value):
         return value
 
     return _inner
+
+
+# --- what the diagnostics record about a poll -------------------------------
+# Latency and the *kind* of failure are what separate "interference" from
+# "the AP rebooted" from "the pump's firmware hung", so they are worth
+# pinning at the coordinator level rather than only in the tracker.
+
+
+def test_a_successful_poll_records_its_round_trip_time(monkeypatch):
+    c = make_coordinator(monkeypatch)
+    run(c._async_update_data())
+    assert c.dropouts.last_latency_ms is not None
+    assert c.dropouts.last_latency_ms >= 0
+
+
+def test_a_pump_that_vanished_from_the_network_is_recorded_as_off_network(monkeypatch):
+    """Discovery can't find it either - power, the AP, or a DHCP lease."""
+    c = make_coordinator(monkeypatch, read_fails=True)
+    monkeypatch.setattr(c, "_try_recover_via_discovery", _async_return(False))
+    with pytest.raises(UpdateFailed):
+        run(c._async_update_data())
+    assert c.dropouts.failure_kind == "off_network"
+
+
+def test_a_pump_that_answers_discovery_but_not_tcp_is_recorded_as_no_response(monkeypatch):
+    """The firmware-hang signature: it's on the LAN, it just won't talk."""
+    c = make_coordinator(monkeypatch, read_fails=True)
+    monkeypatch.setattr(c, "_try_recover_via_discovery", _async_return(True))
+    with pytest.raises(UpdateFailed):
+        run(c._async_update_data())
+    assert c.dropouts.failure_kind == "no_response"
+
+
+def test_an_outage_logs_which_kind_of_failure_it_was(monkeypatch):
+    c = make_coordinator(monkeypatch, read_fails=True)
+    monkeypatch.setattr(c, "_try_recover_via_discovery", _async_return(False))
+    with pytest.raises(UpdateFailed):
+        run(c._async_update_data())
+
+    # ...and now it comes back.
+    FakeSession.behaviour = {}
+    monkeypatch.setattr(c, "_try_recover_via_discovery", _async_return(True))
+    run(c._async_update_data())
+
+    assert c.dropouts.events[-1]["kind"] == "off_network"
+    assert c.dropouts.failure_kind is None, "kind should clear once it is back"

@@ -48,7 +48,8 @@ def test_recovery_completes_the_episode_with_duration() -> None:
     assert t.offline_since is None
     assert t.last_contact == at(130)
     assert t.events == [
-        {"start": at(10).isoformat(), "end": at(130).isoformat(), "duration_s": 120}
+        {"start": at(10).isoformat(), "end": at(130).isoformat(), "duration_s": 120,
+         "kind": "unknown"}
     ]
 
 
@@ -142,7 +143,8 @@ def test_an_outage_still_running_across_a_restart_is_not_counted_twice() -> None
 
     # ...and when it finally recovers, the duration spans the restart.
     t.record_success(at(200))
-    assert t.events == [{"start": at(50).isoformat(), "end": at(200).isoformat(), "duration_s": 150}]
+    assert t.events == [{"start": at(50).isoformat(), "end": at(200).isoformat(), "duration_s": 150,
+                         "kind": "unknown"}]
 
 
 def test_an_outage_that_ended_during_the_restart_is_logged() -> None:
@@ -168,3 +170,45 @@ def test_seeding_twice_keeps_the_first_restore() -> None:
     t.seed(count=7, events=[], last_contact=at(0), offline_since=None)
     t.seed(count=999, events=[], last_contact=at(0), offline_since=None)
     assert t.count == 7
+
+
+# --- latency and failure kind ----------------------------------------------
+
+
+def test_latency_is_recorded_and_kept_between_polls() -> None:
+    t = DropoutTracker()
+    t.record_success(at(0), latency_ms=112)
+    assert t.last_latency_ms == 112
+    t.record_success(at(30))  # a caller that didn't measure
+    assert t.last_latency_ms == 112, "an unmeasured poll should not wipe it"
+
+
+def test_the_failure_kind_is_kept_for_the_current_outage_and_cleared_on_recovery() -> None:
+    t = DropoutTracker()
+    t.record_success(at(0), latency_ms=100)
+    t.record_failure(at(30), "no_response")
+    assert t.failure_kind == "no_response"
+    t.record_success(at(60), latency_ms=120)
+    assert t.failure_kind is None
+
+
+def test_an_outage_takes_the_most_recent_failure_kind() -> None:
+    """A pump can stop answering TCP first and only later fall off the
+    network entirely - the later reading is the useful one."""
+    t = DropoutTracker()
+    t.record_success(at(0))
+    t.record_failure(at(30), "no_response")
+    t.record_failure(at(60), "off_network")
+    assert t.count == 1, "still one episode"
+    assert t.failure_kind == "off_network"
+    t.record_success(at(90))
+    assert t.events[-1]["kind"] == "off_network"
+
+
+def test_attributes_expose_latency_and_last_failure() -> None:
+    t = DropoutTracker()
+    t.record_success(at(0), latency_ms=98)
+    t.record_failure(at(30), "off_network")
+    a = t.as_attributes()
+    assert a["latency_ms"] == 98
+    assert a["last_failure"] == "off_network"

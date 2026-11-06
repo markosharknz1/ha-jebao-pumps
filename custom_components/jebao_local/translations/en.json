@@ -117,6 +117,9 @@
       },
       "dropouts": {
         "name": "Dropouts"
+      },
+      "response_time": {
+        "name": "Response time"
       }
     },
     "button": {

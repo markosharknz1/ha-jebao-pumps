@@ -26,7 +26,7 @@ from homeassistant.components.sensor import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,6 +72,7 @@ async def async_setup_entry(
     entities.append(JebaoIpAddressSensor(coordinator))
     entities.append(JebaoMacAddressSensor(coordinator))
     entities.append(JebaoLastContactSensor(coordinator))
+    entities.append(JebaoResponseTimeSensor(coordinator))
     entities.append(JebaoDropoutsSensor(coordinator))
     async_add_entities(entities)
 
@@ -343,6 +344,42 @@ class JebaoLastContactSensor(JebaoLocalEntity, SensorEntity):
     @property
     def native_value(self):
         return self.coordinator.dropouts.last_contact
+
+
+class JebaoResponseTimeSensor(JebaoLocalEntity, SensorEntity):
+    """Round-trip time of the last successful poll.
+
+    The point is the shape over time, not any single reading. Latency
+    climbing over minutes before a pump disappears means interference or
+    range; latency flat at its usual ~110ms and then nothing means the
+    pump lost its AP, its DHCP lease or its power. A dropout count on its
+    own cannot tell those two apart, and they have completely different
+    fixes.
+
+    Reports nothing while the pump is unreachable rather than holding the
+    last value, so the gap is visible in history instead of a stale flat
+    line implying everything was fine.
+    """
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MILLISECONDS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+
+    def __init__(self, coordinator: JebaoLocalCoordinator) -> None:
+        super().__init__(coordinator, "response_time")
+        self._attr_translation_key = "response_time"
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self) -> int | None:
+        if not self.coordinator.last_update_success:
+            return None
+        return self.coordinator.dropouts.last_latency_ms
 
 
 class JebaoDropoutsSensor(JebaoLocalEntity, RestoreEntity, SensorEntity):
