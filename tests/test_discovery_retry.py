@@ -46,7 +46,26 @@ class _FakeTransport:
 
 
 @pytest.fixture
-def patch_endpoint(monkeypatch):
+def loop():
+    """A loop of this test's own.
+
+    These used to reach for asyncio.get_event_loop(), which only works while
+    something else has left a usable loop installed in the main thread. Any
+    async test running earlier in the session takes that away on teardown,
+    so the whole file failed with "There is no current event loop" depending
+    on what else was collected - green locally, red in CI.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        yield loop
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
+
+
+@pytest.fixture
+def patch_endpoint(monkeypatch, loop):
     created = {}
 
     def install(reply_on_probe):
@@ -56,42 +75,40 @@ def patch_endpoint(monkeypatch):
             created["transport"] = transport
             return transport, protocol
 
-        loop = asyncio.get_event_loop()
         monkeypatch.setattr(loop, "create_datagram_endpoint", fake_create_datagram_endpoint)
         return created
 
     return install
 
 
-def test_discover_sends_more_than_one_probe(patch_endpoint):
+def test_discover_sends_more_than_one_probe(loop, patch_endpoint):
     created = patch_endpoint(reply_on_probe=99)  # never answers
-    devices = asyncio.get_event_loop().run_until_complete(disc.discover(timeout=3.0))
+    devices = loop.run_until_complete(disc.discover(timeout=3.0))
     assert devices == []
     assert created["transport"].probes > 1, "a single broadcast is how devices get missed"
     assert created["transport"].closed
 
 
-def test_device_answering_only_a_later_probe_is_still_found(patch_endpoint):
+def test_device_answering_only_a_later_probe_is_still_found(loop, patch_endpoint):
     # The whole point: the first probe (or its reply) was lost.
     created = patch_endpoint(reply_on_probe=3)
-    devices = asyncio.get_event_loop().run_until_complete(disc.discover(timeout=3.0))
+    devices = loop.run_until_complete(disc.discover(timeout=3.0))
     assert len(devices) == 1
     assert devices[0].did
     assert created["transport"].probes >= 3
 
 
-def test_probes_stay_within_the_timeout_window(patch_endpoint):
+def test_probes_stay_within_the_timeout_window(loop, patch_endpoint):
     created = patch_endpoint(reply_on_probe=99)
-    asyncio.get_event_loop().run_until_complete(disc.discover(timeout=0.5))
+    loop.run_until_complete(disc.discover(timeout=0.5))
     # Only offsets below the timeout may fire - a short scan must not
     # somehow send every probe anyway.
     expected = sum(1 for o in disc.PROBE_OFFSETS if o < 0.5)
     assert created["transport"].probes == expected
 
 
-def test_discover_one_stops_early_once_the_device_answers(patch_endpoint):
+def test_discover_one_stops_early_once_the_device_answers(loop, patch_endpoint):
     created = patch_endpoint(reply_on_probe=1)
-    loop = asyncio.get_event_loop()
     started = loop.time()
     device = loop.run_until_complete(disc.discover_one("10.0.0.5", timeout=5.0))
     elapsed = loop.time() - started
