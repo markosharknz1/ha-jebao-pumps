@@ -102,9 +102,15 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "between 2.4GHz guest/IoT networks). You can also add it manually "
                 "if you know its IP."
             )
+            # Its own step, not the "discovered devices" one with an error on
+            # it: that step's description is written around {found} and
+            # {already}, so reusing it here rendered Home Assistant's raw
+            # "MISSING_VALUE" translation error in the dialog, with the
+            # untranslated key `no_devices_found` underneath it. Submitting
+            # this one comes back through async_step_no_devices and scans
+            # again, which is what the text offers to do.
             return self.async_show_form(
-                step_id="discover",
-                errors={"base": "no_devices_found"},
+                step_id="no_devices",
                 description_placeholders={"reason": reason},
             )
 
@@ -129,6 +135,10 @@ class JebaoLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             },
         )
+
+    async def async_step_no_devices(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Nothing to pick - submitting scans again."""
+        return await self.async_step_discover()
 
     async def async_step_manual(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         errors: dict[str, str] = {}

@@ -28,7 +28,10 @@ PANEL_ICON = "mdi:waves"
 # dashboard, so `type: custom:jebao-pump-card` works with no manual resource
 # setup - the point of bundling it with the integration.
 CARD_URL = "/jebao_local/jebao-pump-card.js"
-CARD_VERSION = "0.7.0"  # bump to bust the browser cache when the card changes
+# Bump to bust the browser cache when the card changes - this is the `?v=`
+# on the registered Lovelace resource. Keep in step with CARD_BUILD in
+# lovelace/jebao-pump-card.js, which is what the card reports about itself.
+CARD_VERSION = "0.8.0"
 
 _PANEL_REGISTERED_KEY = "jebao_local_panel_registered"
 _CARD_REGISTERED_KEY = "jebao_local_card_registered"

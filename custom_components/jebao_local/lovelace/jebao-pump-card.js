@@ -29,6 +29,13 @@
 
 const ENTITY_RE = /^(switch|select|number|binary_sensor|fan|sensor)\.jebao_([a-z0-9]+)_(.+)$/;
 
+// Printed to the browser console on load, and into the card's own empty
+// state. Browsers cache a Lovelace resource hard, so "did my update actually
+// reach the browser?" is the first question to settle whenever the card
+// misbehaves after an upgrade - this answers it without guesswork. Keep in
+// step with CARD_VERSION in panel.py, which is what busts that cache.
+const CARD_BUILD = "0.8.0";
+
 // Cosmetic English labels for the wave-mode enum - the device's Mode select
 // only speaks these Chinese strings (see custom_components/jebao_local/
 // select.py; the schema's raw enum_values are passed straight through as
@@ -152,17 +159,26 @@ function stepsFromSlots(slots) {
 
 // Shared between the card and its config editor, so "which pumps exist and
 // what are they called" is answered identically in both places.
-// The did and the per-entity suffix used to be parsed out of the entity id,
-// which only works while ids look like jebao_<did>_<suffix>. Rename a device
-// in HA and it offers to rename every one of its entity ids to match - most
-// people accept - and discovery then found nothing at all, with the card
-// reporting "No jebao_local pumps found" next to a working integration.
 //
-// So the registry path no longer reads the entity id for meaning: it groups
-// by device, takes the did from the device's own identifiers, and recovers
-// each suffix by stripping whatever prefix that device's entity ids share.
-// That prefix is `jebao_<did>_` under the original naming and `<device>_`
-// after a rename, so one mechanism covers both.
+// Three ways of answering it, best first:
+//
+//  1. State attributes. Every entity the integration creates publishes
+//     jebao_did (which pump) and jebao_role (what this entity does on it) -
+//     see entity.py's jebao_tag. hass.states is always fully populated, for
+//     every user in every frontend context, so this path needs nothing else
+//     and survives any renaming.
+//  2. The entity + device registries, for an integration older than the
+//     card. hass.entities groups entities by device and hass.devices carries
+//     the did in its identifiers. Correct when both are populated - but
+//     hass.devices in particular is not guaranteed to be, which is why it is
+//     no longer the primary path.
+//  3. Pattern-matching entity_ids, for a frontend with no registries at all.
+//     Only works while ids still look like jebao_<did>_<suffix>, so a
+//     renamed device is invisible to it. This is what the card originally
+//     did everywhere, and why renaming a device emptied it.
+const DID_ATTR = "jebao_did";
+const ROLE_ATTR = "jebao_role";
+
 function didOf(device, entityIds, deviceId) {
   for (const pair of (device && device.identifiers) || []) {
     if (Array.isArray(pair) && pair[0] === "jebao_local" && pair[1]) return String(pair[1]);
@@ -190,28 +206,119 @@ function suffixesFor(entityIds) {
   return objectIds.map((objectId) => objectId.startsWith(prefix) ? objectId.slice(prefix.length) : objectId);
 }
 
+// The device's own name, for the card heading. The registry has it when it's
+// available; otherwise every friendly_name on the device starts with it
+// (has_entity_name entities read "<device> <entity>"), so the shared prefix
+// of them is the device name - and unlike anything baked into an entity id,
+// it tracks a rename live.
+function deviceNameFrom(hass, deviceId, friendlyNames, fallback) {
+  const device = deviceId && hass.devices ? hass.devices[deviceId] : null;
+  if (device && (device.name_by_user || device.name)) return device.name_by_user || device.name;
+  let prefix = friendlyNames[0] || "";
+  for (const name of friendlyNames) {
+    let k = 0;
+    while (k < prefix.length && k < name.length && prefix[k] === name[k]) k++;
+    prefix = prefix.slice(0, k);
+  }
+  prefix = prefix.replace(/[\s\-_:]+$/, "").trim();
+  return prefix || fallback;
+}
+
+function deviceIdFrom(hass, entityIds) {
+  if (!hass.entities) return null;
+  for (const entityId of entityIds) {
+    const entry = hass.entities[entityId];
+    if (entry && entry.device_id) return entry.device_id;
+  }
+  return null;
+}
+
 function discoverPumps(hass, dids) {
-  if (!hass) return [];
+  return discoverPumpsDetailed(hass, dids).pumps;
+}
+
+// Returns {pumps, diag}. The diagnostics are what the card prints when it
+// finds nothing: an empty card used to say only "no pumps found", which is
+// the one thing you already know by looking at it - and left no way to tell
+// a stale cached card from a frontend that hands cards no registries from a
+// dids: filter that matches nothing.
+function discoverPumpsDetailed(hass, dids) {
+  const diag = {
+    source: "none", states: 0, tagged: 0,
+    registryEntities: null, registryJebao: null, registryDevices: null,
+    filtered: false,
+  };
+  if (!hass) return { pumps: [], diag };
   const want = dids ? new Set(dids.map((d) => String(d).toLowerCase())) : null;
   const registryEntities = hass.entities;
   const registryDevices = hass.devices;
+  const states = hass.states || {};
+  diag.states = Object.keys(states).length;
+  diag.registryEntities = registryEntities ? Object.keys(registryEntities).length : null;
+  diag.registryDevices = registryDevices ? Object.keys(registryDevices).length : null;
+  if (registryEntities) {
+    // Counted whichever path ends up being used, so the diagnostic line is
+    // complete no matter which one answered.
+    diag.registryJebao = 0;
+    for (const entityId of Object.keys(registryEntities)) {
+      if (registryEntities[entityId].platform === "jebao_local") diag.registryJebao++;
+    }
+  }
 
+  // 1. State attributes published by the integration.
+  const tagged = new Map();
+  for (const entityId of Object.keys(states)) {
+    const attrs = states[entityId] && states[entityId].attributes;
+    if (!attrs || !attrs[DID_ATTR] || !attrs[ROLE_ATTR]) continue;
+    diag.tagged++;
+    const did = String(attrs[DID_ATTR]);
+    if (!tagged.has(did)) tagged.set(did, { did, ids: [], names: [], entities: {} });
+    const pump = tagged.get(did);
+    pump.ids.push(entityId);
+    pump.entities[String(attrs[ROLE_ATTR]).toLowerCase()] = entityId;
+    if (attrs.friendly_name) pump.names.push(String(attrs.friendly_name));
+  }
+  if (tagged.size) {
+    diag.source = "state attributes";
+    const pumps = [];
+    for (const pump of tagged.values()) {
+      const deviceId = deviceIdFrom(hass, pump.ids);
+      // A dids: list may name the pump's did or its HA device id - the did
+      // is no longer visible in the entity ids for someone to copy.
+      if (want && !want.has(pump.did.toLowerCase()) &&
+          !(deviceId && want.has(String(deviceId).toLowerCase()))) continue;
+      pumps.push({
+        did: pump.did,
+        name: deviceNameFrom(hass, deviceId, pump.names, pump.did),
+        deviceId,
+        entities: pump.entities,
+      });
+    }
+    diag.filtered = Boolean(want) && !pumps.length;
+    return { pumps: pumps.sort((a, b) => a.name.localeCompare(b.name)), diag };
+  }
+
+  // 3. No registries at all - pattern-match straight out of hass.states.
+  // Nothing else is available there, so this one still depends on the
+  // original entity id naming and cannot see a renamed device.
   if (!registryEntities || !registryDevices) {
-    // Fallback for older frontends without hass.entities/hass.devices:
-    // pattern-match straight out of hass.states. Nothing else is available
-    // there, so this one still depends on the original entity id naming.
-    const pumps = new Map();
-    for (const entityId of Object.keys(hass.states)) {
+    diag.source = "entity_id pattern";
+    const matched = new Map();
+    for (const entityId of Object.keys(states)) {
       const m = entityId.match(ENTITY_RE);
       if (!m) continue;
       const [, , did, suffix] = m;
       if (want && !want.has(did)) continue;
-      if (!pumps.has(did)) pumps.set(did, { did, name: did, deviceId: null, entities: {} });
-      pumps.get(did).entities[suffix] = entityId;
+      if (!matched.has(did)) matched.set(did, { did, name: did, deviceId: null, entities: {} });
+      matched.get(did).entities[suffix] = entityId;
     }
-    return [...pumps.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const pumps = [...matched.values()].sort((a, b) => a.name.localeCompare(b.name));
+    diag.filtered = Boolean(want) && !pumps.length;
+    return { pumps, diag };
   }
 
+  // 2. The registries.
+  diag.source = "registry";
   const byDevice = new Map();
   for (const [entityId, ent] of Object.entries(registryEntities)) {
     if (ent.platform !== "jebao_local" || !ent.device_id) continue;
@@ -236,7 +343,45 @@ function discoverPumps(hass, dids) {
       entities,
     });
   }
-  return pumps.sort((a, b) => a.name.localeCompare(b.name));
+  diag.filtered = Boolean(want) && !pumps.length;
+  return { pumps: pumps.sort((a, b) => a.name.localeCompare(b.name)), diag };
+}
+
+// What an empty card says. "No pumps found" on its own is the one thing you
+// can already see, and it gave no way to tell apart: a browser still running
+// a cached old card, a frontend that hands cards no registries, an
+// integration older than the card, and a dids: filter matching nothing.
+function emptyStateHtml(hass, dids) {
+  const { diag } = discoverPumpsDetailed(hass, dids);
+  const lines = [];
+  if (!hass) {
+    lines.push("Waiting for Home Assistant.");
+  } else if (diag.filtered) {
+    lines.push(
+      `This card is set to show only ${esc((dids || []).join(", "))}, and no pump matched. ` +
+      `Edit the card and choose the pump again (or "All pumps").`
+    );
+  } else {
+    lines.push("No jebao_local pumps found. Add one via Settings &rarr; Devices &amp; Services first.");
+    if (diag.registryJebao) {
+      lines.push(
+        "Home Assistant does have jebao_local entities, so this is a card problem, not a pump problem - " +
+        "please report it with the line below."
+      );
+    }
+  }
+  const facts = [
+    `card ${CARD_BUILD}`,
+    `via ${diag.source}`,
+    `${diag.states} states`,
+    `${diag.tagged} tagged`,
+    diag.registryEntities === null
+      ? "no entity registry"
+      : `${diag.registryJebao === null ? "?" : diag.registryJebao}/${diag.registryEntities} registry entities`,
+    diag.registryDevices === null ? "no device registry" : `${diag.registryDevices} devices`,
+  ];
+  lines.push(`<span class="diag">${esc(facts.join(" · "))}</span>`);
+  return lines.join("<br>");
 }
 
 class JebaoPumpCard extends HTMLElement {
@@ -1053,7 +1198,7 @@ class JebaoPumpCard extends HTMLElement {
 
     const body = this.shadowRoot.getElementById("body");
     if (!pumps.length) {
-      body.innerHTML = `<div class="empty">No jebao_local pumps found. Add one via Settings &rarr; Devices &amp; Services first.</div>`;
+      body.innerHTML = `<div class="empty">${emptyStateHtml(this._hass, this._config.dids)}</div>`;
       return;
     }
     body.innerHTML = pumps.map((p) => this._renderPump(p)).join("");
@@ -1171,7 +1316,8 @@ class JebaoPumpCard extends HTMLElement {
       .feed { margin-top: 4px; }
       .feednow { width: 100%; margin-top: 2px; background: var(--primary); color: var(--text-primary-color, #fff); border-color: transparent; }
       .countdown { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--primary); }
-      .empty { color: var(--secondary-text-color); font-size: 0.9rem; padding: 8px 0; }
+      .empty { color: var(--secondary-text-color); font-size: 0.9rem; padding: 8px 0; line-height: 1.5; }
+      .diag { font-family: var(--code-font-family, monospace); font-size: 0.78rem; opacity: 0.75; }
       .sched { margin-top: 10px; border-top: 1px dashed var(--divider-color, #eee); padding-top: 6px; }
       .schedhead { width: 100%; display: flex; justify-content: space-between; align-items: center;
         border: none; background: none; padding: 4px 0; font-size: 0.9rem; color: var(--primary-text-color); }
@@ -1315,6 +1461,12 @@ customElements.define("jebao-pump-card-editor", JebaoPumpCardEditor);
 
 // Register in the card picker so it's discoverable from "Add Card" with no
 // YAML at all.
+console.info(
+  `%c JEBAO-PUMP-CARD %c ${CARD_BUILD} `,
+  "color:#fff;background:#03a9f4;font-weight:700",
+  "color:#03a9f4;background:#fff;font-weight:700",
+);
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "jebao-pump-card",

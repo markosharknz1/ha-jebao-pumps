@@ -2,6 +2,37 @@
 
 All notable changes to this project are documented here.
 
+## 0.8.0
+
+- **Fixed (properly this time): the card could still find no pumps.** 0.7.1
+  stopped discovery reading the entity ID, but moved it onto Home
+  Assistant's entity and device registries - which a card is not actually
+  guaranteed to be handed. Every entity now simply publishes which pump it
+  is on (`jebao_did`) and what it does on that pump (`jebao_role`), and the
+  card reads those. State attributes are there for every user in every
+  frontend context, so discovery no longer depends on the registries, on
+  entity ID naming, or on anything a rename touches. The registry and
+  pattern-matching paths remain as fallbacks, so a card newer than the
+  integration still works. **This needs both the integration update and a
+  Home Assistant restart to take effect.**
+- **An empty card now says why it is empty.** It reports the card build,
+  which discovery path answered, and what it could see - states, tagged
+  entities, registry entities and devices. "No pumps found" on its own was
+  the one thing you could already tell by looking at it, and gave no way to
+  distinguish a stale cached card from a frontend that hands cards no
+  registries from a `dids:` filter that matches nothing. The card also
+  prints its build to the browser console on load, so "did my update
+  actually reach the browser?" can be answered in one glance.
+- **Fixed: the "no devices found" step of setup rendered a translation
+  error.** Scanning a network where every pump was already configured (or
+  where none answered) showed Home Assistant's raw
+  `Translation [formatjs Error: MISSING_VALUE]` text and an untranslated
+  `no_devices_found` key: that branch reused the device-picker step, whose
+  description is written around placeholders it did not supply. It now has
+  its own step, which says what actually happened and rescans when you
+  submit it. A test now renders every form the config flow can show and
+  fails if any placeholder or error key is missing.
+
 ## 0.7.1
 
 - **Fixed: the card found no pumps once a device had been renamed.** The

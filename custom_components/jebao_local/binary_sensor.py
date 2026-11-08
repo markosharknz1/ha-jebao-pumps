@@ -67,6 +67,7 @@ class JebaoConnectivityBinarySensor(JebaoLocalEntity, BinarySensorEntity):
         if not self.coordinator.last_update_success and tracker.offline_since is not None:
             downtime = int((utcnow() - tracker.offline_since).total_seconds())
         return {
+            **self.jebao_tag,
             "last_contact": last_contact.isoformat() if last_contact else None,
             "downtime_seconds": downtime,
         }

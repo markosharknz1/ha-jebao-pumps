@@ -198,6 +198,7 @@ class JebaoScheduleSensor(JebaoLocalEntity, SensorEntity):
         # as the base wavemaker, different numbering) - see
         # schedule.slot_mode_options.
         return {
+            **self.jebao_tag,
             "slot_len": schedule_slot_len(self.coordinator.schema),
             "slot_modes": {
                 str(number): _translate_enum(label)
@@ -407,7 +408,7 @@ class JebaoDropoutsSensor(JebaoLocalEntity, RestoreEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        return self.coordinator.dropouts.as_attributes()
+        return {**self.jebao_tag, **self.coordinator.dropouts.as_attributes()}
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
