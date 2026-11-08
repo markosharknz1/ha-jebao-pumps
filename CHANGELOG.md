@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented here.
 
+## 0.7.1
+
+- **Fixed: the card found no pumps once a device had been renamed.** The
+  Jebao Pump card said "No jebao_local pumps found" next to a perfectly
+  working integration. Renaming a device in Home Assistant offers to
+  rename all of its entity IDs to match, and the card was reading both
+  the device id and each control's role out of the entity ID - so the
+  moment IDs stopped looking like `jebao_<did>_<suffix>`, discovery
+  returned nothing. It now groups by device, takes the device id from the
+  device's own registry identifiers, and works out each control's role by
+  stripping whatever prefix that device's entity IDs share. That covers
+  both the original naming and any rename, so the card survives being
+  tidied up. A `dids:` list in an existing card config keeps working, and
+  now accepts a Home Assistant device id too.
+
 ## 0.7.0
 
 - **New: Response time sensor.** Round-trip time of each successful poll,

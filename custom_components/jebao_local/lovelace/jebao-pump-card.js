@@ -152,47 +152,91 @@ function stepsFromSlots(slots) {
 
 // Shared between the card and its config editor, so "which pumps exist and
 // what are they called" is answered identically in both places.
+// The did and the per-entity suffix used to be parsed out of the entity id,
+// which only works while ids look like jebao_<did>_<suffix>. Rename a device
+// in HA and it offers to rename every one of its entity ids to match - most
+// people accept - and discovery then found nothing at all, with the card
+// reporting "No jebao_local pumps found" next to a working integration.
+//
+// So the registry path no longer reads the entity id for meaning: it groups
+// by device, takes the did from the device's own identifiers, and recovers
+// each suffix by stripping whatever prefix that device's entity ids share.
+// That prefix is `jebao_<did>_` under the original naming and `<device>_`
+// after a rename, so one mechanism covers both.
+function didOf(device, entityIds, deviceId) {
+  for (const pair of (device && device.identifiers) || []) {
+    if (Array.isArray(pair) && pair[0] === "jebao_local" && pair[1]) return String(pair[1]);
+  }
+  // Older HA frontends may not expose identifiers - fall back to the id.
+  for (const id of entityIds) {
+    const m = id.match(ENTITY_RE);
+    if (m) return m[2];
+  }
+  return deviceId;
+}
+
+function suffixesFor(entityIds) {
+  const objectIds = entityIds.map((id) => id.slice(id.indexOf(".") + 1));
+  let prefix = objectIds[0] || "";
+  for (const objectId of objectIds) {
+    let k = 0;
+    while (k < prefix.length && k < objectId.length && prefix[k] === objectId[k]) k++;
+    prefix = prefix.slice(0, k);
+  }
+  // Only ever cut on a separator, so a device whose entities happen to
+  // share a few letters past the slug doesn't lose part of its suffix.
+  const cut = prefix.lastIndexOf("_");
+  prefix = cut >= 0 ? prefix.slice(0, cut + 1) : "";
+  return objectIds.map((objectId) => objectId.startsWith(prefix) ? objectId.slice(prefix.length) : objectId);
+}
+
 function discoverPumps(hass, dids) {
   if (!hass) return [];
   const want = dids ? new Set(dids.map((d) => String(d).toLowerCase())) : null;
-
-  const pumps = new Map(); // did -> {did, name, entities: {suffix: entity_id}}
   const registryEntities = hass.entities;
   const registryDevices = hass.devices;
 
-  const addFromEntityId = (entityId, deviceName, deviceId) => {
-    const m = entityId.match(ENTITY_RE);
-    if (!m) return;
-    const [, , did, suffix] = m;
-    if (want && !want.has(did)) return;
-    if (!pumps.has(did)) pumps.set(did, { did, name: deviceName || did, deviceId: null, entities: {} });
-    pumps.get(did).entities[suffix] = entityId;
-    // The schedule/clock services target a HA device_id, which only the
-    // registry path can supply - the fallback path leaves it null and the
-    // card hides the schedule editor for that pump.
-    if (deviceId) pumps.get(did).deviceId = deviceId;
-  };
-
-  if (registryEntities && registryDevices) {
-    // Preferred: the frontend's own entity/device registry cache (HA
-    // 2024.8+), so grouping is correct even if entity_id naming ever
-    // changes - no regex-on-device-name guessing.
-    for (const [entityId, ent] of Object.entries(registryEntities)) {
-      if (ent.platform !== "jebao_local") continue;
-      const device = ent.device_id ? registryDevices[ent.device_id] : null;
-      const name = device ? device.name_by_user || device.name : null;
-      addFromEntityId(entityId, name, ent.device_id || null);
-    }
-  } else {
+  if (!registryEntities || !registryDevices) {
     // Fallback for older frontends without hass.entities/hass.devices:
-    // pattern-match straight out of hass.states. Device name isn't known
-    // here, so the did itself is shown as a heading instead.
+    // pattern-match straight out of hass.states. Nothing else is available
+    // there, so this one still depends on the original entity id naming.
+    const pumps = new Map();
     for (const entityId of Object.keys(hass.states)) {
-      addFromEntityId(entityId, null, null);
+      const m = entityId.match(ENTITY_RE);
+      if (!m) continue;
+      const [, , did, suffix] = m;
+      if (want && !want.has(did)) continue;
+      if (!pumps.has(did)) pumps.set(did, { did, name: did, deviceId: null, entities: {} });
+      pumps.get(did).entities[suffix] = entityId;
     }
+    return [...pumps.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  return [...pumps.values()].sort((a, b) => a.name.localeCompare(b.name));
+  const byDevice = new Map();
+  for (const [entityId, ent] of Object.entries(registryEntities)) {
+    if (ent.platform !== "jebao_local" || !ent.device_id) continue;
+    if (!byDevice.has(ent.device_id)) byDevice.set(ent.device_id, []);
+    byDevice.get(ent.device_id).push(entityId);
+  }
+
+  const pumps = [];
+  for (const [deviceId, entityIds] of byDevice) {
+    const device = registryDevices[deviceId];
+    const did = didOf(device, entityIds, deviceId);
+    // A dids: list may name either, since the did is no longer visible in
+    // the entity ids once a device has been renamed.
+    if (want && !want.has(String(did).toLowerCase()) && !want.has(String(deviceId).toLowerCase())) continue;
+    const entities = {};
+    const suffixes = suffixesFor(entityIds);
+    entityIds.forEach((entityId, k) => { entities[suffixes[k]] = entityId; });
+    pumps.push({
+      did,
+      name: (device && (device.name_by_user || device.name)) || did,
+      deviceId,
+      entities,
+    });
+  }
+  return pumps.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 class JebaoPumpCard extends HTMLElement {
